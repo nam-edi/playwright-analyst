@@ -1,0 +1,261 @@
+{% load test_filters %}
+
+<!-- Panneau latéral pour les détails du test -->
+<div
+  class="bg-white h-full flex flex-col border-l border-gray-200 shadow-lg overflow-hidden"
+>
+  <!-- En-tête du panneau -->
+  <div class="p-4 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-gray-900">Détails du test</h2>
+      <button
+        class="text-gray-400 hover:text-gray-600 transition-colors"
+        onclick="closeTestPanel()"
+        aria-label="Fermer le panneau"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenu du panneau -->
+  <div class="flex-1 overflow-y-auto overflow-x-hidden">
+    <!-- Informations du test -->
+    <div class="p-4 border-b border-gray-200">
+      <h3 class="font-medium text-gray-900 mb-2 break-words">
+        {{ test.title }}
+      </h3>
+
+      <div class="space-y-2 text-sm">
+        <div class="flex flex-col sm:flex-row sm:justify-between">
+          <span class="text-gray-600">Fichier:</span>
+          <span class="font-mono text-xs break-all">{{ test.file_path }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">Ligne:</span>
+          <span class="font-medium">{{ test.line }}:{{ test.column }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">ID Test:</span>
+          <span class="font-medium break-words"
+            >{{ test.test_id|default:test.id }}</span
+          >
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">Total exécutions:</span>
+          <span class="font-medium">{{ test.results.count }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">Taux de réussite:</span>
+          <span class="font-medium"
+            >{{ test.get_success_rate|floatformat:1 }}%</span
+          >
+        </div>
+      </div>
+
+      {% if test.story %}
+      <div class="mt-3">
+        <div class="text-xs text-gray-600 mb-1">Description:</div>
+        <p class="text-sm text-gray-700 bg-gray-50 p-2 rounded">
+          {{ test.story }}
+        </p>
+      </div>
+      {% endif %}
+
+      <!-- Tags -->
+      {% if test.tags.exists %}
+      <div class="mt-3">
+        <div class="text-xs text-gray-600 mb-2">Tags:</div>
+        <div class="flex flex-wrap gap-1">
+          {% for tag in test.tags.all %}
+          <span
+            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+            style="background-color: {{ tag.color }};"
+          >
+            {{ tag.name }}
+          </span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Section commentaire -->
+      {% include 'cotton/test-comment-fragment.html' %}
+
+      <!-- Jauge des dernières exécutions -->
+      <div class="mt-4">
+        <div class="text-xs text-gray-600 mb-2">
+          Historique des 10 dernières exécutions:
+        </div>
+        {% with recent_results=test.results.all|slice:":10" %} {% if
+        recent_results %}
+        <div class="flex gap-1 items-center">
+          {% for result in recent_results %}
+          <div
+            class="h-4 w-4 rounded-full border border-gray-200 flex-shrink-0 tooltip-container"
+            style="background-color: {% if result.status == 'passed' %}#10b981{% elif result.status == 'failed' %}#ef4444{% elif result.status == 'skipped' %}#6b7280{% elif result.status == 'flaky' %}#f59e0b{% else %}#8b5cf6{% endif %};"
+            title="{{ result.status|capfirst }} - {{ result.start_time|date:'d/m H:i' }} - {{ result.duration|duration_format }}"
+          ></div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-xs text-gray-400 italic">
+          Aucune exécution disponible
+        </div>
+        {% endif %} {% endwith %}
+      </div>
+    </div>
+
+    <!-- Liste des exécutions -->
+    <div class="p-4">
+      <h4 class="font-medium text-gray-900 mb-3">Historique des exécutions</h4>
+
+      {% if test_results %}
+      <div class="space-y-3">
+        {% for result in test_results %}
+        <a
+          href="{% url 'execution_detail' result.execution.id %}#test-{{ result.test.id }}"
+          class="block bg-gray-50 rounded-lg p-3 border hover:bg-gray-100 hover:border-gray-300 transition-colors cursor-pointer"
+          onclick="closeTestPanel()"
+        >
+          <!-- En-tête du résultat -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span
+                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                style="background-color: {% if result.status == 'passed' %}#10b981{% elif result.status == 'failed' %}#ef4444{% elif result.status == 'skipped' %}#6b7280{% elif result.status == 'flaky' %}#f59e0b{% else %}#8b5cf6{% endif %};"
+              >
+                {{ result.status|capfirst }}
+              </span>
+              {% if result.retry > 0 %}
+              <span
+                class="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded"
+              >
+                Tentative {{ result.retry }}
+              </span>
+              {% endif %}
+            </div>
+            <span class="text-xs text-gray-500"
+              >{{ result.start_time|date:"d/m/Y H:i" }}</span
+            >
+          </div>
+
+          <!-- Détails de l'exécution -->
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="flex justify-between">
+              <span class="text-gray-600">Durée:</span>
+              <span class="font-medium"
+                >{{ result.duration|duration_format }}</span
+              >
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Worker:</span>
+              <span class="font-medium">#{{ result.worker_index }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Timeout:</span>
+              <span class="font-medium">{{ result.timeout }}ms</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Exécution:</span>
+              <span class="font-medium"
+                >{{ result.execution.start_time|date:"H:i" }}</span
+              >
+            </div>
+          </div>
+
+          <!-- Erreurs -->
+          {% if result.errors %}
+          <div class="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+            <div class="text-xs font-medium text-red-800 mb-1">Erreurs:</div>
+            {% for error in result.errors|slice:":1" %}
+            <div
+              class="text-xs text-red-700 font-mono break-words overflow-hidden"
+            >
+              {{ error.message|default:"Erreur inconnue"|truncatechars:100 }}
+            </div>
+            {% endfor %} {% if result.errors|length > 1 %}
+            <div class="text-xs text-red-600 mt-1">
+              +{{ result.errors|length|add:"-1" }} autre{{
+              result.errors|length|add:"-1"|pluralize }} erreur{{
+              result.errors|length|add:"-1"|pluralize }}
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <!-- Informations de l'exécution -->
+          <div class="mt-2 text-xs text-gray-500">
+            Exécution: {{ result.execution.git_branch|default:"main" }} {% if
+            result.execution.git_commit_short_hash %} ({{
+            result.execution.git_commit_short_hash }}) {% endif %}
+            <span class="ml-2 text-blue-600">→ Voir l'exécution complète</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+      <div class="mt-4 flex justify-center">
+        <nav class="flex space-x-1">
+          {% if page_obj.has_previous %}
+          <a
+            href="{% url 'test_detail' test.id %}?page={{ page_obj.previous_page_number }}"
+            hx-get="{% url 'test_detail' test.id %}?page={{ page_obj.previous_page_number }}"
+            hx-target="#test-detail-panel"
+            class="px-3 py-1 text-sm text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50"
+          >
+            ←
+          </a>
+          {% endif %}
+
+          <span class="px-3 py-1 text-sm text-gray-600">
+            Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+          </span>
+
+          {% if page_obj.has_next %}
+          <a
+            href="{% url 'test_detail' test.id %}?page={{ page_obj.next_page_number }}"
+            hx-get="{% url 'test_detail' test.id %}?page={{ page_obj.next_page_number }}"
+            hx-target="#test-detail-panel"
+            class="px-3 py-1 text-sm text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50"
+          >
+            →
+          </a>
+          {% endif %}
+        </nav>
+      </div>
+      {% endif %} {% else %}
+      <div class="text-center py-8 text-gray-500">
+        <svg
+          class="mx-auto h-12 w-12 text-gray-400 mb-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          ></path>
+        </svg>
+        <p class="text-sm">Aucun résultat d'exécution disponible</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

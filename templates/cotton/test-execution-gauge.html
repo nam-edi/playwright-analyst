@@ -1,0 +1,30 @@
+{% load test_filters %}
+
+<!-- Jauge des dernières exécutions -->
+<div class="mb-3">
+  <div class="text-xs text-gray-600 mb-2 flex justify-between items-center">
+    <span>Dernières exécutions:</span>
+    <span class="text-xs text-gray-500"
+      >{{ test.get_success_rate|floatformat:0 }}% réussite</span
+    >
+  </div>
+
+  {% with recent_results=test.results.all|slice:":10" %} {% if recent_results %}
+  <div class="flex gap-1 items-center">
+    {% for result in recent_results %}
+    <div
+      class="h-3 w-3 rounded-full border border-gray-200 flex-shrink-0 tooltip-container"
+      style="background-color: {% if result.status == 'passed' %}#10b981{% elif result.status == 'failed' %}#ef4444{% elif result.status == 'skipped' %}#6b7280{% elif result.status == 'flaky' %}#f59e0b{% else %}#8b5cf6{% endif %};"
+      title="{{ result.status|capfirst }} - {{ result.start_time|date:'d/m H:i' }} - {{ result.duration|duration_format }}"
+    ></div>
+    {% endfor %} {% if test.results.count > 10 %}
+    <span class="text-xs text-gray-400 ml-1"
+      >+{{ test.results.count|add:"-10" }}</span
+    >
+    {% endif %}
+  </div>
+
+  {% else %}
+  <div class="text-xs text-gray-400 italic">Aucune exécution disponible</div>
+  {% endif %} {% endwith %}
+</div>

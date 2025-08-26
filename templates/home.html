@@ -1,0 +1,272 @@
+{% extends 'base.html' %} {% block title %} Playwright Analyst{% if
+selected_project %} - {{ selected_project.name }}{% endif %} {% endblock %} {%
+block content %}
+<!-- Zone de contenu -->
+<div id="main-content">
+  {% if selected_project %}
+  <div
+    class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center"
+  >
+    <div class="mb-4">
+      <svg
+        class="mx-auto h-16 w-16 text-green-500"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        ></path>
+      </svg>
+    </div>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">
+      Projet "{{ selected_project.name }}" sélectionné
+    </h2>
+    <p class="text-gray-600 mb-6">
+      {{ selected_project.description|default:"Aucune description disponible."
+      }}
+    </p>
+
+    <!-- Statistiques rapides du projet -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+      <div class="bg-blue-50 rounded-lg p-6">
+        <div class="text-3xl font-bold text-blue-600">
+          {{ selected_project.executions.count }}
+        </div>
+        <div class="text-sm text-blue-800 font-medium">
+          Exécution{{ selected_project.executions.count|pluralize }}
+        </div>
+      </div>
+
+      <div class="bg-green-50 rounded-lg p-6">
+        <div class="text-3xl font-bold text-green-600">
+          {{ selected_project.tests.count }}
+        </div>
+        <div class="text-sm text-green-800 font-medium">
+          Test{{ selected_project.tests.count|pluralize }} unique{{
+          selected_project.tests.count|pluralize }}
+        </div>
+      </div>
+
+      <div class="bg-purple-50 rounded-lg p-6">
+        <div class="text-3xl font-bold text-purple-600">
+          {{ selected_project.get_unique_tags_count }}
+        </div>
+        <div class="text-sm text-purple-800 font-medium">
+          Tag{{ selected_project.get_unique_tags_count|pluralize }} unique{{
+          selected_project.get_unique_tags_count|pluralize }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Bloc Dernière Exécution -->
+    {% if latest_execution and latest_execution_stats %}
+    <div class="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <h3 class="text-xl font-bold text-gray-900 mb-4">Dernière Exécution</h3>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Informations sur l'exécution -->
+        <div>
+          <div class="space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="text-gray-600">Date:</span>
+              <span class="font-medium"
+                >{{ latest_execution.start_time|date:"d/m/Y H:i" }}</span
+              >
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-gray-600">Durée:</span>
+              <span class="font-medium"
+                >{{ latest_execution.duration|floatformat:0 }}ms</span
+              >
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-gray-600">Total tests:</span>
+              <span class="font-medium"
+                >{{ latest_execution_stats.total }}</span
+              >
+            </div>
+            {% if latest_execution.git_branch %}
+            <div class="flex items-center gap-2">
+              <span class="text-gray-600">Branche:</span>
+              <span
+                class="font-medium font-mono text-sm bg-gray-100 px-2 py-1 rounded"
+                >{{ latest_execution.git_branch }}</span
+              >
+            </div>
+            {% endif %} {% if latest_execution.git_commit_short_hash %}
+            <div class="flex items-center gap-2">
+              <span class="text-gray-600">Commit:</span>
+              <span
+                class="font-medium font-mono text-sm bg-gray-100 px-2 py-1 rounded"
+                >{{ latest_execution.git_commit_short_hash }}</span
+              >
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Graphique camembert -->
+        <div class="flex flex-col items-center">
+          <div class="relative w-48 h-48 mb-4">
+            <canvas id="executionChart" width="192" height="192"></canvas>
+          </div>
+
+          <!-- Légende -->
+          <div class="grid grid-cols-2 gap-3 text-sm">
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span>Passés: {{ latest_execution_stats.passed }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+              <span>Échoués: {{ latest_execution_stats.failed }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+              <span>Ignorés: {{ latest_execution_stats.skipped }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
+              <span>Instables: {{ latest_execution_stats.flaky }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div
+    class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center"
+  >
+    <div class="mb-4">
+      <svg
+        class="mx-auto h-16 w-16 text-gray-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+        ></path>
+      </svg>
+    </div>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">
+      Aucun projet sélectionné
+    </h2>
+    <p class="text-gray-600 mb-6">
+      Sélectionnez un projet dans le menu déroulant ci-dessus pour commencer
+      l'analyse de vos tests Playwright.
+    </p>
+
+    {% if not projects %}
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+      <p class="text-yellow-800">
+        <strong>Aucun projet trouvé.</strong>
+        Utilisez la commande d'administration pour importer vos résultats de
+        tests.
+      </p>
+    </div>
+    {% endif %}
+
+    <div class="mt-8">
+      <button
+        hx-get="/htmx-example/"
+        hx-target="#main-content"
+        hx-swap="innerHTML"
+        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+      >
+        Tester HTMX
+      </button>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% if latest_execution and latest_execution_stats %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+      const canvas = document.getElementById('executionChart');
+      const ctx = canvas.getContext('2d');
+
+      // Données du graphique
+      const data = {
+          passed: {{ latest_execution_stats.passed }},
+          failed: {{ latest_execution_stats.failed }},
+          skipped: {{ latest_execution_stats.skipped }},
+          flaky: {{ latest_execution_stats.flaky }}
+      };
+
+      // Couleurs
+      const colors = {
+          passed: '#10b981',   // green-500
+          failed: '#ef4444',   // red-500
+          skipped: '#eab308',  // yellow-500
+          flaky: '#f97316'     // orange-500
+      };
+
+      // Calculer les angles pour chaque segment
+      const total = data.passed + data.failed + data.skipped + data.flaky;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = Math.min(centerX, centerY) - 10;
+
+      let currentAngle = -Math.PI / 2; // Commencer en haut
+
+      // Fonction pour dessiner un segment
+      function drawSegment(value, color) {
+          if (value === 0) return;
+
+          const sliceAngle = (value / total) * 2 * Math.PI;
+
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
+          ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+          ctx.closePath();
+          ctx.fillStyle = color;
+          ctx.fill();
+
+          // Bordure blanche
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          currentAngle += sliceAngle;
+      }
+
+      // Dessiner les segments
+      drawSegment(data.passed, colors.passed);
+      drawSegment(data.failed, colors.failed);
+      drawSegment(data.skipped, colors.skipped);
+      drawSegment(data.flaky, colors.flaky);
+
+      // Ajouter un cercle au centre pour un effet "donut" (optionnel)
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius * 0.6, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Ajouter le pourcentage de réussite au centre
+      const successRate = total > 0 ? Math.round((data.passed / total) * 100) : 0;
+      ctx.fillStyle = '#374151';
+      ctx.font = 'bold 24px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(successRate + '%', centerX, centerY - 5);
+
+      ctx.font = '12px system-ui';
+      ctx.fillStyle = '#6b7280';
+      ctx.fillText('réussite', centerX, centerY + 15);
+  });
+</script>
+{% endif %} {% endblock %}

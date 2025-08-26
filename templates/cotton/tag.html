@@ -1,0 +1,12 @@
+<span
+  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+  style="background-color: {{ color|default:'#3b82f6' }}20; color: {{ color|default:'#3b82f6' }};"
+>
+  {% if icon %}
+  <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+    {{ icon|safe }}
+  </svg>
+  {% endif %} {{ name }} {% if count %}
+  <span class="ml-1 text-xs opacity-75">({{ count }})</span>
+  {% endif %}
+</span>

@@ -1,0 +1,128 @@
+{% load test_filters %} {% if page_obj %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+  {% for test in page_obj %} {% include 'cotton/test-card.html' %} {% empty %}
+  <div class="col-span-2 text-center py-12">
+    <svg
+      class="mx-auto h-12 w-12 text-gray-400"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+      ></path>
+    </svg>
+    <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun test trouvé</h3>
+    <p class="mt-1 text-sm text-gray-500">
+      Essayez de modifier vos critères de recherche.
+    </p>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div
+  class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6 rounded-lg shadow-sm"
+>
+  <div class="flex items-center justify-between">
+    <div class="flex-1 flex justify-between sm:hidden">
+      {% if page_obj.has_previous %}
+      <a
+        href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% for tag in tag_filter %}&tags={{ tag }}{% endfor %}"
+        class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+        hx-get="{% url 'tests_list' %}?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% for tag in tag_filter %}&tags={{ tag }}{% endfor %}"
+        hx-target="#tests-container"
+      >
+        Précédent
+      </a>
+      {% endif %} {% if page_obj.has_next %}
+      <a
+        href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% for tag in tag_filter %}&tags={{ tag }}{% endfor %}"
+        class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+        hx-get="{% url 'tests_list' %}?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% for tag in tag_filter %}&tags={{ tag }}{% endfor %}"
+        hx-target="#tests-container"
+      >
+        Suivant
+      </a>
+      {% endif %}
+    </div>
+    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+      <div>
+        <p class="text-sm text-gray-700">
+          Affichage de
+          <span class="font-medium">{{ page_obj.start_index }}</span>
+          à
+          <span class="font-medium">{{ page_obj.end_index }}</span>
+          sur
+          <span class="font-medium">{{ page_obj.paginator.count }}</span>
+          résultats
+        </p>
+      </div>
+      <div>
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+          {% if page_obj.has_previous %}
+          <a
+            href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% for tag in tag_filter %}&tags={{ tag }}{% endfor %}"
+            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            hx-get="{% url 'tests_list' %}?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% for tag in tag_filter %}&tags={{ tag }}{% endfor %}"
+            hx-target="#tests-container"
+          >
+            Précédent
+          </a>
+          {% endif %} {% for num in page_obj.paginator.page_range %} {% if
+          page_obj.number == num %}
+          <span
+            class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600"
+          >
+            {{ num }}
+          </span>
+          {% elif num > page_obj.number|add:'-3' and num <
+          page_obj.number|add:'3' %}
+          <a
+            href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% for tag in tag_filter %}&tags={{ tag }}{% endfor %}"
+            class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+            hx-get="{% url 'tests_list' %}?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% for tag in tag_filter %}&tags={{ tag }}{% endfor %}"
+            hx-target="#tests-container"
+          >
+            {{ num }}
+          </a>
+          {% endif %} {% endfor %} {% if page_obj.has_next %}
+          <a
+            href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% for tag in tag_filter %}&tags={{ tag }}{% endfor %}"
+            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            hx-get="{% url 'tests_list' %}?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% for tag in tag_filter %}&tags={{ tag }}{% endfor %}"
+            hx-target="#tests-container"
+          >
+            Suivant
+          </a>
+          {% endif %}
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %} {% else %}
+<div class="text-center py-12">
+  <svg
+    class="mx-auto h-12 w-12 text-gray-400"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+    ></path>
+  </svg>
+  <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun test disponible</h3>
+  <p class="mt-1 text-sm text-gray-500">
+    Il n'y a pas encore de tests importés pour ce projet.
+  </p>
+</div>
+{% endif %}

@@ -1,0 +1,429 @@
+{% extends 'base.html' %}
+{% load test_filters %}
+
+{% block title %}Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        
+        <!-- Breadcrumb -->
+        <nav class="flex mb-6" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="{% url 'executions_list' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary-600">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                        </svg>
+                        Exécutions
+                    </a>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">{{ execution.start_time|date:"d/m/Y H:i" }}</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Header de la page -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">
+                Exécution du {{ execution.start_time|date:"d/m/Y à H:i" }}
+            </h1>
+            <p class="mt-2 text-lg text-gray-600">
+                Projet : <span class="font-semibold">{{ execution.project.name }}</span>
+            </p>
+            
+            <!-- Informations sur l'exécution -->
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-gray-500">Durée totale</h3>
+                    <p class="mt-1 text-xl font-semibold text-gray-900">{{ execution.duration|floatformat:0 }}ms</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-gray-500">Workers</h3>
+                    <p class="mt-1 text-xl font-semibold text-gray-900">{{ execution.workers }}</p>
+                </div>
+                {% if execution.git_branch %}
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-gray-500">Branche Git</h3>
+                    <p class="mt-1 text-xl font-semibold text-gray-900">{{ execution.git_branch }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Statistiques globales -->
+        <div class="mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="bg-white p-4 rounded-lg shadow text-center">
+                    <div class="text-2xl font-bold text-gray-900">{{ stats.total }}</div>
+                    <div class="text-sm text-gray-500">Total</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ stats.passed }}</div>
+                    <div class="text-sm text-gray-500">Passés</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow text-center">
+                    <div class="text-2xl font-bold text-red-600">{{ stats.failed }}</div>
+                    <div class="text-sm text-gray-500">Échoués</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow text-center">
+                    <div class="text-2xl font-bold text-yellow-600">{{ stats.skipped }}</div>
+                    <div class="text-sm text-gray-500">Ignorés</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow text-center">
+                    <div class="text-2xl font-bold text-purple-600">{{ stats.flaky }}</div>
+                    <div class="text-sm text-gray-500">Instables</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres et tri -->
+        <div class="mb-6 bg-white p-4 rounded-lg shadow">
+            <form method="get" class="space-y-4 md:space-y-0 md:flex md:items-end md:space-x-4">
+                <!-- Recherche -->
+                <div class="flex-1">
+                    <label for="search" class="block text-sm font-medium text-gray-700">Rechercher</label>
+                    <input type="text" 
+                           id="search" 
+                           name="search" 
+                           value="{{ search }}"
+                           placeholder="Nom du test..."
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                </div>
+
+                <!-- Filtre par statut -->
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700">Statut</label>
+                    <select id="status" 
+                            name="status"
+                            onchange="this.form.submit()"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        <option value="">Tous les statuts</option>
+                        <option value="passed" {% if status_filter == 'passed' %}selected{% endif %}>Passés</option>
+                        <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Échoués</option>
+                        <option value="skipped" {% if status_filter == 'skipped' %}selected{% endif %}>Ignorés</option>
+                        <option value="flaky" {% if status_filter == 'flaky' %}selected{% endif %}>Instables</option>
+                    </select>
+                </div>
+
+                <!-- Filtre par tag -->
+                <div>
+                    <label for="tag" class="block text-sm font-medium text-gray-700">Tag</label>
+                    <select id="tag" 
+                            name="tag"
+                            onchange="this.form.submit()"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        <option value="">Tous les tags</option>
+                        {% for tag in available_tags %}
+                            <option value="{{ tag.name }}" {% if tag_filter == tag.name %}selected{% endif %}>
+                                {{ tag.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Tri -->
+                <div>
+                    <label for="sort" class="block text-sm font-medium text-gray-700">Trier par</label>
+                    <select id="sort" 
+                            name="sort"
+                            onchange="this.form.submit()"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        <option value="test_title" {% if sort_by == 'test_title' %}selected{% endif %}>Nom du test</option>
+                        <option value="status" {% if sort_by == 'status' %}selected{% endif %}>Statut</option>
+                        <option value="duration_desc" {% if sort_by == 'duration_desc' %}selected{% endif %}>Durée (décroissant)</option>
+                        <option value="duration_asc" {% if sort_by == 'duration_asc' %}selected{% endif %}>Durée (croissant)</option>
+                        <option value="file_path" {% if sort_by == 'file_path' %}selected{% endif %}>Fichier</option>
+                    </select>
+                </div>
+                
+                <!-- Bouton de réinitialisation -->
+                {% if search or status_filter or tag_filter or sort_by != 'test_title' %}
+                <div>
+                    <a href="{% url 'execution_detail' execution.id %}" 
+                       class="w-full md:w-auto inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        Réinitialiser
+                    </a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Liste des résultats de tests -->
+        <div class="flex gap-6">
+            <!-- Panneau latéral (caché par défaut) -->
+            <div
+                id="test-detail-panel"
+                class="w-[500px] fixed right-0 top-0 h-full bg-white z-50 transform translate-x-full transition-transform duration-300 ease-in-out"
+                style="display: none"
+            >
+                <!-- Le contenu sera chargé ici via HTMX -->
+            </div>
+
+            <!-- Overlay pour fermer le panneau -->
+            <div
+                id="panel-overlay"
+                class="fixed inset-0 bg-black bg-opacity-25 z-40 hidden"
+                onclick="closeTestPanel()"
+            ></div>
+
+            <!-- Contenu principal -->
+            <div id="test-results-container" class="flex-1">
+                <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                    <ul class="divide-y divide-gray-200">
+                        {% for result in test_results %}
+                        <li id="test-{{ result.test.id }}" 
+                            class="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                            hx-get="{% url 'test_detail' result.test.id %}"
+                            hx-target="#test-detail-panel"
+                            hx-swap="innerHTML"
+                            onclick="openTestPanel()">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <!-- Titre et statut -->
+                                    <div class="flex items-center space-x-3">
+                                        <!-- Badge de statut -->
+                                        {% if result.status == 'passed' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                ✓ PASS
+                                            </span>
+                                        {% elif result.status == 'failed' or result.status == 'unexpected' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                ✗ FAIL
+                                            </span>
+                                        {% elif result.status == 'skipped' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                ⊘ SKIP
+                                            </span>
+                                        {% elif result.status == 'flaky' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                ⚠ FLAKY
+                                            </span>
+                                        {% endif %}
+
+                                        <!-- Titre du test -->
+                                        <h3 class="text-sm font-medium text-gray-900 truncate">
+                                            {{ result.test.title }}
+                                        </h3>
+                                    </div>
+
+                                    <!-- Informations du fichier -->
+                                    <div class="mt-1 flex items-center space-x-4">
+                                        <p class="text-sm text-gray-500 font-mono">
+                                            {{ result.test.file_path }}:{{ result.test.line }}
+                                        </p>
+                                        {% if result.test.tags.exists %}
+                                            <div class="flex space-x-1">
+                                                {% for tag in result.test.tags.all %}
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                                                          style="background-color: {{ tag.color }}20; color: {{ tag.color }};">
+                                                        {{ tag.name }}
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Erreurs si présentes -->
+                                    {% if result.has_errors and result.status != 'passed' %}
+                                        <div class="mt-2" onclick="event.stopPropagation()">
+                                            <details class="group">
+                                                <summary class="cursor-pointer text-sm text-red-600 hover:text-red-800">
+                                                    Voir l'erreur →
+                                                </summary>
+                                                <div class="mt-2 p-3 bg-red-50 rounded border-l-4 border-red-400">
+                                                    {% for error in result.errors %}
+                                                        <pre class="text-xs text-red-700 whitespace-pre-wrap">{{ error.message|default:error }}</pre>
+                                                    {% endfor %}
+                                                </div>
+                                            </details>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Durée et métadonnées -->
+                                <div class="flex-shrink-0 text-right">
+                                    <p class="text-sm font-medium text-gray-900">
+                                        {{ result.duration|floatformat:0 }}ms
+                                    </p>
+                                    <p class="text-sm text-gray-500">
+                                        Worker {{ result.worker_index }}
+                                    </p>
+                                    {% if result.retry > 0 %}
+                                        <p class="text-xs text-orange-600">
+                                            Tentative {{ result.retry }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="px-6 py-8 text-center">
+                            <div class="text-gray-500">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47.881-6.071 2.328"/>
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun résultat</h3>
+                                <p class="mt-1 text-sm text-gray-500">Aucun test ne correspond aux critères de filtrage.</p>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <div class="mt-6 flex justify-center">
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}&search={{ search }}&status={{ status_filter }}&tag={{ tag_filter }}&sort={{ sort_by }}" 
+                           class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Précédent</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-primary-50 text-sm font-medium text-primary-600">
+                                {{ num }}
+                            </span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <a href="?page={{ num }}&search={{ search }}&status={{ status_filter }}&tag={{ tag_filter }}&sort={{ sort_by }}" 
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                {{ num }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}&search={{ search }}&status={{ status_filter }}&tag={{ tag_filter }}&sort={{ sort_by }}" 
+                           class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Suivant</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+function openTestPanel() {
+    const panel = document.getElementById('test-detail-panel');
+    const overlay = document.getElementById('panel-overlay');
+    
+    // Afficher le panneau et l'overlay
+    panel.style.display = 'block';
+    overlay.classList.remove('hidden');
+    
+    // Petit délai pour permettre l'affichage, puis ajouter la classe pour l'animation
+    setTimeout(() => {
+        panel.classList.remove('translate-x-full');
+    }, 10);
+}
+
+function closeTestPanel() {
+    const panel = document.getElementById('test-detail-panel');
+    const overlay = document.getElementById('panel-overlay');
+    
+    // Ajouter la classe pour l'animation de fermeture
+    panel.classList.add('translate-x-full');
+    
+    // Masquer l'overlay et le panneau après l'animation
+    setTimeout(() => {
+        panel.style.display = 'none';
+        overlay.classList.add('hidden');
+    }, 300);
+}
+
+// Fermer le panneau avec la touche Escape
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeTestPanel();
+    }
+});
+
+// Empêcher la propagation des clics sur les détails d'erreur
+document.addEventListener('click', function(event) {
+    if (event.target.closest('details')) {
+        event.stopPropagation();
+    }
+});
+
+// Mise en surbrillance et scroll vers l'élément ciblé
+document.addEventListener('DOMContentLoaded', function() {
+    // Vérifier s'il y a un hash dans l'URL
+    if (window.location.hash) {
+        const targetId = window.location.hash.substring(1); // Enlever le #
+        const targetElement = document.getElementById(targetId);
+        
+        console.log('Hash détecté:', window.location.hash);
+        console.log('ID ciblé:', targetId);
+        console.log('Élément trouvé:', targetElement);
+        
+        if (targetElement) {
+            // Ajouter une classe de surbrillance immédiatement
+            targetElement.classList.add('test-highlight');
+            targetElement.style.backgroundColor = '#fef3c7';
+            targetElement.style.border = '2px solid #f59e0b';
+            targetElement.style.borderLeft = '6px solid #d97706';
+            targetElement.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.5)';
+            
+            console.log('Styles appliqués à l\'élément');
+            
+            // Scroll vers l'élément avec un petit délai pour s'assurer que la page est chargée
+            setTimeout(() => {
+                targetElement.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+                
+                console.log('Scroll effectué vers l\'élément');
+                
+                // Effet de pulse pour attirer l'attention
+                setTimeout(() => {
+                    targetElement.classList.add('highlight-pulse');
+                    console.log('Animation pulse ajoutée');
+                }, 300);
+                
+                // Retirer l'animation de pulse après 3 secondes
+                setTimeout(() => {
+                    targetElement.classList.remove('highlight-pulse');
+                    console.log('Animation pulse retirée');
+                }, 3300);
+                
+                // Retirer la surbrillance après 10 secondes
+                setTimeout(() => {
+                    targetElement.classList.remove('test-highlight');
+                    targetElement.style.backgroundColor = '';
+                    targetElement.style.border = '';
+                    targetElement.style.borderLeft = '';
+                    targetElement.style.boxShadow = '';
+                    console.log('Surbrillance retirée');
+                }, 10000);
+                
+            }, 100);
+        } else {
+            console.log('Élément non trouvé pour l\'ID:', targetId);
+        }
+    } else {
+        console.log('Aucun hash dans l\'URL');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,256 @@
+{% extends "base.html" %} {% block title %}Récupération depuis CI - {{
+project.name }}{% endblock %} {% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-6">
+        Récupération automatique depuis CI
+      </h1>
+
+      <div class="mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">
+          Projet: {{ project.name }}
+        </h2>
+        <div class="flex items-center space-x-2">
+          <span class="text-sm text-gray-600">Configuration CI:</span>
+          <span
+            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+          >
+            {{ ci_provider|title }}
+          </span>
+        </div>
+
+        {% if ci_provider == 'gitlab' %}
+        <div class="mt-3 text-sm text-gray-600">
+          <p><strong>GitLab:</strong> {{ ci_config.gitlab_url }}</p>
+          <p><strong>Projet ID:</strong> {{ ci_config.project_id }}</p>
+          <p><strong>Job:</strong> {{ ci_config.job_name }}</p>
+          <p><strong>Fichier:</strong> {{ ci_config.artifact_path }}</p>
+        </div>
+        {% elif ci_provider == 'github' %}
+        <div class="mt-3 text-sm text-gray-600">
+          <p><strong>Repository:</strong> {{ ci_config.repository }}</p>
+          <p><strong>Workflow:</strong> {{ ci_config.workflow_name }}</p>
+          <p><strong>Artifact:</strong> {{ ci_config.artifact_name }}</p>
+          <p><strong>Fichier JSON:</strong> {{ ci_config.json_filename }}</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Test de connexion -->
+      <div class="mb-6">
+        <button
+          id="test-connection"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            ></path>
+          </svg>
+          Tester la connexion
+        </button>
+        <div id="connection-status" class="mt-2"></div>
+      </div>
+
+      <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <div>
+          <label
+            for="fetch-option"
+            class="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Option de récupération
+          </label>
+          <div class="space-y-3">
+            <label class="flex items-center">
+              <input
+                type="radio"
+                name="fetch_option"
+                value="latest"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                checked
+              />
+              <span class="ml-2 text-sm text-gray-700"
+                >Récupérer le dernier job réussi</span
+              >
+            </label>
+            <label class="flex items-center">
+              <input
+                type="radio"
+                name="fetch_option"
+                value="specific"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+              />
+              <span class="ml-2 text-sm text-gray-700"
+                >Spécifier un job ID</span
+              >
+            </label>
+          </div>
+        </div>
+
+        <div id="branch-section">
+          <label for="branch" class="block text-sm font-medium text-gray-700">
+            Branche
+          </label>
+          <input
+            type="text"
+            id="branch"
+            name="branch"
+            value="main"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="main"
+          />
+          <p class="mt-1 text-xs text-gray-500">
+            Branche pour récupérer le dernier job réussi
+          </p>
+        </div>
+
+        <div id="job-id-section" class="hidden">
+          <label for="job_id" class="block text-sm font-medium text-gray-700">
+            {% if ci_provider == 'gitlab' %}Job ID GitLab{% else %}Run ID
+            GitHub{% endif %}
+          </label>
+          <input
+            type="text"
+            id="job_id"
+            name="job_id"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="{% if ci_provider == 'gitlab' %}ID du job GitLab{% else %}ID du run GitHub Actions{% endif %}"
+          />
+          <p class="mt-1 text-xs text-gray-500">
+            {% if ci_provider == 'gitlab' %} ID numérique du job GitLab (visible
+            dans l'URL du job) {% else %} ID numérique du run GitHub Actions
+            (visible dans l'URL du run) {% endif %}
+          </p>
+        </div>
+
+        <div class="flex space-x-3">
+          <button
+            type="submit"
+            class="flex-1 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+              ></path>
+            </svg>
+            Récupérer les résultats
+          </button>
+
+          <a
+            href="{% url 'upload_json' %}"
+            class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Annuler
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const fetchOptions = document.querySelectorAll(
+      'input[name="fetch_option"]'
+    );
+    const branchSection = document.getElementById("branch-section");
+    const jobIdSection = document.getElementById("job-id-section");
+    const testConnectionBtn = document.getElementById("test-connection");
+    const connectionStatus = document.getElementById("connection-status");
+
+    // Gestion du changement d'option
+    fetchOptions.forEach((radio) => {
+      radio.addEventListener("change", function () {
+        if (this.value === "latest") {
+          branchSection.classList.remove("hidden");
+          jobIdSection.classList.add("hidden");
+          document.getElementById("job_id").required = false;
+        } else {
+          branchSection.classList.add("hidden");
+          jobIdSection.classList.remove("hidden");
+          document.getElementById("job_id").required = true;
+        }
+      });
+    });
+
+    // Test de connexion
+    testConnectionBtn.addEventListener("click", function () {
+      const branch = document.getElementById("branch").value || "main";
+
+      // Affichage du loading
+      connectionStatus.innerHTML = `
+            <div class="flex items-center text-sm text-gray-600">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Test de connexion en cours...
+            </div>
+        `;
+
+      fetch(
+        `{% url 'ci_status_check' project.id %}?branch=${encodeURIComponent(
+          branch
+        )}`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          let statusClass, icon;
+
+          if (data.status === "success") {
+            statusClass = "text-green-600 bg-green-50 border-green-200";
+            icon = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>`;
+          } else if (data.status === "warning") {
+            statusClass = "text-yellow-600 bg-yellow-50 border-yellow-200";
+            icon = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.732 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>`;
+          } else {
+            statusClass = "text-red-600 bg-red-50 border-red-200";
+            icon = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>`;
+          }
+
+          connectionStatus.innerHTML = `
+                    <div class="flex items-center px-3 py-2 rounded-md border text-sm ${statusClass}">
+                        ${icon}
+                        ${data.message}
+                    </div>
+                `;
+        })
+        .catch((error) => {
+          connectionStatus.innerHTML = `
+                    <div class="flex items-center px-3 py-2 rounded-md border text-sm text-red-600 bg-red-50 border-red-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Erreur de connexion: ${error.message}
+                    </div>
+                `;
+        });
+    });
+  });
+</script>
+{% endblock %}

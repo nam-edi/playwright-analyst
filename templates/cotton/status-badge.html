@@ -1,0 +1,11 @@
+{% load test_filters %} {% with status_config=status|get_status_config %}
+<span
+  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+  style="background-color: {{ status_config.color }}20; color: {{ status_config.color }};"
+>
+  <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+    {{ status_config.icon|safe }}
+  </svg>
+  {{ status_config.label }}
+</span>
+{% endwith %}

@@ -1,0 +1,103 @@
+<header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 justify-between items-center">
+            <!-- Logo/Brand -->
+            <div class="flex items-center">
+                <h1 class="text-xl font-bold text-gray-900">
+                    <a href="{% url 'home' %}" class="hover:text-primary-600 transition-colors">
+                        🎭 Playwright Dashboard
+                    </a>
+                </h1>
+            </div>
+
+            <!-- Navigation Center -->
+            <nav class="hidden md:flex space-x-8">
+                <a href="{% url 'home' %}" 
+                   class="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                    Dashboard
+                </a>
+                <a href="{% url 'tests_list' %}" 
+                   class="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                    Tests
+                </a>
+                <a href="{% url 'executions_list' %}" 
+                   class="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                    Exécutions
+                </a>
+            </nav>
+
+            <!-- Project Selector -->
+            <div class="flex items-center space-x-4">
+                <!-- Bouton d'import -->
+                <a href="{% url 'upload_json' %}" 
+                   class="inline-flex items-center px-3 py-2 border border-primary-600 rounded-md text-sm font-medium text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    Importer JSON
+                </a>
+
+                <div class="relative">
+                    <label for="project-select" class="sr-only">Sélectionner un projet</label>
+                    <select 
+                        id="project-select" 
+                        name="project"
+                        class="block w-54 pl-3 pr-10 py-2 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        hx-get="{% url 'select_project' %}"
+                        hx-trigger="change"
+                        hx-target="body"
+                        hx-swap="none"
+                        onchange="setProject(this.value)">
+                        
+                        <option value="">Sélectionner un projet...</option>
+                        {% for project in projects %}
+                            <option value="{{ project.id }}" 
+                                    {% if project.id == selected_project.id %}selected{% endif %}>
+                                {{ project.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    
+                    
+                </div>
+
+                <!-- Mobile menu button -->
+                <button type="button" class="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<script>
+function setProject(projectId) {
+    if (projectId) {
+        // Stocker le projet sélectionné dans le localStorage
+        localStorage.setItem('selectedProject', projectId);
+        
+        // Envoyer la requête HTMX pour définir le projet en session
+        htmx.ajax('POST', '{% url "select_project" %}', {
+            values: { project_id: projectId },
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+            }
+        }).then(() => {
+            // Recharger la page pour appliquer le nouveau contexte
+            window.location.reload();
+        });
+    }
+}
+
+// Restaurer le projet sélectionné au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    const savedProject = localStorage.getItem('selectedProject');
+    const selectElement = document.getElementById('project-select');
+    
+    if (savedProject && selectElement && !selectElement.value) {
+        selectElement.value = savedProject;
+    }
+});
+</script>

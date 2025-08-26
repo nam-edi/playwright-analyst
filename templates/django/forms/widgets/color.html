@@ -1,0 +1,11 @@
+{% load widget_tweaks %}
+<div class="color-picker-container">
+  <input type="{{ widget.input_type }}" name="{{ widget.name }}"{% if
+  widget.value != None %} value="{{ widget.value|stringformat:"s" }}"{% endif
+  %}{% include "django/forms/widgets/attrs.html" %}> {% if widget.value %}
+  <span
+    class="color-preview"
+    style="background-color: {{ widget.value }};"
+  ></span>
+  {% endif %}
+</div>
