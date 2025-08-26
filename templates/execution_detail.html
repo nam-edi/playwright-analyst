@@ -39,7 +39,7 @@
             </p>
             
             <!-- Informations sur l'exécution -->
-            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white p-4 rounded-lg shadow">
                     <h3 class="text-sm font-medium text-gray-500">Durée totale</h3>
                     <p class="mt-1 text-xl font-semibold text-gray-900">{{ execution.duration|floatformat:0 }}ms</p>
@@ -52,6 +52,24 @@
                 <div class="bg-white p-4 rounded-lg shadow">
                     <h3 class="text-sm font-medium text-gray-500">Branche Git</h3>
                     <p class="mt-1 text-xl font-semibold text-gray-900">{{ execution.git_branch }}</p>
+                </div>
+                {% endif %}
+                {% if execution.ci_build_href %}
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-gray-500">Build CI</h3>
+                    <div class="mt-1">
+                        <a
+                            href="{{ execution.ci_build_href }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center text-lg font-semibold text-purple-700 hover:text-purple-900 transition-colors"
+                        >
+                            Voir le build
+                            <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                        </a>
+                    </div>
                 </div>
                 {% endif %}
             </div>

@@ -1,0 +1,198 @@
+{% extends "admin/change_list.html" %} {% load static %} {% block content_title
+%}
+<h1>Tags - PW Analyst</h1>
+<div class="tags-summary">
+  <p>Gérez les tags pour organiser et catégoriser vos tests Playwright</p>
+</div>
+{% endblock %} {% block result_list %}
+<div class="tags-actions">
+  <a href="{% url 'admin:core_tag_add' %}" class="btn btn-primary">
+    <span class="icon">🏷️</span>
+    Ajouter un nouveau tag
+  </a>
+</div>
+
+{{ block.super }} {% endblock %} {% block extrahead %} {{ block.super }}
+<style>
+  .tags-summary {
+    background: var(--body-quiet-color);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+
+  .tags-summary p {
+    margin: 0;
+    color: var(--body-fg);
+    font-style: italic;
+  }
+
+  .tags-actions {
+    margin-bottom: 1rem;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: var(--primary-fg);
+    border: 1px solid var(--primary);
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-fg);
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .icon {
+    font-size: 1.25rem;
+  }
+
+  /* Enhanced tag display in table */
+  .admin-tag-color {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 20px;
+    background-color: #6c6868;
+    font-weight: 500;
+    color: var(--body-fg);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    position: relative;
+    min-height: 2rem;
+  }
+
+  .admin-tag-color-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--body-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+  }
+
+  /* Table styling amélioré */
+  .results table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .results th {
+    font-weight: 600;
+    padding: 1rem 0.75rem;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+
+  .results td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+    transition: all 0.2s ease;
+  }
+
+  .results tbody tr {
+    transition: all 0.2s ease;
+  }
+
+  .results tbody tr:hover {
+    transform: translateY(-1px);
+  }
+
+  /* Amélioration spécifique pour les tags colorés au survol */
+  .results tbody tr:hover .admin-tag-color {
+    transform: scale(1.05);
+  }
+
+  /* Style pour les noms de tags */
+  .results .field-name a {
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+    display: inline-block;
+    min-width: 120px;
+  }
+
+  .results .field-name a:hover {
+    background: var(--primary);
+    color: var(--primary-fg);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+
+  /* Amélioration pour la colonne des couleurs */
+  .results .field-color {
+    width: 200px;
+    text-align: center;
+  }
+
+  /* Amélioration pour la colonne des noms */
+  .results .field-name {
+    width: 250px;
+    text-align: left;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .tags-actions {
+      text-align: center;
+    }
+
+    .results th,
+    .results td {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .admin-tag-color {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .admin-tag-color-dot {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  /* Animation pour le chargement */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .results tbody tr {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  /* Accessibilité */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+{% endblock %}

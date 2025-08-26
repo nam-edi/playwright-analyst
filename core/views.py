@@ -13,10 +13,11 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.utils import timezone
 import json
 import tempfile
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils.dateparse import parse_datetime
 from .models import Project, Test, TestExecution, TestResult, Tag
 
@@ -222,6 +223,48 @@ def executions_list(request):
     # Récupérer les exécutions du projet sélectionné, triées par date décroissante
     executions = TestExecution.objects.filter(project=selected_project).order_by('-start_time')
     
+    # Filtres par date
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    date_preset = request.GET.get('date_preset')
+    
+    # Appliquer les filtres de date prédéfinis
+    now = timezone.now()
+    if date_preset == 'current_week':
+        # Début de la semaine (lundi)
+        start_of_week = now - timedelta(days=now.weekday())
+        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+        executions = executions.filter(start_time__gte=start_of_week)
+        date_from = start_of_week.strftime('%Y-%m-%d')
+        date_to = now.strftime('%Y-%m-%d')
+    elif date_preset == 'current_month':
+        # Début du mois
+        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        executions = executions.filter(start_time__gte=start_of_month)
+        date_from = start_of_month.strftime('%Y-%m-%d')
+        date_to = now.strftime('%Y-%m-%d')
+    elif date_from or date_to:
+        # Filtres de date personnalisés
+        if date_from:
+            try:
+                date_from_parsed = datetime.strptime(date_from, '%Y-%m-%d')
+                date_from_parsed = timezone.make_aware(date_from_parsed)
+                executions = executions.filter(start_time__gte=date_from_parsed)
+            except ValueError:
+                messages.error(request, 'Format de date de début invalide.')
+                date_from = None
+        
+        if date_to:
+            try:
+                date_to_parsed = datetime.strptime(date_to, '%Y-%m-%d')
+                # Ajouter 23:59:59 pour inclure toute la journée
+                date_to_parsed = date_to_parsed.replace(hour=23, minute=59, second=59)
+                date_to_parsed = timezone.make_aware(date_to_parsed)
+                executions = executions.filter(start_time__lte=date_to_parsed)
+            except ValueError:
+                messages.error(request, 'Format de date de fin invalide.')
+                date_to = None
+    
     # Ajouter les statistiques pour chaque exécution
     executions_with_stats = []
     for execution in executions:
@@ -252,6 +295,9 @@ def executions_list(request):
         'projects': projects,
         'page_obj': page_obj,
         'executions_with_stats': page_obj,
+        'date_from': date_from,
+        'date_to': date_to,
+        'date_preset': date_preset,
     }
     
     return render(request, 'executions_list.html', context)

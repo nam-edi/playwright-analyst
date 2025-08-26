@@ -1,4 +1,5 @@
 {% load test_filters %}
+<c-vars test />
 
 <div
   class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
@@ -72,13 +73,20 @@
   </div>
 
   <!-- Erreur si présente -->
-  {% if latest_result.errors %}
-  <div class="bg-red-50 border border-red-200 rounded p-2 mb-3">
-    <div class="text-xs text-red-600 font-medium mb-1">Dernière erreur:</div>
-    <div class="text-xs text-red-700">
-      {% for error in latest_result.errors|slice:":1" %} {{
-      error.message|default:"Erreur inconnue" }} {% endfor %}
-    </div>
+  {% if latest_result.errors and latest_result.status != 'passed' %}
+  <div class="mb-3" onclick="event.stopPropagation()">
+    <details class="group">
+      <summary class="cursor-pointer text-xs text-red-600 hover:text-red-800">
+        Voir la dernière erreur →
+      </summary>
+      <div class="mt-2 p-3 bg-red-50 rounded border-l-4 border-red-400">
+        {% for error in latest_result.errors %}
+        <pre class="text-xs text-red-700 whitespace-pre-wrap">
+{{ error.message|default:error }}</pre
+        >
+        {% endfor %}
+      </div>
+    </details>
   </div>
   {% endif %} {% endif %} {% endwith %}
 

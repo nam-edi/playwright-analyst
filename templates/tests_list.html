@@ -52,8 +52,9 @@ selected_project.name }} | Playwright Analyst {% endblock %} {% block content %}
   <div id="tests-container" class="flex-1">
     {% if page_obj %}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-      {% for test in page_obj %} {% include 'cotton/test-card.html' %} {% empty
-      %}
+      {% for test in page_obj %}
+      <c-test-card :test="test" />
+      {% empty %}
       <div class="col-span-2 text-center py-12">
         <svg
           class="mx-auto h-12 w-12 text-gray-400"
@@ -179,4 +180,48 @@ selected_project.name }} | Playwright Analyst {% endblock %} {% block content %}
     {% endif %}
   </div>
 </div>
+
+<script>
+  function openTestPanel() {
+    const panel = document.getElementById("test-detail-panel");
+    const overlay = document.getElementById("panel-overlay");
+
+    // Afficher le panneau et l'overlay
+    panel.style.display = "block";
+    overlay.classList.remove("hidden");
+
+    // Petit délai pour permettre l'affichage, puis ajouter la classe pour l'animation
+    setTimeout(() => {
+      panel.classList.remove("translate-x-full");
+    }, 10);
+  }
+
+  function closeTestPanel() {
+    const panel = document.getElementById("test-detail-panel");
+    const overlay = document.getElementById("panel-overlay");
+
+    // Ajouter la classe pour l'animation de fermeture
+    panel.classList.add("translate-x-full");
+
+    // Masquer l'overlay et le panneau après l'animation
+    setTimeout(() => {
+      panel.style.display = "none";
+      overlay.classList.add("hidden");
+    }, 300);
+  }
+
+  // Fermer le panneau avec la touche Escape
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      closeTestPanel();
+    }
+  });
+
+  // Empêcher la propagation des clics sur les détails d'erreur
+  document.addEventListener("click", function (event) {
+    if (event.target.closest("details")) {
+      event.stopPropagation();
+    }
+  });
+</script>
 {% endblock %}
