@@ -1,0 +1,216 @@
+{% load test_filters %}
+
+{% if total_count > 0 %}
+  {% widthratio pass_count total_count 100 as success_rate %}
+  {% if fail_count == 0 %}
+    <!-- 100% de réussite (aucun échec) - VERT -->
+    <li class="rounded-lg border-l-4 border-green-400 bg-white shadow-sm hover:shadow-md hover:bg-green-50 transition-all duration-200 transform hover:-translate-y-1">
+  {% else %}
+    <!-- Calcul manuel: si pass_count * 10 >= total_count * 9, alors >= 90% -->
+    {% widthratio pass_count 1 10 as pass_times_10 %}
+    {% widthratio total_count 1 9 as total_times_9 %}
+    {% if pass_times_10 >= total_times_9 %}
+      <!-- 90-99% de réussite - ORANGE -->
+      <li class="rounded-lg border-l-4 border-orange-400 bg-white shadow-sm hover:shadow-md hover:bg-orange-50 transition-all duration-200 transform hover:-translate-y-1">
+    {% else %}
+      <!-- < 90% de réussite - ROUGE -->
+      <li class="rounded-lg border-l-4 border-red-400 bg-white shadow-sm hover:shadow-md hover:bg-red-50 transition-all duration-200 transform hover:-translate-y-1">
+    {% endif %}
+  {% endif %}
+{% else %}
+  <!-- Pas de tests - GRIS -->
+  <li class="rounded-lg border-l-4 border-gray-300 bg-white shadow-sm hover:shadow-md hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-1">
+{% endif %}
+  <div class="px-6 py-5">
+    <div class="flex items-center justify-between">
+    <div class="flex-1 min-w-0">
+      <!-- En-tête de l'exécution -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center space-x-3">
+          <div>
+            <a href="{% url 'execution_detail' execution.id %}" class="block group">
+              <p class="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                {{ execution.start_time|date:"d/m/Y à H:i" }}
+              </p>
+            </a>
+            <div class="mt-2 flex items-center space-x-3">
+              {% if execution.git_commit_short_hash %}
+              <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-mono bg-gray-100 text-gray-700 border">
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                {{ execution.git_commit_short_hash }}
+              </span>
+              {% endif %}
+              {% if execution.git_branch %}
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                🌿 {{ execution.git_branch }}
+              </span>
+              {% endif %}
+              {% if execution.ci_build_href %}
+              <a
+                href="{{ execution.ci_build_href }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors border border-purple-200"
+              >
+                🔗 Build CI
+                <svg class="ml-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Durée et informations techniques -->
+        <div class="text-right bg-gray-50 rounded-lg p-3 border">
+          <div class="flex flex-col space-y-1">
+            <div class="flex items-center justify-end space-x-2">
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span class="text-sm font-medium text-gray-900">
+                {{ execution.duration|floatformat:0 }}ms
+              </span>
+            </div>
+            <div class="flex items-center justify-end space-x-2">
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+              </svg>
+              <span class="text-sm text-gray-600">
+                {{ execution.workers }} worker{{ execution.workers|pluralize }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistiques des tests -->
+      <a href="{% url 'execution_detail' execution.id %}" class="block group">
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4 group-hover:from-blue-50 group-hover:to-blue-100 transition-all duration-200">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-semibold text-gray-700 group-hover:text-blue-700">Résultats des tests</h4>
+            <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </div>
+          
+          <div class="grid grid-cols-4 gap-4 mb-4">
+            <!-- PASS -->
+            <div class="text-center bg-white rounded-lg p-3 shadow-sm border border-green-200">
+              <div class="flex items-center justify-center mb-2">
+                <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                <span class="text-xs font-semibold text-gray-700">PASS</span>
+              </div>
+              <span class="text-lg font-bold text-green-700">{{ pass_count }}</span>
+            </div>
+
+            <!-- FAIL -->
+            <div class="text-center bg-white rounded-lg p-3 shadow-sm border border-red-200">
+              <div class="flex items-center justify-center mb-2">
+                <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                <span class="text-xs font-semibold text-gray-700">FAIL</span>
+              </div>
+              <span class="text-lg font-bold text-red-700">{{ fail_count }}</span>
+            </div>
+
+            <!-- SKIP -->
+            <div class="text-center bg-white rounded-lg p-3 shadow-sm border border-yellow-200">
+              <div class="flex items-center justify-center mb-2">
+                <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                <span class="text-xs font-semibold text-gray-700">SKIP</span>
+              </div>
+              <span class="text-lg font-bold text-yellow-700">{{ skip_count }}</span>
+            </div>
+
+            <!-- Total -->
+            <div class="text-center bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+              <div class="flex items-center justify-center mb-2">
+                <span class="text-xs font-semibold text-gray-700">TOTAL</span>
+              </div>
+              <span class="text-lg font-bold text-gray-900">{{ total_count }}</span>
+            </div>
+          </div>
+
+          <!-- Barre de progression simple -->
+          <div class="space-y-2">
+            <div class="flex justify-between text-xs text-gray-600">
+              <span>Progression</span>
+              <span>{{ total_count }} test{{ total_count|pluralize }}</span>
+            </div>
+            <div class="relative">
+              {% if total_count > 0 %}
+                {% widthratio pass_count total_count 100 as success_rate %}
+                <!-- Barre de progression avec nouvelle logique de couleur -->
+                <div class="bg-gray-200 rounded-full overflow-hidden h-3 w-full shadow-inner">
+                  {% if fail_count == 0 %}
+                    <!-- 100% de réussite (aucun échec) - VERT -->
+                    <div class="h-full bg-green-500 transition-all duration-500" style="width: 100%"></div>
+                  {% else %}
+                    <!-- Calcul manuel: si pass_count * 10 >= total_count * 9, alors >= 90% -->
+                    {% widthratio pass_count 1 10 as pass_times_10 %}
+                    {% widthratio total_count 1 9 as total_times_9 %}
+                    {% if pass_times_10 >= total_times_9 %}
+                      <!-- 90-99% de réussite - ORANGE -->
+                      <div class="h-full bg-orange-500 transition-all duration-500" style="width: {{ success_rate }}%"></div>
+                    {% else %}
+                      <!-- < 90% de réussite - ROUGE -->
+                      <div class="h-full bg-red-500 transition-all duration-500" style="width: {{ success_rate }}%"></div>
+                    {% endif %}
+                  {% endif %}
+                </div>
+                <!-- Étiquette de pourcentage -->
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-xs font-bold text-white drop-shadow-lg">
+                    {% if fail_count == 0 %}100{% else %}{{ success_rate }}{% endif %}% réussite
+                  </span>
+                </div>
+              {% else %}
+                <div class="bg-gray-200 rounded-full overflow-hidden h-3 w-full shadow-inner">
+                  <div class="h-full bg-gray-400 w-full"></div>
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-xs font-bold text-white drop-shadow-lg">
+                    Aucun test
+                  </span>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Message de commit si disponible -->
+      {% if execution.git_commit_subject %}
+      <div class="mt-4 border-t pt-4">
+        <a href="{% url 'execution_detail' execution.id %}" class="block group">
+          <div class="flex items-start space-x-3">
+            <div class="flex-shrink-0">
+              <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-gray-700 italic group-hover:text-gray-900 transition-colors leading-relaxed">
+                "{{ execution.git_commit_subject|truncatechars:100 }}"
+              </p>
+              {% if execution.git_author_name %}
+              <div class="mt-2 flex items-center space-x-2">
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-xs text-gray-500 font-medium">
+                  {{ execution.git_author_name }}
+                </span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</li>

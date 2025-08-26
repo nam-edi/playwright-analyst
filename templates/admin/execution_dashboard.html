@@ -1,0 +1,202 @@
+{% extends "admin/change_list.html" %} {% load static %} {% block content_title
+%}
+<h1>Tableau de bord des Exécutions - PW Analyst</h1>
+{% endblock %} {% block result_list %}
+<div class="dashboard-metrics">
+  <div class="metric-card">
+    <h3>{{ total_executions }}</h3>
+    <p>Exécutions totales</p>
+    <div class="metric-icon">📊</div>
+  </div>
+  <div class="metric-card">
+    <h3>{{ avg_success_rate|floatformat:1 }}%</h3>
+    <p>Taux de réussite moyen</p>
+    <div class="metric-icon">✅</div>
+  </div>
+  <div class="metric-card">
+    <h3>{{ executions_trend|length }}</h3>
+    <p>Jours d'activité</p>
+    <div class="metric-icon">📅</div>
+  </div>
+</div>
+
+<div class="dashboard-charts">
+  <div class="chart-container">
+    <div class="chart-header">
+      <h3>Tendances des 30 derniers jours</h3>
+      <div class="chart-info">
+        <span class="info-item">
+          <span class="info-label">Période:</span>
+          <span class="info-value">30 derniers jours</span>
+        </span>
+        <span class="info-item">
+          <span class="info-label">Dernière mise à jour:</span>
+          <span class="info-value">{{ "now"|date:"d/m/Y H:i" }}</span>
+        </span>
+      </div>
+    </div>
+    <canvas id="performanceChart" width="400" height="50"></canvas>
+  </div>
+</div>
+
+<div class="dashboard-actions">
+  <a
+    href="{% url 'admin:core_testresult_changelist' %}?status__exact=failed"
+    class="action-button failed"
+  >
+    Voir les échecs récents
+  </a>
+  <a
+    href="{% url 'admin:core_testresult_changelist' %}?status__exact=flaky"
+    class="action-button flaky"
+  >
+    Tests instables
+  </a>
+  <a href="{% url 'admin:core_test_changelist' %}" class="action-button tests">
+    Tous les tests
+  </a>
+</div>
+
+{{ block.super }} {% endblock %} {% block extrahead %} {{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}" />
+<style>
+  /* Force horizontal layout for metrics */
+  .dashboard-metrics {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1.5rem !important;
+    margin-bottom: 2rem;
+    padding: 1rem 0;
+    width: 100% !important;
+  }
+
+  /* Styles pour les boutons d'action - fond bleu et texte blanc */
+  .dashboard-actions .action-button {
+    background-color: #3b82f6 !important;
+    color: white !important;
+    border: 1px solid #2563eb !important;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-block;
+    margin-right: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .dashboard-actions .action-button:hover {
+    background-color: #2563eb !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    text-decoration: none;
+  }
+
+  .dashboard-actions .action-button:visited {
+    color: white !important;
+  }
+
+  @media (max-width: 768px) {
+    .dashboard-metrics {
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 0.75rem !important;
+    }
+    .metric-card {
+      padding: 1rem !important;
+    }
+    .metric-card h3 {
+      font-size: 1.75rem !important;
+    }
+    .metric-card p {
+      font-size: 0.875rem !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dashboard-metrics {
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 0.5rem !important;
+    }
+    .metric-card {
+      padding: 0.75rem !important;
+    }
+    .metric-card h3 {
+      font-size: 1.5rem !important;
+    }
+    .metric-card p {
+      font-size: 0.75rem !important;
+    }
+
+    .dashboard-actions .action-button {
+      display: block;
+      margin-right: 0;
+      margin-bottom: 0.75rem;
+      text-align: center;
+    }
+  }
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      const trendData = {{ executions_trend|safe }};
+
+      if (trendData && trendData.length > 0) {
+          const chart = new Chart(ctx, {
+              type: 'line',
+              data: {
+                  labels: trendData.map(item => new Date(item.start_time__date).toLocaleDateString('fr-FR')),
+                  datasets: [{
+                      label: 'Taux de réussite (%)',
+                      data: trendData.map(item => item.avg_success || 0),
+                      borderColor: '#10b981',
+                      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                      tension: 0.1,
+                      fill: true
+                  }, {
+                      label: 'Nombre d\'exécutions',
+                      data: trendData.map(item => item.count),
+                      borderColor: '#3b82f6',
+                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                      tension: 0.1,
+                      yAxisID: 'y1'
+                  }]
+              },
+              options: {
+                  responsive: true,
+                  interaction: {
+                      intersect: false,
+                  },
+                  scales: {
+                      y: {
+                          type: 'linear',
+                          display: true,
+                          position: 'left',
+                          max: 100,
+                          title: {
+                              display: true,
+                              text: 'Taux de réussite (%)'
+                          }
+                      },
+                      y1: {
+                          type: 'linear',
+                          display: true,
+                          position: 'right',
+                          title: {
+                              display: true,
+                              text: 'Nombre d\'exécutions'
+                          },
+                          grid: {
+                              drawOnChartArea: false,
+                          }
+                      }
+                  }
+              }
+          });
+      } else {
+          document.getElementById('performanceChart').innerHTML = '<p class="no-chart-data">Aucune donnée disponible</p>';
+      }
+  });
+</script>
+{% endblock %}

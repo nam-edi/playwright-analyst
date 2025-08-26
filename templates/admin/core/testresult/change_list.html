@@ -1,0 +1,307 @@
+{% extends "admin/change_list.html" %} {% load static %} {% block content_title
+%}
+<h1>
+  Résultats de Tests - PW Analyst - {{ cl.result_count }} résultat{{
+  cl.result_count|pluralize }}
+</h1>
+
+{% endblock %} {% block result_list %}
+<div class="test-results-filters">
+  <div class="quick-filters">
+    <a href="?status__exact=passed" class="filter-btn filter-passed">
+      <span class="filter-icon">✅</span>
+      Tests réussis
+    </a>
+    <a href="?status__exact=failed" class="filter-btn filter-failed">
+      <span class="filter-icon">❌</span>
+      Tests échoués
+    </a>
+    <a href="?status__exact=flaky" class="filter-btn filter-flaky">
+      <span class="filter-icon">⚠️</span>
+      Tests instables
+    </a>
+    <a href="?status__exact=skipped" class="filter-btn filter-skipped">
+      <span class="filter-icon">⏭️</span>
+      Tests ignorés
+    </a>
+    <a href="?" class="filter-btn filter-all">
+      <span class="filter-icon">📊</span>
+      Tous
+    </a>
+  </div>
+</div>
+
+{{ block.super }} {% endblock %} {% block extrahead %} {{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/test_results.css' %}" />
+
+<style>
+  /* =========================
+           EN-TÊTE ET RÉSUMÉ
+           ========================= */
+  .test-results-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .test-results-header h1 {
+    color: var(--body-fg);
+    margin-bottom: 1rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+
+  .test-results-summary {
+    background: var(--body-quiet-color);
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+  }
+
+  .summary-stats {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .stat-item {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: var(--body-bg);
+    font-size: 0.875rem;
+    color: var(--body-fg);
+    border: 1px solid var(--border-color);
+  }
+
+  .stat-item strong {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* =========================
+           FILTRES RAPIDES
+           ========================= */
+  .test-results-filters {
+    margin-bottom: 1.5rem;
+  }
+
+  .quick-filters {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+    background: var(--body-quiet-color);
+    color: var(--body-fg);
+  }
+
+  /* Couleurs spécifiques pour chaque type de filtre */
+  .filter-passed {
+    background: #22c55e !important;
+    border-color: #22c55e !important;
+    color: white !important;
+  }
+
+  .filter-passed:hover {
+    background: #16a34a !important;
+    border-color: #16a34a !important;
+    color: white !important;
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .filter-failed {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: white !important;
+  }
+
+  .filter-failed:hover {
+    background: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: white !important;
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .filter-flaky {
+    background: #f59e0b !important;
+    border-color: #f59e0b !important;
+    color: white !important;
+  }
+
+  .filter-flaky:hover {
+    background: #d97706 !important;
+    border-color: #d97706 !important;
+    color: white !important;
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .filter-skipped {
+    background: #6b7280 !important;
+    border-color: #6b7280 !important;
+    color: white !important;
+  }
+
+  .filter-skipped:hover {
+    background: #4b5563 !important;
+    border-color: #4b5563 !important;
+    color: white !important;
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .filter-all {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: white !important;
+  }
+
+  .filter-all:hover {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: white !important;
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .filter-icon {
+    font-size: 1.1rem;
+    font-weight: normal;
+  }
+
+  /* =========================
+           TABLEAU AMÉLIORÉ
+           ========================= */
+  .results table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--body-bg);
+    width: 100%;
+    border: 1px solid var(--border-color);
+  }
+
+  .results th {
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1.25rem 1rem;
+    border: none;
+    text-align: left;
+  }
+
+  .results td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--hairline-color);
+    vertical-align: middle;
+    transition: all 0.2s ease;
+    background: var(--body-bg);
+    color: var(--body-fg);
+  }
+
+  .results tbody tr {
+    transition: all 0.2s ease;
+  }
+
+  .results tbody tr:hover {
+    transform: translateY(-1px);
+  }
+
+  .results tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* =========================
+           LIENS ET INTERACTIONS
+           ========================= */
+  .results td a {
+    color: var(--link-fg);
+    text-decoration: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .results td a:hover {
+    background: var(--primary);
+    color: var(--primary-fg);
+    text-decoration: none;
+    transform: scale(1.02);
+  }
+
+  /* =========================
+           RESPONSIVE
+           ========================= */
+  @media (max-width: 768px) {
+    .summary-stats {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .quick-filters {
+      flex-direction: column;
+    }
+
+    .filter-btn {
+      justify-content: center;
+      text-align: center;
+    }
+
+    .results table {
+      font-size: 0.8rem;
+    }
+
+    .results th,
+    .results td {
+      padding: 0.75rem 0.5rem;
+    }
+  }
+
+  /* =========================
+           ANIMATIONS ET ACCESSIBILITÉ
+           ========================= */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .results tbody tr {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+{% endblock %} {% block extrajs %} {{ block.super }}
+<script src="{% static 'admin/js/init.js' %}"></script>
+<script src="{% static 'admin/js/test_results.js' %}"></script>
+{% endblock %}
