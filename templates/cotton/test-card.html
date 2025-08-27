@@ -2,7 +2,7 @@
 <c-vars test />
 
 <div
-  class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+  class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer flex flex-col h-full"
   hx-get="{% url 'test_detail' test.id %}"
   hx-target="#test-detail-panel"
 >
@@ -11,7 +11,14 @@
     <div class="flex-1">
       <h4 class="font-medium text-gray-900 mb-1">{{ test.title }}</h4>
       <p class="text-sm text-gray-600">{{ test.file_path }}:{{ test.line }}</p>
-      <!-- Tags du test (priorité) -->
+      {% if test.story %}
+      <p class="text-xs text-gray-500 mt-1">
+        {{ test.story|linebreaks_simple|safe }}
+      </p>
+      {% endif %}
+    </div>
+    <div class="ml-4 text-right">
+      <!-- Tags du test -->
       {% if test.tags.exists %}
       <div class="mb-3 py-2">
         <div class="flex flex-wrap gap-1">
@@ -20,75 +27,66 @@
           {% endfor %}
         </div>
       </div>
-      {% endif %} {% if test.story %}
-      <p class="text-xs text-gray-500 mt-1">{{ test.story }}</p>
       {% endif %}
     </div>
-    <div class="ml-4 text-right">
-      <!-- Statut basé sur le dernier résultat (optionnel) -->
-      {% with latest_result=test.results.first %} {% if latest_result %}
-      <c-status-badge status="{{ latest_result.status }}" />
-      <div class="text-xs text-gray-500 mt-1">
-        {{ latest_result.start_time|date:"d/m H:i" }}
-      </div>
-      {% else %}
-      <span
-        class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600"
-      >
-        Pas encore exécuté
-      </span>
-      {% endif %} {% endwith %}
-    </div>
   </div>
 
-  <!-- Informations principales du test -->
-  <div class="grid grid-cols-2 gap-4 mb-3 text-sm">
-    <div>
+  <!-- Contenu principal qui grandit pour pousser le footer vers le bas -->
+  <div class="flex-1">
+    <!-- Informations principales du test -->
+    <div class="grid grid-cols-2 gap-4 mb-3 text-sm">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-gray-600">ID Test:</span>
+          <span class="font-medium">{{ test.test_id|default:test.id }}</span>
+        </div>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-gray-600">Exécutions:</span>
+          <span class="font-medium">{{ test.results.count }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jauge des dernières exécutions -->
+    <c-test-execution-gauge :test="test" />
+
+    <!-- Informations optionnelles des résultats -->
+    {% with latest_result=test.results.first %} {% if latest_result %}
+    <!-- Durée moyenne des dernières exécutions réussies -->
+    <div class="mb-3 text-xs">
       <div class="flex items-center gap-2">
-        <span class="text-gray-600">ID Test:</span>
-        <span class="font-medium">{{ test.test_id|default:test.id }}</span>
-      </div>
-    </div>
-    <div>
-      <div class="flex items-center gap-2">
-        <span class="text-gray-600">Exécutions:</span>
-        <span class="font-medium">{{ test.results.count }}</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Jauge des dernières exécutions -->
-  {% include 'cotton/test-execution-gauge.html' %}
-
-  <!-- Informations optionnelles des résultats -->
-  {% with latest_result=test.results.first %} {% if latest_result %}
-  <!-- Durée de la dernière exécution -->
-  <div class="mb-3 text-sm">
-    <div class="flex items-center gap-2">
-      <span class="text-gray-600">Dernière durée:</span>
-      <span class="font-medium"
-        >{{ latest_result.duration|duration_format }}</span
-      >
-    </div>
-  </div>
-
-  <!-- Erreur si présente -->
-  {% if latest_result.errors and latest_result.status != 'passed' %}
-  <div class="mb-3" onclick="event.stopPropagation()">
-    <details class="group">
-      <summary class="cursor-pointer text-xs text-red-600 hover:text-red-800">
-        Voir la dernière erreur →
-      </summary>
-      <div class="mt-2 p-3 bg-red-50 rounded border-l-4 border-red-400">
-        {% for error in latest_result.errors %}
-        <pre class="text-xs text-red-700 whitespace-pre-wrap">
-{{ error.message|default:error }}</pre
+        <span class="text-gray-600"
+          >Durée moyenne (5 derniers tests réussis):</span
         >
-        {% endfor %}
+        {% with avg_duration=test|average_duration_last_passed %} {% if
+        avg_duration %}
+        <span class="font-medium">{{ avg_duration|duration_format }}</span>
+        {% else %}
+        <span class="font-medium text-gray-400">Aucun test réussi</span>
+        {% endif %} {% endwith %}
       </div>
-    </details>
+    </div>
+
+    <!-- Erreur si présente -->
+    {% if latest_result.errors and latest_result.status != 'passed' %}
+    <div class="mb-3" onclick="event.stopPropagation()">
+      <details class="group">
+        <summary class="cursor-pointer text-xs text-red-600 hover:text-red-800">
+          Voir la dernière erreur →
+        </summary>
+        <div class="mt-2 p-3 bg-red-50 rounded border-l-4 border-red-400">
+          {% for error in latest_result.errors %}
+          <pre class="text-xs text-red-700 whitespace-pre-wrap">
+{{ error.message|default:error }}</pre
+          >
+          {% endfor %}
+        </div>
+      </details>
+    </div>
+    {% endif %} {% endif %} {% endwith %}
   </div>
-  {% endif %} {% endif %} {% endwith %}
 
   <!-- Footer -->
   <div

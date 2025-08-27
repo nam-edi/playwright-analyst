@@ -27,6 +27,9 @@ def home(request):
     selected_project = None
     latest_execution = None
     latest_execution_stats = None
+    success_rate_data = []
+    duration_data = []
+    heatmap_data = []
     
     if 'selected_project_id' in request.session:
         try:
@@ -44,6 +47,57 @@ def home(request):
                     'flaky': latest_execution.test_results.filter(status='flaky').count(),
                     'total': latest_execution.test_results.exclude(expected_status='skipped').count(),
                 }
+            
+            # Données pour le graphique d'évolution du taux de réussite (20 dernières exécutions)
+            recent_executions = selected_project.executions.order_by('-start_time')[:20]
+            for execution in recent_executions:
+                total_tests = execution.test_results.exclude(expected_status='skipped').count()
+                passed_tests = execution.test_results.filter(status='passed').count()
+                success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+                success_rate_data.append(round(success_rate, 1))
+            
+            # Données pour le graphique des durées d'exécution (20 dernières exécutions)
+            for execution in recent_executions:
+                duration_data.append(execution.duration)
+            
+            # Données pour la heatmap (mois en cours)
+            from django.utils import timezone
+            from datetime import datetime, timedelta
+            from django.db.models import Count
+            from django.db.models.functions import TruncDate
+            import calendar
+            
+            now = timezone.now()
+            current_year = now.year
+            current_month = now.month
+            
+            # Premier et dernier jour du mois en cours
+            first_day_of_month = datetime(current_year, current_month, 1, tzinfo=now.tzinfo)
+            last_day_of_month = datetime(current_year, current_month, calendar.monthrange(current_year, current_month)[1], 23, 59, 59, tzinfo=now.tzinfo)
+            
+            # Récupérer le nombre d'exécutions par jour pour le mois en cours
+            executions_by_day = selected_project.executions.filter(
+                start_time__gte=first_day_of_month,
+                start_time__lte=last_day_of_month
+            ).extra(
+                select={'day': 'DATE(start_time)'}
+            ).values('day').annotate(
+                count=Count('id')
+            ).order_by('day')
+            
+            # Créer un dictionnaire pour un accès rapide
+            execution_counts = {item['day']: item['count'] for item in executions_by_day}
+            
+            # Générer les données pour tous les jours du mois en cours
+            days_in_month = calendar.monthrange(current_year, current_month)[1]
+            for day in range(1, days_in_month + 1):
+                date = datetime(current_year, current_month, day).date()
+                date_str = date.strftime('%Y-%m-%d')
+                count = execution_counts.get(date_str, 0)
+                heatmap_data.append({
+                    'date': date_str,
+                    'count': count
+                })
                 
         except Project.DoesNotExist:
             del request.session['selected_project_id']
@@ -56,6 +110,9 @@ def home(request):
         'projects': projects,
         'latest_execution': latest_execution,
         'latest_execution_stats': latest_execution_stats,
+        'success_rate_data': success_rate_data,
+        'duration_data': duration_data,
+        'heatmap_data': heatmap_data,
     }
     
     return render(request, 'home.html', context)
@@ -324,10 +381,42 @@ def execution_detail(request, execution_id):
     # Récupérer tous les résultats de tests pour cette exécution
     test_results = TestResult.objects.filter(execution=execution).select_related('test').prefetch_related('test__tags')
     
+    # Ajouter l'information du statut de la dernière exécution pour chaque test
+    test_results_with_previous_status = []
+    for result in test_results:
+        # Récupérer le dernier résultat de ce test (excluant l'exécution courante)
+        previous_result = TestResult.objects.filter(
+            test=result.test,
+            execution__start_time__lt=execution.start_time
+        ).order_by('-execution__start_time').first()
+        
+        # Ajouter l'information au résultat
+        result.previous_status = previous_result.status if previous_result else None
+        result.was_ko_before = previous_result and previous_result.status in ['failed', 'unexpected'] if previous_result else False
+        
+        # Déterminer l'évolution du statut (amélioration, régression, stable)
+        if previous_result:
+            current_is_success = result.status == 'passed'
+            previous_is_success = previous_result.status == 'passed'
+            
+            if current_is_success and not previous_is_success:
+                result.status_evolution = 'improved'  # Amélioration
+            elif not current_is_success and previous_is_success:
+                result.status_evolution = 'regressed'  # Régression
+            else:
+                result.status_evolution = 'stable'  # Stable
+        else:
+            result.status_evolution = 'new'  # Nouveau test
+            
+        test_results_with_previous_status.append(result)
+    
+    test_results = test_results_with_previous_status
+    
     # Filtres
     status_filter = request.GET.get('status', '')
     search = request.GET.get('search', '')
     tag_filter = request.GET.get('tag', '')
+    evolution_filter = request.GET.get('evolution', '')
     sort_by = request.GET.get('sort', 'test_title')  # Par défaut tri par titre du test
     
     # Récupérer tous les tags disponibles pour cette exécution
@@ -338,33 +427,37 @@ def execution_detail(request, execution_id):
     # Appliquer le filtre de statut
     if status_filter:
         if status_filter == 'passed':
-            test_results = test_results.filter(status='passed')
+            test_results = [r for r in test_results if r.status == 'passed']
         elif status_filter == 'failed':
-            test_results = test_results.filter(status__in=['failed', 'unexpected'])
+            test_results = [r for r in test_results if r.status in ['failed', 'unexpected']]
         elif status_filter == 'skipped':
-            test_results = test_results.filter(status='skipped')
+            test_results = [r for r in test_results if r.status == 'skipped']
         elif status_filter == 'flaky':
-            test_results = test_results.filter(status='flaky')
+            test_results = [r for r in test_results if r.status == 'flaky']
     
     # Appliquer le filtre de recherche
     if search:
-        test_results = test_results.filter(test__title__icontains=search)
+        test_results = [r for r in test_results if search.lower() in r.test.title.lower()]
     
     # Appliquer le filtre par tag
     if tag_filter:
-        test_results = test_results.filter(test__tags__name=tag_filter)
+        test_results = [r for r in test_results if r.test.tags.filter(name=tag_filter).exists()]
+    
+    # Appliquer le filtre par évolution
+    if evolution_filter:
+        test_results = [r for r in test_results if hasattr(r, 'status_evolution') and r.status_evolution == evolution_filter]
     
     # Appliquer le tri
     if sort_by == 'duration_asc':
-        test_results = test_results.order_by('duration')
+        test_results = sorted(test_results, key=lambda x: x.duration)
     elif sort_by == 'duration_desc':
-        test_results = test_results.order_by('-duration')
+        test_results = sorted(test_results, key=lambda x: x.duration, reverse=True)
     elif sort_by == 'status':
-        test_results = test_results.order_by('status', 'test__title')
+        test_results = sorted(test_results, key=lambda x: (x.status, x.test.title))
     elif sort_by == 'file_path':
-        test_results = test_results.order_by('test__file_path', 'test__line')
+        test_results = sorted(test_results, key=lambda x: (x.test.file_path, x.test.line))
     else:  # test_title par défaut
-        test_results = test_results.order_by('test__title')
+        test_results = sorted(test_results, key=lambda x: x.test.title)
     
     # Calculer les statistiques globales (exclure les tests avec expected_status='skipped')
     all_results = TestResult.objects.filter(execution=execution)
@@ -375,6 +468,35 @@ def execution_detail(request, execution_id):
         'skipped': all_results.filter(status='skipped').exclude(expected_status='skipped').count(),
         'flaky': all_results.filter(status='flaky').exclude(expected_status='skipped').count(),
     }
+    
+    # Calculer les statistiques d'évolution
+    evolution_stats = {
+        'improved': len([r for r in test_results if hasattr(r, 'status_evolution') and r.status_evolution == 'improved']),
+        'regressed': len([r for r in test_results if hasattr(r, 'status_evolution') and r.status_evolution == 'regressed']),
+        'stable': len([r for r in test_results if hasattr(r, 'status_evolution') and r.status_evolution == 'stable']),
+        'new': len([r for r in test_results if hasattr(r, 'status_evolution') and r.status_evolution == 'new']),
+    }
+    
+    # Calculer la répartition des échecs par tag
+    from django.db.models import Count
+    failed_results = all_results.filter(status__in=['failed', 'unexpected']).exclude(expected_status='skipped')
+    
+    # Récupérer les tags des tests qui ont échoué avec leur nombre d'échecs
+    tag_failure_stats = []
+    for tag in Tag.objects.filter(test__results__in=failed_results).distinct():
+        failed_count = failed_results.filter(test__tags=tag).count()
+        total_count = all_results.filter(test__tags=tag).exclude(expected_status='skipped').count()
+        failure_rate = (failed_count / total_count * 100) if total_count > 0 else 0
+        
+        tag_failure_stats.append({
+            'tag': tag,
+            'failed_count': failed_count,
+            'total_count': total_count,
+            'failure_rate': round(failure_rate, 1)
+        })
+    
+    # Trier par nombre d'échecs décroissant
+    tag_failure_stats.sort(key=lambda x: x['failed_count'], reverse=True)
     
     # Pagination
     paginator = Paginator(test_results, 50)  # 50 résultats par page
@@ -388,9 +510,12 @@ def execution_detail(request, execution_id):
         'page_obj': page_obj,
         'test_results': page_obj,
         'stats': stats,
+        'evolution_stats': evolution_stats,
+        'tag_failure_stats': tag_failure_stats,
         'status_filter': status_filter,
         'search': search,
         'tag_filter': tag_filter,
+        'evolution_filter': evolution_filter,
         'sort_by': sort_by,
         'available_tags': available_tags,
     }

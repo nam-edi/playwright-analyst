@@ -97,7 +97,7 @@ class Command(BaseCommand):
             actual_workers=metadata.get('actualWorkers', 1),
             git_commit_hash=git_commit.get('hash', ''),
             git_commit_short_hash=git_commit.get('shortHash', ''),
-            git_branch=git_commit.get('branch', ''),
+            git_branch=ci.get('branch', ''),
             git_commit_subject=git_commit.get('subject', ''),
             git_author_name=git_commit.get('author', {}).get('name', ''),
             git_author_email=git_commit.get('author', {}).get('email', ''),
