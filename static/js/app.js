@@ -1,8 +1,6 @@
 // Configuration et scripts personnalisés HTMX
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('HTMX et Tailwind chargés avec succès !');
-    
     // Configuration HTMX globale
     if (typeof htmx !== 'undefined') {
         // Configuration des headers CSRF pour Django

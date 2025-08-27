@@ -67,6 +67,36 @@ def duration_format(duration_ms):
     return f"{hours:.1f}h"
 
 @register.filter
+def duration_detailed(duration_ms):
+    """Format duration from milliseconds to detailed format (Xmin Ys Zms)"""
+    if not duration_ms:
+        return "0ms"
+    
+    duration_ms = int(duration_ms)
+    
+    if duration_ms < 1000:
+        return f"{duration_ms}ms"
+    
+    # Calculer les minutes, secondes et millisecondes
+    minutes = duration_ms // 60000  # 60 * 1000 ms
+    remaining_ms = duration_ms % 60000
+    seconds = remaining_ms // 1000
+    milliseconds = remaining_ms % 1000
+    
+    parts = []
+    
+    if minutes > 0:
+        parts.append(f"{minutes}min")
+    
+    if seconds > 0:
+        parts.append(f"{seconds}s")
+    
+    if milliseconds > 0 or not parts:  # Afficher les ms si c'est la seule unité ou s'il y en a
+        parts.append(f"{milliseconds}ms")
+    
+    return " ".join(parts)
+
+@register.filter
 def percentage(value, total):
     """Calculate percentage"""
     if not total or total == 0:
@@ -79,3 +109,33 @@ def split(value, separator):
     if value:
         return value.split(separator)
     return []
+
+@register.filter
+def average_duration_last_passed(test):
+    """Calculate average duration of last 5 passed test executions"""
+    if not test:
+        return None
+    
+    # Récupérer les 5 derniers résultats avec status='passed'
+    passed_results = test.results.filter(status='passed').order_by('-start_time')[:5]
+    
+    if not passed_results:
+        return None
+    
+    # Calculer la durée moyenne
+    total_duration = sum(result.duration for result in passed_results)
+    average = total_duration / len(passed_results)
+    
+    return average
+
+@register.filter
+def linebreaks_simple(value):
+    """Convert line breaks to HTML <br> tags"""
+    if not value:
+        return ""
+    
+    # Remplace les différents types de retour à la ligne par <br>
+    import re
+    # Gère \r\n (Windows), \n (Unix/Linux/Mac), \r (Mac classique)
+    value = re.sub(r'\r\n|\r|\n', '<br>', str(value))
+    return value

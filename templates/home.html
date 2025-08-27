@@ -1,7 +1,6 @@
 {% extends 'base.html' %} {% block title %} Playwright Analyst{% if
 selected_project %} - {{ selected_project.name }}{% endif %} {% endblock %} {%
 block content %}
-<!-- Zone de contenu -->
 <div id="main-content">
   {% if selected_project %}
   <div
@@ -30,7 +29,6 @@ block content %}
       }}
     </p>
 
-    <!-- Statistiques rapides du projet -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
       <div class="bg-blue-50 rounded-lg p-6">
         <div class="text-3xl font-bold text-blue-600">
@@ -62,78 +60,115 @@ block content %}
       </div>
     </div>
 
-    <!-- Bloc Dernière Exécution -->
     {% if latest_execution and latest_execution_stats %}
-    <div class="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h3 class="text-xl font-bold text-gray-900 mb-4">Dernière Exécution</h3>
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Dernière Exécution</h3>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Informations sur l'exécution -->
-        <div>
-          <div class="space-y-3">
-            <div class="flex items-center gap-2">
-              <span class="text-gray-600">Date:</span>
-              <span class="font-medium"
-                >{{ latest_execution.start_time|date:"d/m/Y H:i" }}</span
-              >
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <div class="space-y-3">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-600">Date:</span>
+                <span class="font-medium"
+                  >{{ latest_execution.start_time|date:"d/m/Y H:i" }}</span
+                >
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-gray-600">Durée:</span>
+                <span class="font-medium"
+                  >{{ latest_execution.duration|floatformat:0 }}ms</span
+                >
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-gray-600">Total tests:</span>
+                <span class="font-medium"
+                  >{{ latest_execution_stats.total }}</span
+                >
+              </div>
+              {% if latest_execution.git_branch %}
+              <div class="flex items-center gap-2">
+                <span class="text-gray-600">Branche:</span>
+                <span
+                  class="font-medium font-mono text-sm bg-gray-100 px-2 py-1 rounded"
+                  >{{ latest_execution.git_branch }}</span
+                >
+              </div>
+              {% endif %} {% if latest_execution.git_commit_short_hash %}
+              <div class="flex items-center gap-2">
+                <span class="text-gray-600">Commit:</span>
+                <span
+                  class="font-medium font-mono text-sm bg-gray-100 px-2 py-1 rounded"
+                  >{{ latest_execution.git_commit_short_hash }}</span
+                >
+              </div>
+              {% endif %}
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-gray-600">Durée:</span>
-              <span class="font-medium"
-                >{{ latest_execution.duration|floatformat:0 }}ms</span
-              >
+          </div>
+
+          <div class="flex flex-col items-center">
+            <div class="relative w-48 h-48 mb-4">
+              <canvas id="executionChart" width="192" height="192"></canvas>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-gray-600">Total tests:</span>
-              <span class="font-medium"
-                >{{ latest_execution_stats.total }}</span
-              >
+
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span>Passés: {{ latest_execution_stats.passed }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                <span>Échoués: {{ latest_execution_stats.failed }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                <span>Ignorés: {{ latest_execution_stats.skipped }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
+                <span>Instables: {{ latest_execution_stats.flaky }}</span>
+              </div>
             </div>
-            {% if latest_execution.git_branch %}
-            <div class="flex items-center gap-2">
-              <span class="text-gray-600">Branche:</span>
-              <span
-                class="font-medium font-mono text-sm bg-gray-100 px-2 py-1 rounded"
-                >{{ latest_execution.git_branch }}</span
-              >
-            </div>
-            {% endif %} {% if latest_execution.git_commit_short_hash %}
-            <div class="flex items-center gap-2">
-              <span class="text-gray-600">Commit:</span>
-              <span
-                class="font-medium font-mono text-sm bg-gray-100 px-2 py-1 rounded"
-                >{{ latest_execution.git_commit_short_hash }}</span
-              >
-            </div>
-            {% endif %}
           </div>
         </div>
+      </div>
 
-        <!-- Graphique camembert -->
-        <div class="flex flex-col items-center">
-          <div class="relative w-48 h-48 mb-4">
-            <canvas id="executionChart" width="192" height="192"></canvas>
-          </div>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">
+          Évolution du Taux de Réussite
+        </h3>
+        <div class="relative h-64">
+          <canvas id="successRateChart" class="w-full h-full"></canvas>
+        </div>
+        <div class="mt-2 text-sm text-gray-600 text-center">
+          Dernières {{ success_rate_data|length|default:"0" }} exécution{{
+          success_rate_data|length|pluralize }}
+        </div>
+      </div>
+    </div>
+    {% endif %} {% if selected_project %}
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">
+          Performance dans le Temps
+        </h3>
+        <div class="relative h-64">
+          <canvas id="durationChart" class="w-full h-full"></canvas>
+        </div>
+        <div class="mt-2 text-sm text-gray-600 text-center">
+          Durée d'exécution (secondes)
+        </div>
+      </div>
 
-          <!-- Légende -->
-          <div class="grid grid-cols-2 gap-3 text-sm">
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span>Passés: {{ latest_execution_stats.passed }}</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span>Échoués: {{ latest_execution_stats.failed }}</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
-              <span>Ignorés: {{ latest_execution_stats.skipped }}</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
-              <span>Instables: {{ latest_execution_stats.flaky }}</span>
-            </div>
-          </div>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">
+          Calendrier des Exécutions
+        </h3>
+        <div class="relative h-64">
+          <canvas id="heatmapChart" class="w-full h-full"></canvas>
+        </div>
+        <div class="mt-2 text-sm text-gray-600 text-center">
+          Exécutions du mois en cours
         </div>
       </div>
     </div>
@@ -196,7 +231,6 @@ block content %}
       const canvas = document.getElementById('executionChart');
       const ctx = canvas.getContext('2d');
 
-      // Données du graphique
       const data = {
           passed: {{ latest_execution_stats.passed }},
           failed: {{ latest_execution_stats.failed }},
@@ -204,27 +238,36 @@ block content %}
           flaky: {{ latest_execution_stats.flaky }}
       };
 
-      // Couleurs
       const colors = {
-          passed: '#10b981',   // green-500
-          failed: '#ef4444',   // red-500
-          skipped: '#eab308',  // yellow-500
-          flaky: '#f97316'     // orange-500
+          passed: '#10b981',
+          failed: '#ef4444',
+          skipped: '#eab308',
+          flaky: '#f97316'
       };
 
-      // Calculer les angles pour chaque segment
       const total = data.passed + data.failed + data.skipped + data.flaky;
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const radius = Math.min(centerX, centerY) - 10;
 
-      let currentAngle = -Math.PI / 2; // Commencer en haut
+      let currentAngle = -Math.PI / 2;
+      const segments = [];
 
-      // Fonction pour dessiner un segment
-      function drawSegment(value, color) {
+      function drawSegment(value, color, label) {
           if (value === 0) return;
 
           const sliceAngle = (value / total) * 2 * Math.PI;
+          const startAngle = currentAngle;
+          const endAngle = currentAngle + sliceAngle;
+
+          segments.push({
+              startAngle,
+              endAngle,
+              value,
+              label,
+              color,
+              percentage: Math.round((value / total) * 100)
+          });
 
           ctx.beginPath();
           ctx.moveTo(centerX, centerY);
@@ -233,7 +276,6 @@ block content %}
           ctx.fillStyle = color;
           ctx.fill();
 
-          // Bordure blanche
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = 2;
           ctx.stroke();
@@ -241,13 +283,11 @@ block content %}
           currentAngle += sliceAngle;
       }
 
-      // Dessiner les segments
-      drawSegment(data.passed, colors.passed);
-      drawSegment(data.failed, colors.failed);
-      drawSegment(data.skipped, colors.skipped);
-      drawSegment(data.flaky, colors.flaky);
+      drawSegment(data.passed, colors.passed, 'Passés');
+      drawSegment(data.failed, colors.failed, 'Échoués');
+      drawSegment(data.skipped, colors.skipped, 'Ignorés');
+      drawSegment(data.flaky, colors.flaky, 'Instables');
 
-      // Ajouter un cercle au centre pour un effet "donut" (optionnel)
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius * 0.6, 0, 2 * Math.PI);
       ctx.fillStyle = '#ffffff';
@@ -256,7 +296,6 @@ block content %}
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Ajouter le pourcentage de réussite au centre
       const successRate = total > 0 ? Math.round((data.passed / total) * 100) : 0;
       ctx.fillStyle = '#374151';
       ctx.font = 'bold 24px system-ui';
@@ -267,6 +306,513 @@ block content %}
       ctx.font = '12px system-ui';
       ctx.fillStyle = '#6b7280';
       ctx.fillText('réussite', centerX, centerY + 15);
+
+      const tooltip = document.createElement('div');
+      tooltip.style.cssText = `
+          position: absolute;
+          background: rgba(0,0,0,0.8);
+          color: white;
+          padding: 8px 12px;
+          border-radius: 4px;
+          font-size: 12px;
+          pointer-events: none;
+          z-index: 1000;
+          opacity: 0;
+          transition: opacity 0.2s;
+      `;
+      document.body.appendChild(tooltip);
+
+      canvas.addEventListener('mousemove', function(e) {
+          const rect = canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          const dx = x - centerX;
+          const dy = y - centerY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          let angle = Math.atan2(dy, dx) + Math.PI / 2;
+          if (angle < 0) angle += 2 * Math.PI;
+
+          if (distance >= radius * 0.6 && distance <= radius) {
+              const segment = segments.find(s => angle >= s.startAngle && angle < s.endAngle);
+
+              if (segment) {
+                  canvas.style.cursor = 'pointer';
+                  tooltip.innerHTML = `${segment.label}: ${segment.value} (${segment.percentage}%)`;
+                  tooltip.style.left = (e.pageX + 5) + 'px';
+                  tooltip.style.top = (e.pageY - 30) + 'px';
+                  tooltip.style.opacity = '1';
+              } else {
+                  canvas.style.cursor = 'default';
+                  tooltip.style.opacity = '0';
+              }
+          } else {
+              canvas.style.cursor = 'default';
+              tooltip.style.opacity = '0';
+          }
+      });
+
+      canvas.addEventListener('mouseleave', function() {
+          canvas.style.cursor = 'default';
+          tooltip.style.opacity = '0';
+      });
+  });
+</script>
+{% endif %} {% if selected_project %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+      const successCanvas = document.getElementById('successRateChart');
+      if (successCanvas) {
+          const rect = successCanvas.getBoundingClientRect();
+          successCanvas.width = rect.width;
+          successCanvas.height = rect.height;
+
+          const successCtx = successCanvas.getContext('2d');
+
+          const successDataRaw = {{ success_rate_data|safe }};
+          const successData = successDataRaw.slice().reverse();
+          const executions = successData.length;
+
+          if (executions > 0) {
+              const padding = 40;
+              const chartWidth = successCanvas.width - 2 * padding;
+              const chartHeight = successCanvas.height - 2 * padding;
+
+              const points = [];
+
+              successCtx.strokeStyle = '#e5e7eb';
+              successCtx.lineWidth = 1;
+
+              for (let i = 0; i <= 10; i++) {
+                  const y = padding + (chartHeight * i / 10);
+                  successCtx.beginPath();
+                  successCtx.moveTo(padding, y);
+                  successCtx.lineTo(padding + chartWidth, y);
+                  successCtx.stroke();
+
+                  successCtx.fillStyle = '#6b7280';
+                  successCtx.font = '10px system-ui';
+                  successCtx.textAlign = 'right';
+                  successCtx.fillText((100 - i * 10) + '%', padding - 5, y + 3);
+              }
+
+              successCtx.beginPath();
+              successCtx.moveTo(padding, padding + chartHeight);
+              successCtx.lineTo(padding + chartWidth, padding + chartHeight);
+              successCtx.stroke();
+
+              successCtx.strokeStyle = '#10b981';
+              successCtx.lineWidth = 2;
+              successCtx.beginPath();
+
+              for (let i = 0; i < successData.length; i++) {
+                  const x = padding + (chartWidth * i / (executions - 1));
+                  const y = padding + chartHeight - (chartHeight * successData[i] / 100);
+
+                  points.push({
+                      x: x,
+                      y: y,
+                      value: successData[i],
+                      execution: i + 1
+                  });
+
+                  if (i === 0) {
+                      successCtx.moveTo(x, y);
+                  } else {
+                      successCtx.lineTo(x, y);
+                  }
+              }
+              successCtx.stroke();
+
+              successCtx.fillStyle = '#10b981';
+              for (let i = 0; i < successData.length; i++) {
+                  const x = padding + (chartWidth * i / (executions - 1));
+                  const y = padding + chartHeight - (chartHeight * successData[i] / 100);
+
+                  successCtx.beginPath();
+                  successCtx.arc(x, y, 3, 0, 2 * Math.PI);
+                  successCtx.fill();
+              }
+
+              const successTooltip = document.createElement('div');
+              successTooltip.style.cssText = `
+                  position: absolute;
+                  background: rgba(0,0,0,0.8);
+                  color: white;
+                  padding: 8px 12px;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  pointer-events: none;
+                  z-index: 1000;
+                  opacity: 0;
+                  transition: opacity 0.2s;
+              `;
+              document.body.appendChild(successTooltip);
+
+              successCanvas.addEventListener('mousemove', function(e) {
+                  const rect = successCanvas.getBoundingClientRect();
+                  const mouseX = e.clientX - rect.left;
+                  const mouseY = e.clientY - rect.top;
+
+                  let closestPoint = null;
+                  let minDistance = Infinity;
+
+                  points.forEach(point => {
+                      const distance = Math.sqrt(Math.pow(mouseX - point.x, 2) + Math.pow(mouseY - point.y, 2));
+                      if (distance < 15 && distance < minDistance) {
+                          minDistance = distance;
+                          closestPoint = point;
+                      }
+                  });
+
+                  if (closestPoint) {
+                      successCanvas.style.cursor = 'pointer';
+                      successTooltip.innerHTML = `Exécution #${closestPoint.execution}<br>Taux de réussite: ${closestPoint.value}%`;
+                      successTooltip.style.left = (e.pageX + 5) + 'px';
+                      successTooltip.style.top = (e.pageY - 30) + 'px';
+                      successTooltip.style.opacity = '1';
+                  } else {
+                      successCanvas.style.cursor = 'default';
+                      successTooltip.style.opacity = '0';
+                  }
+              });
+
+              successCanvas.addEventListener('mouseleave', function() {
+                  successCanvas.style.cursor = 'default';
+                  successTooltip.style.opacity = '0';
+              });
+          } else {
+              successCtx.fillStyle = '#6b7280';
+              successCtx.font = '14px system-ui';
+              successCtx.textAlign = 'center';
+              successCtx.fillText('Aucune donnée disponible', successCanvas.width / 2, successCanvas.height / 2);
+          }
+      }
+
+      const durationCanvas = document.getElementById('durationChart');
+      if (durationCanvas) {
+          const rect = durationCanvas.getBoundingClientRect();
+          durationCanvas.width = rect.width;
+          durationCanvas.height = rect.height;
+
+          const durationCtx = durationCanvas.getContext('2d');
+
+          const durationDataRaw = {{ duration_data|safe }};
+          const durationData = durationDataRaw.slice().reverse();
+
+          if (durationData.length > 0) {
+              const padding = 40;
+              const chartWidth = durationCanvas.width - 2 * padding;
+              const chartHeight = durationCanvas.height - 2 * padding;
+              const maxDuration = Math.max(...durationData);
+              const minDuration = Math.min(...durationData);
+
+              const adjustedMinDuration = 0;
+              const durationRange = maxDuration - adjustedMinDuration;
+
+              const bars = [];
+
+              durationCtx.strokeStyle = '#e5e7eb';
+              durationCtx.lineWidth = 1;
+
+              for (let i = 0; i <= 5; i++) {
+                  const y = padding + (chartHeight * i / 5);
+                  durationCtx.beginPath();
+                  durationCtx.moveTo(padding, y);
+                  durationCtx.lineTo(padding + chartWidth, y);
+                  durationCtx.stroke();
+
+                  const value = maxDuration - (durationRange * i / 5);
+                  durationCtx.fillStyle = '#6b7280';
+                  durationCtx.font = '10px system-ui';
+                  durationCtx.textAlign = 'right';
+                  durationCtx.fillText(Math.round(value/1000) + 's', padding - 5, y + 3);
+              }
+
+              const barWidth = chartWidth / durationData.length * 0.6;
+              durationCtx.fillStyle = '#3b82f6';
+
+              for (let i = 0; i < durationData.length; i++) {
+                  const x = padding + (chartWidth * i / durationData.length) + (chartWidth / durationData.length - barWidth) / 2;
+
+                  const normalizedHeight = (durationData[i] - adjustedMinDuration) / durationRange * chartHeight;
+                  const y = padding + chartHeight - normalizedHeight;
+
+                  bars.push({
+                      x: x,
+                      y: y,
+                      width: barWidth,
+                      height: normalizedHeight,
+                      duration: durationData[i],
+                      execution: i + 1
+                  });
+
+                  durationCtx.fillRect(x, y, barWidth, normalizedHeight);
+
+                  durationCtx.strokeStyle = '#1e40af';
+                  durationCtx.lineWidth = 1;
+                  durationCtx.strokeRect(x, y, barWidth, normalizedHeight);
+              }
+
+              const durationTooltip = document.createElement('div');
+              durationTooltip.style.cssText = `
+                  position: absolute;
+                  background: rgba(0,0,0,0.8);
+                  color: white;
+                  padding: 8px 12px;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  pointer-events: none;
+                  z-index: 1000;
+                  opacity: 0;
+                  transition: opacity 0.2s;
+              `;
+              document.body.appendChild(durationTooltip);
+
+              durationCanvas.addEventListener('mousemove', function(e) {
+                  const rect = durationCanvas.getBoundingClientRect();
+                  const mouseX = e.clientX - rect.left;
+                  const mouseY = e.clientY - rect.top;
+
+                  const hoveredBar = bars.find(bar =>
+                      mouseX >= bar.x &&
+                      mouseX <= bar.x + bar.width &&
+                      mouseY >= bar.y &&
+                      mouseY <= bar.y + bar.height
+                  );
+
+                  if (hoveredBar) {
+                      durationCanvas.style.cursor = 'pointer';
+                      const seconds = (hoveredBar.duration / 1000).toFixed(1);
+                      const minutes = Math.floor(hoveredBar.duration / 60000);
+                      const remainingSeconds = ((hoveredBar.duration % 60000) / 1000).toFixed(1);
+
+                      let timeDisplay = seconds < 60 ?
+                          `${seconds}s` :
+                          `${minutes}m ${remainingSeconds}s`;
+
+                      durationTooltip.innerHTML = `Exécution #${hoveredBar.execution}<br>Durée: ${timeDisplay}`;
+                      durationTooltip.style.left = (e.pageX + 5) + 'px';
+                      durationTooltip.style.top = (e.pageY - 30) + 'px';
+                      durationTooltip.style.opacity = '1';
+                  } else {
+                      durationCanvas.style.cursor = 'default';
+                      durationTooltip.style.opacity = '0';
+                  }
+              });
+
+              durationCanvas.addEventListener('mouseleave', function() {
+                  durationCanvas.style.cursor = 'default';
+                  durationTooltip.style.opacity = '0';
+              });
+          } else {
+              durationCtx.fillStyle = '#6b7280';
+              durationCtx.font = '14px system-ui';
+              durationCtx.textAlign = 'center';
+              durationCtx.fillText('Aucune donnée disponible', durationCanvas.width / 2, durationCanvas.height / 2);
+          }
+      }
+
+      const heatmapCanvas = document.getElementById('heatmapChart');
+      if (heatmapCanvas) {
+          const rect = heatmapCanvas.getBoundingClientRect();
+          heatmapCanvas.width = rect.width;
+          heatmapCanvas.height = rect.height;
+
+          const heatmapCtx = heatmapCanvas.getContext('2d');
+
+          const heatmapData = {{ heatmap_data|safe }};
+
+          if (heatmapData.length > 0) {
+              const today = new Date();
+              const currentMonth = today.getMonth();
+              const currentYear = today.getFullYear();
+
+              const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+              const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+
+              const daysInMonth = lastDayOfMonth.getDate();
+              const firstDayOfWeek = firstDayOfMonth.getDay();
+
+              const totalCells = firstDayOfWeek + daysInMonth;
+              const rows = Math.ceil(totalCells / 7);
+
+              const cellSize = Math.min(28, (heatmapCanvas.width - 80) / 7 - 3);
+              const cellGap = 3;
+              const cols = 7;
+
+              const startX = (heatmapCanvas.width - (cols * (cellSize + cellGap) - cellGap)) / 2;
+              const startY = 80;
+
+              const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+                               'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+              heatmapCtx.fillStyle = '#374151';
+              heatmapCtx.font = 'bold 16px system-ui';
+              heatmapCtx.textAlign = 'center';
+              heatmapCtx.fillText(`${monthNames[currentMonth]} ${currentYear}`, heatmapCanvas.width / 2, 30);
+
+              const dayLabels = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+              heatmapCtx.fillStyle = '#6b7280';
+              heatmapCtx.font = '12px system-ui';
+              heatmapCtx.textAlign = 'center';
+
+              for (let i = 0; i < dayLabels.length; i++) {
+                  const x = startX + i * (cellSize + cellGap) + cellSize / 2;
+                  heatmapCtx.fillText(dayLabels[i], x, startY - 15);
+              }
+
+              const maxCount = Math.max(...heatmapData.map(d => d.count));
+
+              const calendarCells = [];
+
+              for (let row = 0; row < rows; row++) {
+                  for (let col = 0; col < 7; col++) {
+                      const cellIndex = row * 7 + col;
+                      const dayOfMonth = cellIndex - firstDayOfWeek + 1;
+
+                      const x = startX + col * (cellSize + cellGap);
+                      const y = startY + row * (cellSize + cellGap);
+
+                      if (dayOfMonth >= 1 && dayOfMonth <= daysInMonth) {
+                          const currentDate = new Date(currentYear, currentMonth, dayOfMonth);
+                          const dateStr = currentDate.toISOString().split('T')[0];
+                          const dayData = heatmapData.find(d => d.date === dateStr);
+                          const count = dayData ? dayData.count : 0;
+
+                          calendarCells.push({
+                              x: x,
+                              y: y,
+                              width: cellSize,
+                              height: cellSize,
+                              date: currentDate,
+                              count: count,
+                              dayOfMonth: dayOfMonth
+                          });
+
+                          const intensity = maxCount > 0 ? count / maxCount : 0;
+                          const alpha = count > 0 ? Math.max(0.2, intensity) : 0.05;
+
+                          const isToday = dayOfMonth === today.getDate() &&
+                                        currentMonth === today.getMonth() &&
+                                        currentYear === today.getFullYear();
+
+                          if (isToday) {
+                              heatmapCtx.fillStyle = `rgba(59, 130, 246, 0.3)`;
+                          } else {
+                              heatmapCtx.fillStyle = `rgba(16, 185, 129, ${alpha})`;
+                          }
+
+                          heatmapCtx.fillRect(x, y, cellSize, cellSize);
+
+                          if (isToday) {
+                              heatmapCtx.strokeStyle = '#3b82f6';
+                              heatmapCtx.lineWidth = 2;
+                          } else {
+                              heatmapCtx.strokeStyle = '#e5e7eb';
+                              heatmapCtx.lineWidth = 1;
+                          }
+                          heatmapCtx.strokeRect(x, y, cellSize, cellSize);
+
+                          heatmapCtx.fillStyle = isToday ? '#1f2937' : '#374151';
+                          heatmapCtx.font = '11px system-ui';
+                          heatmapCtx.textAlign = 'center';
+                          heatmapCtx.fillText(dayOfMonth.toString(), x + cellSize / 2, y + cellSize / 2 + 4);
+
+                          if (count > 0) {
+                              heatmapCtx.fillStyle = '#059669';
+                              heatmapCtx.font = 'bold 8px system-ui';
+                              heatmapCtx.fillText(count.toString(), x + cellSize - 8, y + 12);
+                          }
+                      } else {
+                          heatmapCtx.fillStyle = 'rgba(249, 250, 251, 0.5)';
+                          heatmapCtx.fillRect(x, y, cellSize, cellSize);
+                          heatmapCtx.strokeStyle = '#f3f4f6';
+                          heatmapCtx.lineWidth = 1;
+                          heatmapCtx.strokeRect(x, y, cellSize, cellSize);
+                      }
+                  }
+              }
+
+              const calendarTooltip = document.createElement('div');
+              calendarTooltip.style.cssText = `
+                  position: absolute;
+                  background: rgba(0,0,0,0.8);
+                  color: white;
+                  padding: 8px 12px;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  pointer-events: none;
+                  z-index: 1000;
+                  opacity: 0;
+                  transition: opacity 0.2s;
+              `;
+              document.body.appendChild(calendarTooltip);
+
+              heatmapCanvas.addEventListener('mousemove', function(e) {
+                  const rect = heatmapCanvas.getBoundingClientRect();
+                  const mouseX = e.clientX - rect.left;
+                  const mouseY = e.clientY - rect.top;
+
+                  const hoveredCell = calendarCells.find(cell =>
+                      mouseX >= cell.x &&
+                      mouseX <= cell.x + cell.width &&
+                      mouseY >= cell.y &&
+                      mouseY <= cell.y + cell.height
+                  );
+
+                  if (hoveredCell) {
+                      heatmapCanvas.style.cursor = 'pointer';
+
+                      const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+                      const dayName = dayNames[hoveredCell.date.getDay()];
+                      const formattedDate = hoveredCell.date.toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'long'
+                      });
+
+                      const executionText = hoveredCell.count === 0 ? 'Aucune exécution' :
+                                          hoveredCell.count === 1 ? '1 exécution' :
+                                          `${hoveredCell.count} exécutions`;
+
+                      calendarTooltip.innerHTML = `${dayName} ${formattedDate}<br>${executionText}`;
+                      calendarTooltip.style.left = (e.pageX + 5) + 'px';
+                      calendarTooltip.style.top = (e.pageY - 30) + 'px';
+                      calendarTooltip.style.opacity = '1';
+                  } else {
+                      heatmapCanvas.style.cursor = 'default';
+                      calendarTooltip.style.opacity = '0';
+                  }
+              });
+
+              heatmapCanvas.addEventListener('mouseleave', function() {
+                  heatmapCanvas.style.cursor = 'default';
+                  calendarTooltip.style.opacity = '0';
+              });
+              const legendY = startY + rows * (cellSize + cellGap) + 30;
+              heatmapCtx.fillStyle = '#6b7280';
+              heatmapCtx.font = '12px system-ui';
+              heatmapCtx.textAlign = 'left';
+              heatmapCtx.fillText('Moins', startX, legendY);
+
+              for (let i = 0; i < 5; i++) {
+                  const x = startX + 50 + i * (cellSize * 0.8 + 2);
+                  const y = legendY - 15;
+                  const alpha = i === 0 ? 0.05 : Math.max(0.2, i / 4);
+                  heatmapCtx.fillStyle = `rgba(16, 185, 129, ${alpha})`;
+                  heatmapCtx.fillRect(x, y, cellSize * 0.8, cellSize * 0.8);
+                  heatmapCtx.strokeStyle = '#e5e7eb';
+                  heatmapCtx.strokeRect(x, y, cellSize * 0.8, cellSize * 0.8);
+              }
+
+              heatmapCtx.fillStyle = '#6b7280';
+              heatmapCtx.fillText('Plus', startX + 50 + 5 * (cellSize * 0.8 + 2) + 10, legendY);
+          } else {
+              heatmapCtx.fillStyle = '#6b7280';
+              heatmapCtx.font = '14px system-ui';
+              heatmapCtx.textAlign = 'center';
+              heatmapCtx.fillText('Aucune donnée disponible', heatmapCanvas.width / 2, heatmapCanvas.height / 2);
+          }
+      }
   });
 </script>
 {% endif %} {% endblock %}

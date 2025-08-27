@@ -1,6 +1,8 @@
 {% load test_filters %} {% if page_obj %}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-  {% for test in page_obj %} {% include 'cotton/test-card.html' %} {% empty %}
+  {% for test in page_obj %}
+  <c-test-card :test="test" />
+  {% empty %}
   <div class="col-span-2 text-center py-12">
     <svg
       class="mx-auto h-12 w-12 text-gray-400"
