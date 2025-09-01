@@ -1,0 +1,223 @@
+{% extends 'base.html' %} {% block title %}Configuration des features - {{
+project.name }}{% endblock %} {% block content %}
+<div class="max-w-full mx-auto sm:px-6 lg:px-8">
+  <div class="px-4 sm:px-0">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+      <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+          <a
+            href="{% url 'home' %}"
+            class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary-600"
+          >
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"
+              ></path>
+            </svg>
+            Accueil
+          </a>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg
+              class="w-6 h-6 text-gray-400"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2"
+              >{{ project.name }}</span
+            >
+          </div>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg
+              class="w-6 h-6 text-gray-400"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2"
+              >Configuration des features</span
+            >
+          </div>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Header de la page -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">
+        Configuration des features
+      </h1>
+      <p class="mt-2 text-lg text-gray-600">
+        Personnalisez les fonctionnalités activées pour le projet :
+        <span class="font-semibold">{{ project.name }}</span>
+      </p>
+    </div>
+
+    <!-- Formulaire de configuration -->
+    <div class="bg-white shadow rounded-lg">
+      <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Header du formulaire -->
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-medium text-gray-900">
+            Features disponibles
+          </h3>
+          <p class="mt-1 text-sm text-gray-600">
+            Activez ou désactivez les fonctionnalités selon vos besoins pour ce
+            projet.
+          </p>
+        </div>
+
+        <!-- Liste des features -->
+        <div class="px-6 pb-6 space-y-6">
+          {% for feature_key, feature_data in project_features.items %}
+          <div class="flex items-start">
+            <div class="flex items-center h-5">
+              <input
+                id="feature_{{ feature_key }}"
+                name="feature_{{ feature_key }}"
+                type="checkbox"
+                {%
+                if
+                feature_data.is_enabled
+                %}checked{%
+                endif
+                %}
+                class="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300 rounded"
+              />
+            </div>
+            <div class="ml-3 text-sm">
+              <label
+                for="feature_{{ feature_key }}"
+                class="font-medium text-gray-700"
+              >
+                {{ feature_data.name }}
+              </label>
+              <div class="mt-1">
+                {% if feature_key == 'evolution_tracking' %}
+                <p class="text-gray-500">
+                  Affiche l'évolution des tests par rapport à la dernière
+                  exécution (amélioré, régressé, stable, nouveau). Inclut les
+                  statistiques d'évolution et les indicateurs visuels sur chaque
+                  test.
+                </p>
+                <div class="mt-2 text-xs text-gray-400">
+                  <strong>Quand activé :</strong> Bloc "Évolution par rapport à
+                  la dernière exécution" visible, filtres d'évolution
+                  disponibles, indicateurs sur chaque test.
+                  <br />
+                  <strong>Quand désactivé :</strong> Aucune information
+                  d'évolution affichée, comparaisons désactivées.
+                </div>
+                {% endif %}
+
+                <!-- Indicateur de valeur par défaut -->
+                {% if feature_data.is_enabled == feature_data.default_value %}
+                <span
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2"
+                >
+                  Valeur par défaut
+                </span>
+                {% else %}
+                <span
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mt-2"
+                >
+                  Modifiée (défaut: {{
+                  feature_data.default_value|yesno:"Activée,Désactivée" }})
+                </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Actions -->
+        <div
+          class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center"
+        >
+          <div class="text-sm text-gray-500">
+            Les modifications s'appliquent immédiatement après sauvegarde.
+          </div>
+          <div class="flex space-x-3">
+            <a
+              href="{% url 'home' %}"
+              class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Annuler
+            </a>
+            <button
+              type="submit"
+              class="bg-primary-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Sauvegarder
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Section d'aide -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg
+            class="h-5 w-5 text-blue-400"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-blue-800">
+            À propos des features
+          </h3>
+          <div class="mt-2 text-sm text-blue-700">
+            <p>
+              Les features permettent de personnaliser l'interface et les
+              fonctionnalités pour chaque projet selon vos besoins :
+            </p>
+            <ul class="mt-2 list-disc list-inside space-y-1">
+              <li>
+                <strong>Évolution par rapport à la dernière exécution :</strong>
+                Compare automatiquement les résultats avec la précédente
+                exécution pour identifier les améliorations et régressions.
+              </li>
+              <li>
+                D'autres features seront ajoutées au fur et à mesure des
+                besoins.
+              </li>
+            </ul>
+            <p class="mt-2">
+              <strong>Note :</strong> Ces paramètres sont spécifiques à chaque
+              projet et peuvent être modifiés à tout moment.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

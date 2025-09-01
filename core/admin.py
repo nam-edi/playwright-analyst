@@ -15,7 +15,7 @@ from django.http import HttpResponse
 from django.forms.widgets import TextInput
 from datetime import datetime, timedelta
 import csv
-from .models import Project, Tag, TestExecution, Test, TestResult, CIConfiguration, GitLabConfiguration, GitHubConfiguration
+from .models import Project, Tag, TestExecution, Test, TestResult, CIConfiguration, GitLabConfiguration, GitHubConfiguration, ProjectFeature
 from .widgets import ColorPickerWidget
 
 
@@ -75,6 +75,25 @@ class DateRangeFilter(admin.SimpleListFilter):
             quarter_start = datetime(now.year, ((now.month-1)//3)*3+1, 1)
             return queryset.filter(start_time__gte=quarter_start)
         
+        return queryset
+
+
+class TestCommentFilter(admin.SimpleListFilter):
+    """Filtre pour les tests avec ou sans commentaire"""
+    title = 'Commentaire'
+    parameter_name = 'has_comment'
+    
+    def lookups(self, request, model_admin):
+        return [
+            ('yes', 'Avec commentaire'),
+            ('no', 'Sans commentaire'),
+        ]
+    
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(comment__isnull=False).exclude(comment='')
+        elif self.value() == 'no':
+            return queryset.filter(Q(comment__isnull=True) | Q(comment=''))
         return queryset
 
 
@@ -193,12 +212,21 @@ class TagAdminForm(forms.ModelForm):
         }
 
 
+class ProjectFeatureInline(admin.TabularInline):
+    """Inline pour gérer les features d'un projet"""
+    model = ProjectFeature
+    extra = 0
+    readonly_fields = ['created_at', 'updated_at']
+    fields = ['feature_key', 'is_enabled', 'created_at', 'updated_at']
+
+
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ['name', 'created_by', 'ci_provider', 'created_at', 'execution_count']
+    list_display = ['name', 'created_by', 'ci_provider', 'created_at', 'execution_count', 'features_display']
     list_filter = ['created_at', 'created_by', 'ci_configuration__provider']
     search_fields = ['name', 'description']
     readonly_fields = ['created_at', 'updated_at']
+    inlines = [ProjectFeatureInline]
     
     def execution_count(self, obj):
         return obj.executions.count()
@@ -209,6 +237,27 @@ class ProjectAdmin(admin.ModelAdmin):
             return obj.ci_configuration.get_provider_display()
         return "Aucune"
     ci_provider.short_description = 'CI configurée'
+    
+    def features_display(self, obj):
+        """Affiche les features activées pour ce projet"""
+        features = obj.features.filter(is_enabled=True)
+        if features.exists():
+            feature_names = [f.get_feature_key_display() for f in features]
+            return ", ".join(feature_names[:2])  # Afficher les 2 premières
+        return "Aucune feature"
+    features_display.short_description = 'Features actives'
+
+
+@admin.register(ProjectFeature)
+class ProjectFeatureAdmin(admin.ModelAdmin):
+    list_display = ['project', 'feature_key', 'is_enabled', 'created_at']
+    list_filter = ['feature_key', 'is_enabled', 'created_at']
+    search_fields = ['project__name']
+    list_editable = ['is_enabled']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('project')
 
 
 @admin.register(Tag)
@@ -352,11 +401,30 @@ class TestExecutionAdmin(admin.ModelAdmin):
 
 @admin.register(Test)
 class TestAdmin(admin.ModelAdmin):
-    list_display = ['title', 'file_path', 'line', 'tag_list', 'result_count']
-    list_filter = ['tags', 'created_at']
-    search_fields = ['title', 'file_path', 'story', 'test_id']
+    list_display = ['title', 'file_path', 'line', 'tag_list', 'has_comment', 'result_count']
+    list_filter = ['tags', 'created_at', TestCommentFilter]
+    search_fields = ['title', 'file_path', 'story', 'test_id', 'comment']
     filter_horizontal = ['tags']
     inlines = [TestResultInline]
+    
+    fieldsets = (
+        ('Informations générales', {
+            'fields': ('title', 'project', 'test_id', 'tags')
+        }),
+        ('Localisation', {
+            'fields': ('file_path', 'line', 'column')
+        }),
+        ('Description', {
+            'fields': ('story', 'comment'),
+            'description': 'Ajoutez des informations supplémentaires sur ce test'
+        }),
+        ('Métadonnées', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        })
+    )
+    
+    readonly_fields = ['created_at']
     
     def get_queryset(self, request):
         # Optimiser avec prefetch_related pour éviter les N+1 queries
@@ -367,6 +435,16 @@ class TestAdmin(admin.ModelAdmin):
     def tag_list(self, obj):
         return ", ".join([tag.name for tag in obj.tags.all()[:3]])
     tag_list.short_description = 'Tags'
+    
+    def has_comment(self, obj):
+        if obj.comment:
+            return format_html(
+                '<span style="color: #10b981; font-weight: bold;" title="{}">💬 Oui</span>',
+                obj.comment[:100] + '...' if len(obj.comment) > 100 else obj.comment
+            )
+        return format_html('<span style="color: #6b7280;">Non</span>')
+    has_comment.short_description = 'Commentaire'
+    has_comment.admin_order_field = 'comment'
     
     def result_count(self, obj):
         return obj.results.count()

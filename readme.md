@@ -4,17 +4,17 @@
 
 ## 📋 Table des matières
 
-- [Aperçu](#aperçu)
-- [Fonctionnalités](#fonctionnalités)
-- [Stack technique](#stack-technique)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Utilisation](#utilisation)
-- [Intégration CI/CD](#intégration-cicd)
-- [API](#api)
-- [Déploiement](#déploiement)
-- [Développement](#développement)
-- [Contribution](#contribution)
+- [Aperçu](#-aperçu)
+- [Fonctionnalités](#-fonctionnalités-principales)
+- [Stack technique](#️-stack-technique)
+- [Installation](#-installation)
+- [Configuration](#️-configuration)
+- [Utilisation](#-utilisation)
+- [Intégration CI/CD](#-intégration-cicd)
+- [API](#-api)
+- [Déploiement](#-déploiement)
+- [Développement](#-développement)
+- [Contribution](#-contribution)
 
 ## 🎯 Aperçu
 

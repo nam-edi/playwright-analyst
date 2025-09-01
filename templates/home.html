@@ -1,6 +1,60 @@
 {% extends 'base.html' %} {% block title %} Playwright Analyst{% if
 selected_project %} - {{ selected_project.name }}{% endif %} {% endblock %} {%
 block content %}
+
+<!-- Messages Django -->
+{% if messages %} {% for message in messages %}
+<div
+  id="welcome-message-{{ forloop.counter }}"
+  class="bg-{% if message.tags == 'success' %}blue{% elif message.tags == 'error' %}red{% else %}gray{% endif %}-50 border border-{% if message.tags == 'success' %}blue{% elif message.tags == 'error' %}red{% else %}gray{% endif %}-200 rounded-lg p-4 mb-6 transition-all duration-500 ease-in-out"
+>
+  <div class="flex items-center">
+    <div class="flex-shrink-0">
+      {% if message.tags == 'success' %}
+      <svg
+        class="h-5 w-5 text-blue-400"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+          clip-rule="evenodd"
+        ></path>
+      </svg>
+      {% elif message.tags == 'error' %}
+      <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+          clip-rule="evenodd"
+        ></path>
+      </svg>
+      {% else %}
+      <svg
+        class="h-5 w-5 text-gray-400"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+          clip-rule="evenodd"
+        ></path>
+      </svg>
+      {% endif %}
+    </div>
+    <div class="ml-3">
+      <div
+        class="text-sm {% if message.tags == 'success' %}text-blue-800{% elif message.tags == 'error' %}text-red-800{% else %}text-gray-800{% endif %}"
+      >
+        {{ message }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %} {% endif %}
+
 <div id="main-content">
   {% if selected_project %}
   <div
@@ -210,17 +264,6 @@ block content %}
       </p>
     </div>
     {% endif %}
-
-    <div class="mt-8">
-      <button
-        hx-get="/htmx-example/"
-        hx-target="#main-content"
-        hx-swap="innerHTML"
-        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        Tester HTMX
-      </button>
-    </div>
   </div>
   {% endif %}
 </div>
@@ -675,7 +718,11 @@ block content %}
 
                       if (dayOfMonth >= 1 && dayOfMonth <= daysInMonth) {
                           const currentDate = new Date(currentYear, currentMonth, dayOfMonth);
-                          const dateStr = currentDate.toISOString().split('T')[0];
+                          // Utiliser une date locale au lieu de UTC
+                          const year = currentDate.getFullYear();
+                          const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                          const day = String(currentDate.getDate()).padStart(2, '0');
+                          const dateStr = `${year}-${month}-${day}`;
                           const dayData = heatmapData.find(d => d.date === dateStr);
                           const count = dayData ? dayData.count : 0;
 
@@ -815,4 +862,32 @@ block content %}
       }
   });
 </script>
-{% endif %} {% endblock %}
+{% endif %}
+
+<!-- Script pour faire disparaître les messages -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Sélectionner tous les messages de bienvenue
+    const welcomeMessages = document.querySelectorAll(
+      '[id^="welcome-message-"]'
+    );
+
+    welcomeMessages.forEach(function (welcomeMessage) {
+      if (welcomeMessage) {
+        // Faire disparaître le message au bout de 5 secondes
+        setTimeout(function () {
+          // Animation de disparition
+          welcomeMessage.style.opacity = "0";
+          welcomeMessage.style.transform = "translateY(-20px)";
+
+          // Supprimer complètement l'élément après l'animation
+          setTimeout(function () {
+            welcomeMessage.style.display = "none";
+          }, 500); // Délai pour que l'animation se termine
+        }, 5000); // 5 secondes
+      }
+    });
+  });
+</script>
+
+{% endblock %}

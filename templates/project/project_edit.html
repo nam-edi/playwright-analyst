@@ -1,0 +1,391 @@
+{% extends 'base.html' %} {% block title %}Éditer - {{ project.name }}{%
+endblock %} {% block content %}
+<div class="max-w-full mx-auto sm:px-6 lg:px-8">
+  <div class="px-4 sm:px-0">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+      <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+          <a
+            href="{% url 'home' %}"
+            class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary-600"
+          >
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"
+              ></path>
+            </svg>
+            Accueil
+          </a>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg
+              class="w-6 h-6 text-gray-400"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <a
+              href="{% url 'projects_list' %}"
+              class="ml-1 text-sm font-medium text-gray-700 hover:text-primary-600 md:ml-2"
+              >Projets</a
+            >
+          </div>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg
+              class="w-6 h-6 text-gray-400"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2"
+              >{{ project.name }}</span
+            >
+          </div>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Header de la page -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Éditer le projet</h1>
+      <p class="mt-2 text-lg text-gray-600">
+        Modifiez les informations de
+        <span class="font-medium">{{ project.name }}</span>
+      </p>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="bg-white shadow rounded-lg">
+      <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Header du formulaire -->
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-medium text-gray-900">
+            Informations du projet
+          </h3>
+          <p class="mt-1 text-sm text-gray-600">
+            Modifiez les informations de base de votre projet.
+          </p>
+        </div>
+
+        <!-- Champs du formulaire -->
+        <div class="px-6 pb-6 space-y-6">
+          <!-- Nom du projet -->
+          <div>
+            <label for="name" class="block text-sm font-medium text-gray-700">
+              Nom du projet *
+            </label>
+            <div class="mt-1">
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value="{{ project.name }}"
+                required
+                maxlength="200"
+                class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+              />
+            </div>
+            <p class="mt-2 text-sm text-gray-500">
+              Choisissez un nom descriptif et unique pour votre projet.
+            </p>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label
+              for="description"
+              class="block text-sm font-medium text-gray-700"
+            >
+              Description
+            </label>
+            <div class="mt-1">
+              <textarea
+                id="description"
+                name="description"
+                rows="4"
+                class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                placeholder="Description optionnelle du projet..."
+              >
+{{ project.description|default:"" }}</textarea
+              >
+            </div>
+            <p class="mt-2 text-sm text-gray-500">
+              Décrivez brièvement l'objectif ou le contexte de ce projet
+              (optionnel).
+            </p>
+          </div>
+
+          <!-- Configuration CI -->
+          <div>
+            <label
+              for="ci_configuration_id"
+              class="block text-sm font-medium text-gray-700"
+            >
+              Configuration CI (optionnel)
+            </label>
+            <div class="mt-1">
+              <select
+                id="ci_configuration_id"
+                name="ci_configuration_id"
+                class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+              >
+                <option value="">Aucune configuration CI</option>
+                {% for ci_config in ci_configurations %}
+                <option value="{{ ci_config.id }}" {% if project.ci_configuration and project.ci_configuration.id == ci_config.id %}selected{% endif %}>
+                  {{ ci_config.name }} ({{ ci_config.get_provider_display }})
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <p class="mt-2 text-sm text-gray-500">
+              Sélectionnez une configuration CI pour récupérer automatiquement
+              les résultats de tests depuis votre pipeline.
+            </p>
+            {% if project.ci_configuration %}
+            <div class="mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-4 w-4 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-2">
+                  <p class="text-sm text-green-800">
+                    Configuration CI active : <strong>{{ project.ci_configuration.name }}</strong> ({{ project.ci_configuration.get_provider_display }})
+                  </p>
+                </div>
+              </div>
+            </div>
+            {% elif not ci_configurations %}
+            <p class="mt-2 text-sm text-amber-600">
+              <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+              Aucune configuration CI disponible. Vous pouvez en créer une dans l'administration Django.
+            </p>
+            {% endif %}
+          </div>
+
+          <!-- Statistiques du projet -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="text-sm font-medium text-gray-900 mb-3">
+              Statistiques du projet
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-primary-600">
+                  {{ executions_count }}
+                </div>
+                <div class="text-sm text-gray-600">Exécutions</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-green-600">
+                  {{ tests_count }}
+                </div>
+                <div class="text-sm text-gray-600">Tests</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-blue-600">
+                  {{ features_count }}
+                </div>
+                <div class="text-sm text-gray-600">Features configurées</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div
+          class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center"
+        >
+          <div class="flex space-x-3">
+            <a
+              href="{% url 'projects_list' %}"
+              class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Annuler
+            </a>
+            <button
+              type="submit"
+              class="bg-blue-600 hover:bg-blue-700 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Enregistrer les modifications
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Actions supplémentaires -->
+    <div class="mt-8 bg-white shadow rounded-lg">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Actions avancées</h3>
+        <p class="mt-1 text-sm text-gray-600">
+          Actions additionnelles pour ce projet.
+        </p>
+      </div>
+      <div class="px-6 py-4 space-y-4">
+        <!-- Lien vers les features -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h4 class="text-sm font-medium text-gray-900">
+              Configuration des features
+            </h4>
+            <p class="text-sm text-gray-600">
+              Gérez les fonctionnalités activées pour ce projet
+            </p>
+          </div>
+          <a
+            href="{% url 'project_features' project.pk %}"
+            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            Configurer
+          </a>
+        </div>
+
+        <!-- Séparateur -->
+        <div class="border-t border-gray-200"></div>
+
+        <!-- Zone de danger -->
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div class="flex items-start">
+            <div class="flex-shrink-0">
+              <svg
+                class="h-5 w-5 text-red-400"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <div class="ml-3 flex-1">
+              <h4 class="text-sm font-medium text-red-800">Zone de danger</h4>
+              <p class="mt-1 text-sm text-red-700">
+                La suppression d'un projet entraînera la perte définitive de
+                toutes les données associées (tests, exécutions, etc.).
+              </p>
+              <div class="mt-3">
+                <button
+                  type="button"
+                  onclick="confirmDelete()"
+                  class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  <svg
+                    class="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    ></path>
+                  </svg>
+                  Supprimer ce projet
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div
+  id="deleteModal"
+  class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden"
+  style="z-index: 1000"
+>
+  <div
+    class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+  >
+    <div class="mt-3 text-center">
+      <div
+        class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100"
+      >
+        <svg
+          class="h-6 w-6 text-red-600"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.864-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mt-4">
+        Confirmer la suppression
+      </h3>
+      <div class="mt-2 px-7 py-3">
+        <p class="text-sm text-gray-500">
+          Êtes-vous sûr de vouloir supprimer le projet "<strong
+            >{{ project.name }}</strong
+          >" ? Cette action est irréversible et supprimera toutes les données
+          associées.
+        </p>
+      </div>
+      <div class="items-center px-4 py-3">
+        <form
+          method="post"
+          action="{% url 'project_delete' project.pk %}"
+          class="inline"
+        >
+          {% csrf_token %}
+          <button
+            type="submit"
+            class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 mr-2"
+          >
+            Supprimer définitivement
+          </button>
+        </form>
+        <button
+          onclick="closeDeleteModal()"
+          class="px-4 py-2 bg-gray-300 text-gray-900 text-base font-medium rounded-md shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
+        >
+          Annuler
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function confirmDelete() {
+    document.getElementById("deleteModal").classList.remove("hidden");
+  }
+
+  function closeDeleteModal() {
+    document.getElementById("deleteModal").classList.add("hidden");
+  }
+</script>
+{% endblock %}
