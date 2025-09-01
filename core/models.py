@@ -129,6 +129,48 @@ class Project(models.Model):
     def get_total_test_results_count(self):
         """Retourne le nombre total de résultats de tests pour ce projet"""
         return TestResult.objects.filter(execution__project=self).count()
+    
+    def is_feature_enabled(self, feature_key):
+        """Vérifie si une feature est activée pour ce projet"""
+        try:
+            feature = self.features.get(feature_key=feature_key)
+            return feature.is_enabled
+        except ProjectFeature.DoesNotExist:
+            # Si la feature n'existe pas, retourner la valeur par défaut
+            return ProjectFeature.get_default_value(feature_key)
+
+
+class ProjectFeature(models.Model):
+    """Features flags pour personnaliser les fonctionnalités par projet"""
+    
+    FEATURE_CHOICES = [
+        ('evolution_tracking', 'Évolution par rapport à la dernière exécution'),
+        # Vous pouvez ajouter d'autres features ici
+    ]
+    
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='features', verbose_name="Projet")
+    feature_key = models.CharField(max_length=50, choices=FEATURE_CHOICES, verbose_name="Feature")
+    is_enabled = models.BooleanField(default=True, verbose_name="Activée")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Créée le")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Modifiée le")
+    
+    class Meta:
+        verbose_name = "Feature de projet"
+        verbose_name_plural = "Features de projet"
+        unique_together = ['project', 'feature_key']
+        ordering = ['project__name', 'feature_key']
+    
+    def __str__(self):
+        status = "Activée" if self.is_enabled else "Désactivée"
+        return f"{self.project.name} - {self.get_feature_key_display()} ({status})"
+    
+    @classmethod
+    def get_default_value(cls, feature_key):
+        """Retourne la valeur par défaut pour une feature donnée"""
+        defaults = {
+            'evolution_tracking': True,  # Par défaut activé
+        }
+        return defaults.get(feature_key, True)
 
 
 class Tag(models.Model):
