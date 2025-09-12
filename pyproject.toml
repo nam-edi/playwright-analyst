@@ -43,7 +43,7 @@ known_first_party = ["core", "api", "projects", "testing", "integrations"]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "DJANGO", "FIRSTPARTY", "LOCALFOLDER"]
 
 [tool.coverage.run]
-source = "."
+source = ["."]
 omit = [
     "*/migrations/*",
     "*/venv/*",
