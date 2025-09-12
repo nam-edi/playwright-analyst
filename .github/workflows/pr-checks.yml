@@ -3,7 +3,7 @@ name: Pull Request Checks
 # Checks spécifiques pour les PR vers main
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
 
 # Permissions nécessaires pour commenter les PR
@@ -17,151 +17,151 @@ jobs:
   required-checks:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    
+
     steps:
-    - name: 🔄 Checkout du code
-      uses: actions/checkout@v4
-      with:
-        # Récupère l'historique complet pour les comparaisons
-        fetch-depth: 0
-    
-    - name: 🐍 Configuration de Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13'
-    
-    - name: 📥 Installation des dépendances
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    
-    - name: 📊 Tests avec couverture obligatoire
-      run: |
-        pip install coverage
-        coverage run --source='.' manage.py test --verbosity=2
-        coverage report --fail-under=80  # Échec si couverture < 80%
-        coverage xml
-      env:
-        DJANGO_SETTINGS_MODULE: pw_analyst.settings
-    
-    - name: 🔍 Vérifications de code strictes
-      run: |
-        pip install flake8 black isort
-        
-        # Vérification du formatage avec Black
-        black --check --diff .
-        
-        # Vérification du tri des imports avec isort
-        isort --check-only --diff .
-        
-        # Vérifications flake8 (échec sur warnings)
-        flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
-    
-    - name: 🗄️ Vérification des migrations
-      run: |
-        python manage.py makemigrations --check --dry-run
-        python manage.py migrate --run-syncdb
-      env:
-        DJANGO_SETTINGS_MODULE: pw_analyst.settings
-    
-    - name: 🔒 Tests de sécurité obligatoires
-      run: |
-        pip install bandit safety
-        
-        # Bandit pour l'analyse statique de sécurité
-        bandit -r . -ll  # Niveau medium et high seulement
-        
-        # Safety pour les vulnérabilités des dépendances
-        safety check --json
-    
-    - name: 📝 Commentaire automatique sur la PR
-      if: always()
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const { data: comments } = await github.rest.issues.listComments({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.issue.number,
-          });
-          
-          // Supprime les anciens commentaires du bot
-          const botComments = comments.filter(comment => 
-            comment.user.type === 'Bot' && 
-            comment.body.includes('🤖 Rapport automatique')
-          );
-          
-          for (const comment of botComments) {
-            await github.rest.issues.deleteComment({
+      - name: 🔄 Checkout du code
+        uses: actions/checkout@v4
+        with:
+          # Récupère l'historique complet pour les comparaisons
+          fetch-depth: 0
+
+      - name: 🐍 Configuration de Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: 📥 Installation des dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 📊 Tests avec couverture obligatoire
+        run: |
+          pip install coverage
+          coverage run --source='.' manage.py test --verbosity=2
+          coverage report --fail-under=80  # Échec si couverture < 80%
+          coverage xml
+        env:
+          DJANGO_SETTINGS_MODULE: pw_analyst.settings
+
+      - name: 🔍 Vérifications de code strictes
+        run: |
+          pip install flake8 black isort
+
+          # Vérification du formatage avec Black
+          black --check --diff .
+
+          # Vérification du tri des imports avec isort
+          isort --check-only --diff .
+
+          # Vérifications flake8 (échec sur warnings)
+          flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: 🗄️ Vérification des migrations
+        run: |
+          python manage.py makemigrations --check --dry-run
+          python manage.py migrate --run-syncdb
+        env:
+          DJANGO_SETTINGS_MODULE: pw_analyst.settings
+
+      - name: 🔒 Tests de sécurité obligatoires
+        run: |
+          pip install bandit safety
+
+          # Bandit pour l'analyse statique de sécurité
+          bandit -r . -ll  # Niveau medium et high seulement
+
+          # Safety pour les vulnérabilités des dépendances
+          safety check --json
+
+      - name: 📝 Commentaire automatique sur la PR
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              comment_id: comment.id,
+              issue_number: context.issue.number,
             });
-          }
-          
-          // Crée un nouveau commentaire
-          const jobStatus = '${{ job.status }}';
-          const emoji = jobStatus === 'success' ? '✅' : '❌';
-          const status = jobStatus === 'success' ? 'Toutes les vérifications passent' : 'Certaines vérifications ont échoué';
-          
-          await github.rest.issues.createComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.issue.number,
-            body: `🤖 **Rapport automatique des vérifications**
-          
-          ${emoji} **Statut :** ${status}
-          
-          **Détails :**
-          - Tests Django avec couverture (≥80%)
-          - Vérifications de code (Black, isort, flake8)
-          - Vérifications de migrations
-          - Tests de sécurité (Bandit, Safety)
-          
-          **Branch :** \`${{ github.head_ref }}\`
-          **Commit :** \`${{ github.event.pull_request.head.sha }}\`
-          
-          ${jobStatus === 'failure' ? '⚠️ Veuillez corriger les problèmes avant de merger.' : '🎉 Cette PR est prête à être mergée !'}
-          `
-          });
+
+            // Supprime les anciens commentaires du bot
+            const botComments = comments.filter(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('🤖 Rapport automatique')
+            );
+
+            for (const comment of botComments) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: comment.id,
+              });
+            }
+
+            // Crée un nouveau commentaire
+            const jobStatus = '${{ job.status }}';
+            const emoji = jobStatus === 'success' ? '✅' : '❌';
+            const status = jobStatus === 'success' ? 'Toutes les vérifications passent' : 'Certaines vérifications ont échoué';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🤖 **Rapport automatique des vérifications**
+
+            ${emoji} **Statut :** ${status}
+
+            **Détails :**
+            - Tests Django avec couverture (≥80%)
+            - Vérifications de code (Black, isort, flake8)
+            - Vérifications de migrations
+            - Tests de sécurité (Bandit, Safety)
+
+            **Branch :** \`${{ github.head_ref }}\`
+            **Commit :** \`${{ github.event.pull_request.head.sha }}\`
+
+            ${jobStatus === 'failure' ? '⚠️ Veuillez corriger les problèmes avant de merger.' : '🎉 Cette PR est prête à être mergée !'}
+            `
+            });
 
   # Job pour analyser les changements de performance
   performance-check:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    
+
     steps:
-    - name: 🔄 Checkout du code
-      uses: actions/checkout@v4
-    
-    - name: 🐍 Configuration de Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13'
-    
-    - name: 📥 Installation des dépendances
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install django-extensions memory-profiler
-    
-    - name: ⚡ Test de performance des migrations
-      run: |
-        echo "🔄 Test des temps de migration..."
-        time python manage.py migrate --run-syncdb
-      env:
-        DJANGO_SETTINGS_MODULE: pw_analyst.settings
-    
-    - name: 📊 Analyse de la complexité du code
-      run: |
-        pip install radon xenon
-        
-        echo "📊 Complexité cyclomatique :"
-        radon cc . -s -a
-        
-        echo "📊 Index de maintenabilité :"
-        radon mi . -s
-        
-        # Échec si complexité trop élevée
-        xenon --max-absolute B --max-modules A --max-average A .
-      continue-on-error: true
+      - name: 🔄 Checkout du code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Configuration de Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: 📥 Installation des dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install django-extensions memory-profiler
+
+      - name: ⚡ Test de performance des migrations
+        run: |
+          echo "🔄 Test des temps de migration..."
+          time python manage.py migrate --run-syncdb
+        env:
+          DJANGO_SETTINGS_MODULE: pw_analyst.settings
+
+      - name: 📊 Analyse de la complexité du code
+        run: |
+          pip install radon xenon
+
+          echo "📊 Complexité cyclomatique :"
+          radon cc . -s -a
+
+          echo "📊 Index de maintenabilité :"
+          radon mi . -s
+
+          # Échec si complexité trop élevée
+          xenon --max-absolute B --max-modules A --max-average A .
+        continue-on-error: true
