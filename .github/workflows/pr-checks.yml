@@ -113,7 +113,7 @@ jobs:
             ${emoji} **Statut :** ${status}
 
             **Détails :**
-            - Tests Django avec couverture (≥80%)
+            - Tests Django avec couverture (≥40%)
             - Vérifications de code (Black, isort, flake8)
             - Vérifications de migrations
             - Tests de sécurité (Bandit, Safety)
