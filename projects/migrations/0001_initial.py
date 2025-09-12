@@ -6,47 +6,79 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('integrations', '0001_initial'),
+        ("integrations", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Project',
+            name="Project",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200, verbose_name='Nom du projet')),
-                ('description', models.TextField(blank=True, verbose_name='Description')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Créé le')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Modifié le')),
-                ('ci_configuration', models.ForeignKey(blank=True, help_text='Configuration CI pour récupérer automatiquement les résultats', null=True, on_delete=django.db.models.deletion.SET_NULL, to='integrations.ciconfiguration', verbose_name='Configuration CI')),
-                ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='Créé par')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=200, verbose_name="Nom du projet")),
+                ("description", models.TextField(blank=True, verbose_name="Description")),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="Créé le")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="Modifié le")),
+                (
+                    "ci_configuration",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Configuration CI pour récupérer automatiquement les résultats",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="integrations.ciconfiguration",
+                        verbose_name="Configuration CI",
+                    ),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name="Créé par"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Projet',
-                'verbose_name_plural': 'Projets',
-                'ordering': ['-created_at'],
+                "verbose_name": "Projet",
+                "verbose_name_plural": "Projets",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='ProjectFeature',
+            name="ProjectFeature",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('feature_key', models.CharField(choices=[('evolution_tracking', 'Évolution par rapport à la dernière exécution'), ('tags_mapping', "Cartographie des tags sur la page d'accueil")], max_length=50, verbose_name='Feature')),
-                ('is_enabled', models.BooleanField(default=True, verbose_name='Activée')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Créée le')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Modifiée le')),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='features', to='projects.project', verbose_name='Projet')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "feature_key",
+                    models.CharField(
+                        choices=[
+                            ("evolution_tracking", "Évolution par rapport à la dernière exécution"),
+                            ("tags_mapping", "Cartographie des tags sur la page d'accueil"),
+                        ],
+                        max_length=50,
+                        verbose_name="Feature",
+                    ),
+                ),
+                ("is_enabled", models.BooleanField(default=True, verbose_name="Activée")),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="Créée le")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="Modifiée le")),
+                (
+                    "project",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="features",
+                        to="projects.project",
+                        verbose_name="Projet",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Feature de projet',
-                'verbose_name_plural': 'Features de projet',
-                'ordering': ['project__name', 'feature_key'],
-                'unique_together': {('project', 'feature_key')},
+                "verbose_name": "Feature de projet",
+                "verbose_name_plural": "Features de projet",
+                "ordering": ["project__name", "feature_key"],
+                "unique_together": {("project", "feature_key")},
             },
         ),
     ]

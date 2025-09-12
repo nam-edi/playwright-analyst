@@ -17,13 +17,13 @@ function enhanceTableInteractions() {
 
     // Améliorer les liens de tests
     const testLinks = table.querySelectorAll('td a[href*="/test/"], td a[href*="/testresult/"]');
-    
+
     testLinks.forEach(link => {
         // Ajouter des attributs pour une meilleure accessibilité
         if (!link.getAttribute('title') && link.textContent.length > 50) {
             link.setAttribute('title', link.textContent.trim());
         }
-        
+
         // Améliorer la navigation au clavier
         link.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -41,7 +41,7 @@ function enhanceTableInteractions() {
             if (e.target.tagName === 'A' || e.target.tagName === 'INPUT') {
                 return;
             }
-            
+
             // Toggle de sélection de la ligne
             const checkbox = this.querySelector('input[type="checkbox"]');
             if (checkbox) {
@@ -49,7 +49,7 @@ function enhanceTableInteractions() {
                 this.classList.toggle('selected', checkbox.checked);
             }
         });
-        
+
         // Ajouter un numéro de ligne discret
         addRowNumber(row, index + 1);
     });
@@ -58,7 +58,7 @@ function enhanceTableInteractions() {
 function addRowNumber(row, number) {
     const firstCell = row.querySelector('td:first-child');
     if (!firstCell || firstCell.querySelector('.row-number')) return;
-    
+
     const rowNumber = document.createElement('span');
     rowNumber.className = 'row-number';
     rowNumber.textContent = `#${number}`;
@@ -73,18 +73,18 @@ function addRowNumber(row, number) {
         opacity: 0.5;
         pointer-events: none;
     `;
-    
+
     firstCell.style.position = 'relative';
     firstCell.appendChild(rowNumber);
 }
 
 function addSmartTooltips() {
     const cellsWithPotentialTruncation = document.querySelectorAll('.results td');
-    
+
     cellsWithPotentialTruncation.forEach(cell => {
         const textElement = cell.querySelector('a') || cell;
         const text = textElement.textContent.trim();
-        
+
         // Ne créer un tooltip que si le texte est vraiment tronqué
         if (text.length > 40 && (textElement.scrollWidth > textElement.clientWidth || text.length > 80)) {
             createSmartTooltip(textElement, text);
@@ -96,7 +96,7 @@ function createSmartTooltip(element, fullText) {
     let tooltip = null;
     let showTimeout = null;
     let hideTimeout = null;
-    
+
     function showTooltip(e) {
         clearTimeout(hideTimeout);
         showTimeout = setTimeout(() => {
@@ -120,16 +120,16 @@ function createSmartTooltip(element, fullText) {
                 transform: translateY(-5px);
                 transition: opacity 0.2s ease, transform 0.2s ease;
             `;
-            
+
             document.body.appendChild(tooltip);
-            
+
             // Positionner intelligemment
             const rect = element.getBoundingClientRect();
             const tooltipRect = tooltip.getBoundingClientRect();
-            
+
             let top = rect.bottom + 8;
             let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-            
+
             // Ajustements pour rester dans la fenêtre
             if (left < 8) left = 8;
             if (left + tooltipRect.width > window.innerWidth - 8) {
@@ -138,10 +138,10 @@ function createSmartTooltip(element, fullText) {
             if (top + tooltipRect.height > window.innerHeight - 8) {
                 top = rect.top - tooltipRect.height - 8;
             }
-            
+
             tooltip.style.top = top + 'px';
             tooltip.style.left = left + 'px';
-            
+
             // Animation d'apparition
             requestAnimationFrame(() => {
                 tooltip.style.opacity = '1';
@@ -149,7 +149,7 @@ function createSmartTooltip(element, fullText) {
             });
         }, 500); // Délai avant affichage
     }
-    
+
     function hideTooltip() {
         clearTimeout(showTimeout);
         if (tooltip) {
@@ -165,7 +165,7 @@ function createSmartTooltip(element, fullText) {
             }, 100);
         }
     }
-    
+
     element.addEventListener('mouseenter', showTooltip);
     element.addEventListener('mouseleave', hideTooltip);
     element.addEventListener('focus', showTooltip);
@@ -176,14 +176,14 @@ function improveAccessibility() {
     // Améliorer les contrastes et l'accessibilité
     const table = document.querySelector('.results table');
     if (!table) return;
-    
+
     // Ajouter des en-têtes de portée pour les lecteurs d'écran
     const headers = table.querySelectorAll('th');
     headers.forEach((header, index) => {
         header.setAttribute('scope', 'col');
         header.setAttribute('id', `header-${index}`);
     });
-    
+
     // Améliorer la navigation au clavier dans le tableau
     const cells = table.querySelectorAll('td, th');
     cells.forEach(cell => {
@@ -197,10 +197,10 @@ function improveAccessibility() {
 function enhanceStatusDisplay() {
     // Améliorer l'affichage des statuts avec des icônes et couleurs cohérentes
     const statusElements = document.querySelectorAll('.results td');
-    
+
     statusElements.forEach(cell => {
         const text = cell.textContent.trim().toLowerCase();
-        
+
         // Identifier et améliorer les cellules de statut
         if (text.includes('passé') || text.includes('passed')) {
             enhanceStatusCell(cell, 'passed', '✅', 'Passé');
@@ -216,12 +216,12 @@ function enhanceStatusDisplay() {
 
 function enhanceStatusCell(cell, status, icon, label) {
     if (cell.querySelector('.status-enhanced')) return; // Déjà traité
-    
+
     const statusElement = document.createElement('span');
     statusElement.className = `status-enhanced status-${status}`;
     statusElement.innerHTML = `<span class="status-icon" aria-hidden="true">${icon}</span> <span class="status-text">${label}</span>`;
     statusElement.setAttribute('title', `Statut: ${label}`);
-    
+
     // Remplacer le contenu si c'est juste le texte du statut
     if (cell.textContent.trim().toLowerCase() === label.toLowerCase()) {
         cell.innerHTML = '';
@@ -234,19 +234,19 @@ function addKeyboardNavigation() {
     document.addEventListener('keydown', function(e) {
         const table = document.querySelector('.results table');
         if (!table) return;
-        
+
         const focused = document.activeElement;
-        
+
         // Navigation avec les flèches dans le tableau
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
             const cell = focused.closest('td, th');
             if (!cell) return;
-            
+
             const row = cell.parentElement;
             const cellIndex = Array.from(row.children).indexOf(cell);
-            
+
             let targetCell = null;
-            
+
             switch (e.key) {
                 case 'ArrowUp':
                     const prevRow = row.previousElementSibling;
@@ -263,7 +263,7 @@ function addKeyboardNavigation() {
                     targetCell = cell.nextElementSibling;
                     break;
             }
-            
+
             if (targetCell) {
                 e.preventDefault();
                 const link = targetCell.querySelector('a, input, button');

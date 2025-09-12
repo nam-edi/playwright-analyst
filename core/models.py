@@ -13,8 +13,8 @@ Les autres modèles ont été déplacés dans leurs applications respectives :
 - APIKey -> api/models.py
 """
 
+from django.contrib.auth.models import User
 from django.db import models
-from django.contrib.auth.models import User, Group
 
 
 class UserContext(models.Model):
@@ -23,16 +23,13 @@ class UserContext(models.Model):
     Seuls les utilisateurs des groupes Manager et Viewer peuvent avoir un contexte.
     Les Admin accèdent à tout sans restriction.
     """
-    user = models.OneToOneField(
-        User, 
-        on_delete=models.CASCADE,
-        verbose_name="Utilisateur"
-    )
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Utilisateur")
     projects = models.ManyToManyField(
-        'projects.Project', 
+        "projects.Project",
         blank=True,
         verbose_name="Projets accessibles",
-        help_text="Si aucun projet n'est sélectionné, l'utilisateur accède à tous les projets"
+        help_text="Si aucun projet n'est sélectionné, l'utilisateur accède à tous les projets",
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Créé le")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Modifié le")
@@ -51,8 +48,8 @@ class UserContext(models.Model):
         """
         Validation : seuls les utilisateurs Manager et Viewer peuvent avoir un contexte
         """
-        user_groups = self.user.groups.values_list('name', flat=True)
-        if 'Admin' in user_groups:
+        user_groups = self.user.groups.values_list("name", flat=True)
+        if "Admin" in user_groups:
             raise ValueError("Les utilisateurs Admin ne peuvent pas avoir de contexte")
         super().save(*args, **kwargs)
 
@@ -66,11 +63,11 @@ class UserContext(models.Model):
         Retourne les projets accessibles par un utilisateur selon son contexte.
         """
         from projects.models import Project
-        
+
         # Si l'utilisateur est Admin, il accède à tout
-        if user.groups.filter(name='Admin').exists():
+        if user.groups.filter(name="Admin").exists():
             return Project.objects.all()
-        
+
         # Chercher le contexte de l'utilisateur
         try:
             user_context = cls.objects.get(user=user)

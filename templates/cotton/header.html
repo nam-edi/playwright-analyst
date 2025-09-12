@@ -14,15 +14,15 @@
             <!-- Navigation Center -->
             {% if user.is_authenticated %}
             <nav class="hidden md:flex space-x-8">
-                <a href="{% url 'home' %}" 
+                <a href="{% url 'home' %}"
                    class="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                     Dashboard
                 </a>
-                <a href="{% url 'tests_list' %}" 
+                <a href="{% url 'tests_list' %}"
                    class="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                     Tests
                 </a>
-                <a href="{% url 'executions_list' %}" 
+                <a href="{% url 'executions_list' %}"
                    class="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                     Exécutions
                 </a>
@@ -30,8 +30,8 @@
                 {% if not request.resolver_match.url_name == 'administration_dashboard' and show_project_selector %}
                 <div class="relative">
                     <label for="project-select" class="sr-only">Sélectionner un projet</label>
-                    <select 
-                        id="project-select" 
+                    <select
+                        id="project-select"
                         name="project"
                         class="block w-54 pl-3 pr-10 py-2 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                         hx-get="{% url 'select_project' %}"
@@ -41,7 +41,7 @@
                         onchange="setProject(this.value)">
                         <option value="">Sélectionner un projet...</option>
                         {% for project in projects %}
-                            <option value="{{ project.id }}" 
+                            <option value="{{ project.id }}"
                                     {% if selected_project and project.id == selected_project.id %}selected{% endif %}>
                                 {{ project.name }}
                             </option>
@@ -52,7 +52,7 @@
                 <!-- Affichage du projet unique -->
                 <div class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-md">
                     <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                     {{ selected_project.name }}
@@ -64,7 +64,7 @@
             <!-- Menu Admin et Authentication -->
             <div class="flex items-center space-x-4">
                 {% if user|has_group:"Admin" or user|has_group:"Manager" %}
-                <a href="{% url 'administration_dashboard' %}" 
+                <a href="{% url 'administration_dashboard' %}"
                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -84,7 +84,7 @@
                 <!-- Authentication Menu avec Avatar - tout à droite -->
                 {% if user.is_authenticated %}
                 <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" 
+                    <button @click="open = !open"
                             @click.away="open = false"
                             class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                             type="button">
@@ -92,7 +92,7 @@
                     </button>
 
                     <!-- Dropdown avec informations utilisateur et déconnexion -->
-                    <div x-show="open" 
+                    <div x-show="open"
                          x-transition:enter="transition ease-out duration-100"
                          x-transition:enter-start="transform opacity-0 scale-95"
                          x-transition:enter-end="transform opacity-100 scale-100"
@@ -108,7 +108,7 @@
                                 {% if user.email %}
                                 <p class="text-sm text-gray-500">{{ user.email }}</p>
                                 {% endif %}
-                                
+
                                 <!-- Badges des groupes -->
                                 <div class="mt-2 flex flex-wrap gap-1">
                                     {% if user_permissions.is_admin %}
@@ -128,15 +128,15 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            
+
                             <form method="post" action="{% url 'logout' %}" class="w-full">
                                 {% csrf_token %}
-                                <button type="submit" 
+                                <button type="submit"
                                         class="group flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 text-left"
                                         role="menuitem">
-                                    <svg class="w-4 h-4 mr-3 text-gray-400 group-hover:text-gray-500" 
+                                    <svg class="w-4 h-4 mr-3 text-gray-400 group-hover:text-gray-500"
                                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                                     </svg>
                                     Se déconnecter
@@ -146,7 +146,7 @@
                     </div>
                 </div>
                 {% else %}
-                <a href="{% url 'login' %}" 
+                <a href="{% url 'login' %}"
                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
@@ -170,7 +170,7 @@ function setProject(projectId) {
     if (projectId) {
         // Stocker le projet sélectionné dans le localStorage
         localStorage.setItem('selectedProject', projectId);
-        
+
         // Envoyer la requête HTMX pour définir le projet en session
         htmx.ajax('POST', '{% url "select_project" %}', {
             values: { project_id: projectId },
@@ -203,11 +203,11 @@ function setProjectForGuest(projectId) {
 // Restaurer le projet sélectionné au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
     const selectElement = document.getElementById('project-select');
-    
+
     // Si aucun projet n'est sélectionné côté serveur, vérifier le localStorage
     if (selectElement && !selectElement.value) {
         const savedProject = localStorage.getItem('selectedProject');
-        
+
         if (savedProject) {
             // Vérifier que le projet existe encore dans les options
             const option = selectElement.querySelector(`option[value="${savedProject}"]`);

@@ -57,14 +57,14 @@
   function showExecutionCommentEditor(executionId) {
     const editor = document.getElementById('execution-comment-editor-' + executionId)
     const textarea = document.getElementById('execution-comment-' + executionId)
-  
+
     editor.classList.remove('hidden')
     textarea.focus()
-  
+
     // Positionner le curseur à la fin du texte
     textarea.setSelectionRange(textarea.value.length, textarea.value.length)
   }
-  
+
   function hideExecutionCommentEditor(executionId) {
     const editor = document.getElementById('execution-comment-editor-' + executionId)
     editor.classList.add('hidden')

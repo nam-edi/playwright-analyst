@@ -95,12 +95,12 @@
 
 /* Animation de pulse personnalisée */
 @keyframes highlightPulse {
-    0%, 100% { 
+    0%, 100% {
         background-color: #fef3c7;
         border-color: #f59e0b;
         box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
     }
-    50% { 
+    50% {
         background-color: #fde68a;
         border-color: #d97706;
         box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
