@@ -209,6 +209,11 @@ yarn-error.log*
 *.bak
 *.backup
 
+# Security scan reports
+*bandit-report*.json
+*security-report*.json
+.bandit-report
+
 # Database backups
 *.sql
 *.dump

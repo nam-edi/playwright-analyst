@@ -1,0 +1,13 @@
+[bandit]
+# Exclure les répertoires de dépendances et autres répertoires non pertinents
+exclude_dirs = ['.venv', 'venv', 'env', '.git', '__pycache__', 'node_modules', 'staticfiles', 'static']
+
+# Tests à ignorer globalement si nécessaire
+skips = []
+
+# Tests spécifiques pour Django
+# B308 est pour mark_safe - nous l'incluons maintenant car nous utilisons format_html_join
+# B703 est pour django_mark_safe - même chose
+
+# Configuration pour exclure certains chemins spécifiques si nécessaire
+exclude = /migrations/,/static/,/staticfiles/

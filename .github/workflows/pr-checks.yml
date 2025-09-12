@@ -68,8 +68,8 @@ jobs:
         run: |
           pip install bandit safety
 
-          # Bandit pour l'analyse statique de sécurité
-          bandit -r . -ll  # Niveau medium et high seulement
+          # Bandit pour l'analyse statique de sécurité - exclure les dépendances
+          bandit -r . -ll --exclude .venv,venv,env  # Niveau medium et high seulement
 
           # Safety pour les vulnérabilités des dépendances
           safety check --json

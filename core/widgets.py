@@ -1,8 +1,7 @@
 from django import forms
 from django.forms import utils as forms_utils
 from django.forms.widgets import TextInput
-from django.utils.html import format_html
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html, format_html_join
 
 
 class ColorPickerWidget(TextInput):
@@ -188,13 +187,15 @@ class ColorPickerWidget(TextInput):
 
             # Ne créer la catégorie que s'il y a des couleurs disponibles
             if available_buttons:
+                # Utilisation de format_html_join pour concatener en toute sécurité
+                buttons_html = format_html_join("", "{}", ((button,) for button in available_buttons))
                 category_html = format_html(
                     '<div class="color-category">'
                     '<label class="color-category-label">{}</label>'
                     '<div class="color-category-grid">{}</div>'
                     "</div>",
                     category_name,
-                    mark_safe("".join(available_buttons)),
+                    buttons_html,
                 )
                 categories_html.append(category_html)
 
@@ -229,16 +230,20 @@ class ColorPickerWidget(TextInput):
                     )
                 )
 
+            # Utilisation de format_html_join pour concatener en toute sécurité
+            used_buttons_html = format_html_join("", "{}", ((button,) for button in used_buttons))
             used_colors_section = format_html(
                 '<div class="used-colors-container">'
                 '<h4 class="used-colors-title">Couleurs déjà utilisées :</h4>'
                 '<div class="used-colors-grid">{}</div>'
                 '<small class="used-colors-note">💡 Ces couleurs sont déjà utilisées par d\'autres tags de ce projet.</small>'
                 "</div>",
-                mark_safe("".join(used_buttons)),
+                used_buttons_html,
             )
 
         # HTML complet avec les couleurs prédéfinies et les couleurs utilisées séparées
+        # Utilisation de format_html_join pour concatener en toute sécurité
+        categories_html_safe = format_html_join("", "{}", ((category,) for category in categories_html))
         return format_html(
             '<div class="color-picker-widget-container" data-input-name="{}">'
             '<div class="color-picker-main">'
@@ -257,7 +262,7 @@ class ColorPickerWidget(TextInput):
             name,
             color_input,
             current_value,
-            mark_safe("".join(categories_html)),
+            categories_html_safe,
             used_colors_section,
         )
 
