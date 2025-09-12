@@ -2,16 +2,11 @@
 Tests pour l'application core
 """
 
-from datetime import datetime
-from unittest.mock import patch
-
 from django.contrib.auth.models import Group, User
 from django.test import Client, TestCase
 from django.urls import reverse
-from django.utils import timezone
 
 from core.models import UserContext
-from core.permissions import admin_required, group_required, manager_required
 from core.services.context_service import ContextService
 from projects.models import Project
 
@@ -222,9 +217,7 @@ class CoreViewsTest(TestCase):
         # Créer un test pour tester l'affichage
         from testing.models import Test
 
-        test = Test.objects.create(
-            title="Test Sample", file_path="tests/sample.spec.js", line=10, column=5, project=self.project
-        )
+        Test.objects.create(title="Test Sample", file_path="tests/sample.spec.js", line=10, column=5, project=self.project)
 
         response = self.client.get(reverse("tests_list"))
         self.assertEqual(response.status_code, 200)

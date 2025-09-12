@@ -14,24 +14,25 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path, include
+
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import include, path
+
 from core.views import CustomLoginView, CustomLogoutView
-from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('accounts/login/', CustomLoginView.as_view(), name='login'),
-    path('accounts/logout/', CustomLogoutView.as_view(), name='logout'),
-    path('accounts/', include('django.contrib.auth.urls')),
+    path("admin/", admin.site.urls),
+    path("accounts/login/", CustomLoginView.as_view(), name="login"),
+    path("accounts/logout/", CustomLogoutView.as_view(), name="logout"),
+    path("accounts/", include("django.contrib.auth.urls")),
     # Applications principales
-    path('', include('core.urls')),
-    path('projects/', include('projects.urls')),
-    path('', include('testing.urls')),
-    path('integrations/', include('integrations.urls')),
-    path('api/', include('api.urls')),
+    path("", include("core.urls")),
+    path("projects/", include("projects.urls")),
+    path("", include("testing.urls")),
+    path("integrations/", include("integrations.urls")),
+    path("api/", include("api.urls")),
 ]
 
 # Serve static files during development

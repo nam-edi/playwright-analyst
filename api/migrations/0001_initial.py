@@ -6,34 +6,54 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('projects', '0001_initial'),
+        ("projects", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='APIKey',
+            name="APIKey",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200, verbose_name='Nom de la clé')),
-                ('key', models.CharField(max_length=64, unique=True, verbose_name='Clé API')),
-                ('can_upload', models.BooleanField(default=True, verbose_name='Peut uploader des résultats')),
-                ('can_read', models.BooleanField(default=True, verbose_name='Peut lire les données')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Créée le')),
-                ('last_used', models.DateTimeField(blank=True, null=True, verbose_name='Dernière utilisation')),
-                ('is_active', models.BooleanField(default=True, verbose_name='Active')),
-                ('expires_at', models.DateTimeField(blank=True, help_text='Laisser vide pour une clé permanente', null=True, verbose_name='Expire le')),
-                ('projects', models.ManyToManyField(blank=True, help_text='Si vide, accès à tous les projets', to='projects.project', verbose_name='Projets autorisés')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='api_keys', to=settings.AUTH_USER_MODEL, verbose_name='Utilisateur')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=200, verbose_name="Nom de la clé")),
+                ("key", models.CharField(max_length=64, unique=True, verbose_name="Clé API")),
+                ("can_upload", models.BooleanField(default=True, verbose_name="Peut uploader des résultats")),
+                ("can_read", models.BooleanField(default=True, verbose_name="Peut lire les données")),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="Créée le")),
+                ("last_used", models.DateTimeField(blank=True, null=True, verbose_name="Dernière utilisation")),
+                ("is_active", models.BooleanField(default=True, verbose_name="Active")),
+                (
+                    "expires_at",
+                    models.DateTimeField(
+                        blank=True, help_text="Laisser vide pour une clé permanente", null=True, verbose_name="Expire le"
+                    ),
+                ),
+                (
+                    "projects",
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text="Si vide, accès à tous les projets",
+                        to="projects.project",
+                        verbose_name="Projets autorisés",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="api_keys",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Utilisateur",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Clé API',
-                'verbose_name_plural': 'Clés API',
-                'ordering': ['-created_at'],
+                "verbose_name": "Clé API",
+                "verbose_name_plural": "Clés API",
+                "ordering": ["-created_at"],
             },
         ),
     ]

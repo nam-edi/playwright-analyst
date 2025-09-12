@@ -5,11 +5,7 @@ Tests pour l'application testing
 from datetime import datetime
 
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.db import IntegrityError
 from django.test import Client, TestCase
-from django.urls import reverse
-from django.utils import timezone
 
 from projects.models import Project
 from testing.models import Tag, Test, TestExecution, TestResult
@@ -393,7 +389,7 @@ class TestingViewsTest(TestCase):
 
     def test_test_execution_str_method(self):
         """Test la méthode __str__ du modèle TestExecution"""
-        expected = f"Execution for {self.project.name}"
+        f"Execution for {self.project.name}"
         self.assertIn("Test Project", str(self.execution))
 
     def test_test_model_location_display(self):

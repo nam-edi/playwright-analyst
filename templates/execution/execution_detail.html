@@ -12,7 +12,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
 {% block content %}
 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
     <div class="px-4 sm:px-0">
-        
+
         <!-- Breadcrumb -->
         <nav class="flex mb-6" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -52,7 +52,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                 Projet : <span class="font-semibold">{{ execution.project.name }}</span>
             </p>
             {% endif %}
-            
+
             <!-- Informations sur l'exécution -->
             <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white p-4 rounded-lg shadow">
@@ -126,14 +126,14 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                                 {% endif %}
                             </div>
                             <!-- Icône de chevron -->
-                            <svg id="global-stats-chevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" 
+                            <svg id="global-stats-chevron" class="w-5 h-5 text-gray-400 transition-transform duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Contenu collapsible -->
                 <div id="global-stats-content" class="hidden">
                     <div class="p-6">
@@ -198,14 +198,14 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                                 {% endif %}
                             </div>
                             <!-- Icône de chevron -->
-                            <svg id="evolution-chevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" 
+                            <svg id="evolution-chevron" class="w-5 h-5 text-gray-400 transition-transform duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Contenu collapsible -->
                 <div id="evolution-content" class="hidden">
                     <div class="p-6">
@@ -255,14 +255,14 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                                 {% endwith %}
                             </span>
                             <!-- Icône de chevron -->
-                            <svg id="tag-failure-chevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" 
+                            <svg id="tag-failure-chevron" class="w-5 h-5 text-gray-400 transition-transform duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Contenu collapsible -->
                 <div id="tag-failure-content" class="hidden">
                     <div class="p-6">
@@ -292,7 +292,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                             {% endif %}
                             {% endfor %}
                         </div>
-                        
+
                         {% if not tag_failure_stats or tag_failure_stats|length == 0 %}
                         <div class="text-center py-8">
                             <div class="text-gray-500">
@@ -331,9 +331,9 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                 <!-- Recherche -->
                 <div class="flex-1">
                     <label for="search" class="block text-sm font-medium text-gray-700">Rechercher</label>
-                    <input type="text" 
-                           id="search" 
-                           name="search" 
+                    <input type="text"
+                           id="search"
+                           name="search"
                            value="{{ search }}"
                            placeholder="Nom du test..."
                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
@@ -342,7 +342,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                 <!-- Filtre par statut -->
                 <div>
                     <label for="status" class="block text-sm font-medium text-gray-700">Statut</label>
-                    <select id="status" 
+                    <select id="status"
                             name="status"
                             onchange="this.form.submit()"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
@@ -358,7 +358,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                 {% if evolution_tracking_enabled %}
                 <div>
                     <label for="evolution" class="block text-sm font-medium text-gray-700">Évolution</label>
-                    <select id="evolution" 
+                    <select id="evolution"
                             name="evolution"
                             onchange="this.form.submit()"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
@@ -374,7 +374,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                 <!-- Filtre par tag -->
                 <div>
                     <label for="tag" class="block text-sm font-medium text-gray-700">Tag</label>
-                    <select id="tag" 
+                    <select id="tag"
                             name="tag"
                             onchange="this.form.submit()"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
@@ -390,7 +390,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                 <!-- Tri -->
                 <div>
                     <label for="sort" class="block text-sm font-medium text-gray-700">Trier par</label>
-                    <select id="sort" 
+                    <select id="sort"
                             name="sort"
                             onchange="this.form.submit()"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
@@ -401,11 +401,11 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                         <option value="file_path" {% if sort_by == 'file_path' %}selected{% endif %}>Fichier</option>
                     </select>
                 </div>
-                
+
                 <!-- Bouton de réinitialisation -->
                 {% if search or status_filter or tag_filter or evolution_filter or sort_by != 'test_title' %}
                 <div>
-                    <a href="{% url 'execution_detail' execution.id %}" 
+                    <a href="{% url 'execution_detail' execution.id %}"
                        class="w-full md:w-auto inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500">
                         Réinitialiser
                     </a>
@@ -437,7 +437,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                 <div class="bg-white shadow overflow-hidden sm:rounded-md">
                     <ul class="divide-y divide-gray-200">
                         {% for result in test_results %}
-                        <li id="test-{{ result.test.id }}" 
+                        <li id="test-{{ result.test.id }}"
                             class="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
                             hx-get="{% url 'test_detail' result.test.id %}"
                             hx-target="#test-detail-panel"
@@ -514,7 +514,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                                     <p class="text-sm font-medium text-gray-900">
                                         {{ result.duration|duration_detailed }}
                                     </p>
-                                    
+
                                     <!-- Indicateur d'évolution -->
                                     {% if evolution_tracking_enabled %}
                                         {% if result.status_evolution == 'improved' %}
@@ -547,7 +547,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                                             </div>
                                         {% endif %}
                                     {% endif %}
-                                    
+
                                     {% if result.retry > 0 %}
                                         <p class="text-xs text-orange-600">
                                             Tentative {{ result.retry }}
@@ -577,7 +577,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
             <div class="mt-6 flex justify-center">
                 <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                     {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}&search={{ search }}&status={{ status_filter }}&tag={{ tag_filter }}&evolution={{ evolution_filter }}&sort={{ sort_by }}" 
+                        <a href="?page={{ page_obj.previous_page_number }}&search={{ search }}&status={{ status_filter }}&tag={{ tag_filter }}&evolution={{ evolution_filter }}&sort={{ sort_by }}"
                            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                             <span class="sr-only">Précédent</span>
                             <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -592,7 +592,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                                 {{ num }}
                             </span>
                         {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <a href="?page={{ num }}&search={{ search }}&status={{ status_filter }}&tag={{ tag_filter }}&evolution={{ evolution_filter }}&sort={{ sort_by }}" 
+                            <a href="?page={{ num }}&search={{ search }}&status={{ status_filter }}&tag={{ tag_filter }}&evolution={{ evolution_filter }}&sort={{ sort_by }}"
                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                                 {{ num }}
                             </a>
@@ -600,7 +600,7 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
                     {% endfor %}
 
                     {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}&search={{ search }}&status={{ status_filter }}&tag={{ tag_filter }}&evolution={{ evolution_filter }}&sort={{ sort_by }}" 
+                        <a href="?page={{ page_obj.next_page_number }}&search={{ search }}&status={{ status_filter }}&tag={{ tag_filter }}&evolution={{ evolution_filter }}&sort={{ sort_by }}"
                            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                             <span class="sr-only">Suivant</span>
                             <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -620,11 +620,11 @@ Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.na
 function openTestPanel() {
     const panel = document.getElementById('test-detail-panel');
     const overlay = document.getElementById('panel-overlay');
-    
+
     // Afficher le panneau et l'overlay
     panel.style.display = 'block';
     overlay.classList.remove('hidden');
-    
+
     // Petit délai pour permettre l'affichage, puis ajouter la classe pour l'animation
     setTimeout(() => {
         panel.classList.remove('translate-x-full');
@@ -634,10 +634,10 @@ function openTestPanel() {
 function closeTestPanel() {
     const panel = document.getElementById('test-detail-panel');
     const overlay = document.getElementById('panel-overlay');
-    
+
     // Ajouter la classe pour l'animation de fermeture
     panel.classList.add('translate-x-full');
-    
+
     // Masquer l'overlay et le panneau après l'animation
     setTimeout(() => {
         panel.style.display = 'none';
@@ -649,7 +649,7 @@ function toggleTagFailureStats() {
     const content = document.getElementById('tag-failure-content');
     const chevron = document.getElementById('tag-failure-chevron');
     const header = chevron.closest('.px-6');
-    
+
     if (content.classList.contains('hidden')) {
         // Afficher le contenu
         content.classList.remove('hidden');
@@ -667,7 +667,7 @@ function toggleEvolutionStats() {
     const content = document.getElementById('evolution-content');
     const chevron = document.getElementById('evolution-chevron');
     const header = chevron.closest('.px-6');
-    
+
     if (content.classList.contains('hidden')) {
         // Afficher le contenu
         content.classList.remove('hidden');
@@ -685,7 +685,7 @@ function toggleGlobalStats() {
     const content = document.getElementById('global-stats-content');
     const chevron = document.getElementById('global-stats-chevron');
     const header = chevron.closest('.px-6');
-    
+
     if (content.classList.contains('hidden')) {
         // Afficher le contenu
         content.classList.remove('hidden');
@@ -703,21 +703,21 @@ function toggleGlobalStats() {
 function toggleStatusEditor(resultId) {
     const editor = document.getElementById('status-editor-' + resultId);
     const isHidden = editor.classList.contains('hidden');
-    
+
     // Fermer tous les autres éditeurs
     document.querySelectorAll('[id^="status-editor-"]').forEach(el => {
         if (el.id !== 'status-editor-' + resultId) {
             el.classList.add('hidden');
         }
     });
-    
+
     // Basculer l'éditeur courant
     if (isHidden) {
         editor.classList.remove('hidden');
     } else {
         editor.classList.add('hidden');
     }
-    
+
     // Empêcher la propagation de l'événement pour éviter d'ouvrir le panneau de détails
     event.stopPropagation();
 }
@@ -725,7 +725,7 @@ function toggleStatusEditor(resultId) {
 function updateStatus(resultId, newStatus) {
     // Récupérer le token CSRF
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
+
     // Faire la requête HTMX pour mettre à jour le statut
     fetch(`/result/${resultId}/status/`, {
         method: 'POST',
@@ -740,13 +740,13 @@ function updateStatus(resultId, newStatus) {
         // Remplacer le conteneur du badge de statut
         const container = document.getElementById('status-container-' + resultId);
         container.innerHTML = html;
-        
+
         // Fermer l'éditeur
         const editor = document.getElementById('status-editor-' + resultId);
         if (editor) {
             editor.classList.add('hidden');
         }
-        
+
         // Afficher une notification de succès (optionnel)
         showStatusUpdateNotification(newStatus);
     })
@@ -754,7 +754,7 @@ function updateStatus(resultId, newStatus) {
         console.error('Erreur lors de la mise à jour du statut:', error);
         alert('Erreur lors de la mise à jour du statut');
     });
-    
+
     // Empêcher la propagation de l'événement
     event.stopPropagation();
 }
@@ -764,9 +764,9 @@ function showStatusUpdateNotification(status) {
     const notification = document.createElement('div');
     notification.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
     notification.innerHTML = `Statut mis à jour vers: <strong>${status}</strong>`;
-    
+
     document.body.appendChild(notification);
-    
+
     // Supprimer la notification après 3 secondes
     setTimeout(() => {
         notification.remove();
@@ -807,11 +807,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.location.hash) {
         const targetId = window.location.hash.substring(1); // Enlever le #
         const targetElement = document.getElementById(targetId);
-        
+
         console.log('Hash détecté:', window.location.hash);
         console.log('ID ciblé:', targetId);
         console.log('Élément trouvé:', targetElement);
-        
+
         if (targetElement) {
             // Ajouter une classe de surbrillance immédiatement
             targetElement.classList.add('test-highlight');
@@ -819,30 +819,30 @@ document.addEventListener('DOMContentLoaded', function() {
             targetElement.style.border = '2px solid #f59e0b';
             targetElement.style.borderLeft = '6px solid #d97706';
             targetElement.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.5)';
-            
+
             console.log('Styles appliqués à l\'élément');
-            
+
             // Scroll vers l'élément avec un petit délai pour s'assurer que la page est chargée
             setTimeout(() => {
-                targetElement.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
                 });
-                
+
                 console.log('Scroll effectué vers l\'élément');
-                
+
                 // Effet de pulse pour attirer l'attention
                 setTimeout(() => {
                     targetElement.classList.add('highlight-pulse');
                     console.log('Animation pulse ajoutée');
                 }, 300);
-                
+
                 // Retirer l'animation de pulse après 3 secondes
                 setTimeout(() => {
                     targetElement.classList.remove('highlight-pulse');
                     console.log('Animation pulse retirée');
                 }, 3300);
-                
+
                 // Retirer la surbrillance après 10 secondes
                 setTimeout(() => {
                     targetElement.classList.remove('test-highlight');
@@ -852,7 +852,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     targetElement.style.boxShadow = '';
                     console.log('Surbrillance retirée');
                 }, 10000);
-                
+
             }, 100);
         } else {
             console.log('Élément non trouvé pour l\'ID:', targetId);

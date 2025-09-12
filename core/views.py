@@ -7,24 +7,19 @@ https://creativecommons.org/licenses/by-nc-sa/4.0/
 """
 
 import json
-import os
-import tempfile
 from datetime import datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
-from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -35,7 +30,7 @@ from integrations.models import CIConfiguration, GitHubConfiguration, GitLabConf
 from projects.models import Project, ProjectFeature
 from testing.models import Tag, Test, TestExecution, TestResult
 
-from .permissions import admin_access_required, admin_required, can_manage_projects, can_modify_data, manager_required
+from .permissions import admin_access_required, can_manage_projects, can_modify_data, manager_required
 from .services.context_service import ContextService
 
 
@@ -91,7 +86,7 @@ class CustomLoginView(LoginView):
         username = self.request.POST.get("username", "")
         if username:
             try:
-                user = User.objects.get(username=username)
+                User.objects.get(username=username)
                 messages.error(
                     self.request,
                     f'Utilisateur trouvé mais mot de passe incorrect pour "{username}". Veuillez vérifier votre mot de passe.',
@@ -197,7 +192,7 @@ def home(request):
 
         # Données pour la heatmap (mois en cours)
         import calendar
-        from datetime import datetime, timedelta
+        from datetime import datetime
 
         from django.db.models import Count
         from django.db.models.functions import TruncDate
@@ -290,7 +285,6 @@ def home(request):
             tag_nodes[tag.id] = tag_data
 
         # Calculer les liens entre les tags (tests partagés)
-        from django.db.models import Q
 
         for i, tag1 in enumerate(tags_stats):
             for tag2 in tags_stats[i + 1 :]:  # Éviter les doublons
@@ -301,7 +295,7 @@ def home(request):
                     tags_links_data.append({"source": tag1.id, "target": tag2.id, "value": shared_tests})
 
     # Récupérer tous les projets accessibles à l'utilisateur pour la liste déroulante
-    projects = ContextService.get_user_accessible_projects(request.user)
+    ContextService.get_user_accessible_projects(request.user)
 
     context = {
         "latest_execution": latest_execution,
@@ -314,9 +308,6 @@ def home(request):
     }
 
     return render(request, "home.html", context)
-
-
-from django.contrib.auth.decorators import login_required
 
 
 @login_required
@@ -461,7 +452,7 @@ def update_test_result_status(request, result_id):
     if new_status not in valid_statuses:
         return JsonResponse({"error": "Statut invalide"}, status=400)
 
-    old_status = result.status
+    result.status
     result.status = new_status
     result.save()
 
@@ -758,7 +749,6 @@ def execution_detail(request, execution_id):
         }
 
     # Calculer la répartition des échecs par tag
-    from django.db.models import Count
 
     failed_results = all_results.filter(status__in=["failed", "unexpected"]).exclude(expected_status="skipped")
 
@@ -1127,7 +1117,7 @@ def process_spec(spec, execution, file_path, parent_tags=None):
                     story=story,
                 )
                 created = True
-            except:
+            except Exception:
                 # Dernière tentative: récupérer n'importe quel test correspondant
                 test = Test.objects.filter(
                     project=execution.project, title=title, file_path=file_path, line=line, column=column
@@ -1780,7 +1770,7 @@ def administration_dashboard(request):
             if ci_config:
                 has_ci_configuration = True
                 ci_provider = ci_config.get_provider_display()
-        except:
+        except Exception:
             pass
 
     # Récupérer tous les tags pour la section tags, filtrés par les projets accessibles
@@ -1835,7 +1825,7 @@ def documentation(request):
             if ci_config:
                 has_ci_configuration = True
                 ci_provider = ci_config.get_provider_display()
-        except:
+        except Exception:
             pass
 
     context = {

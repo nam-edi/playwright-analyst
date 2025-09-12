@@ -3,9 +3,7 @@ Tests pour l'application integrations
 """
 
 from django.contrib.auth.models import User
-from django.db import IntegrityError
 from django.test import Client, TestCase
-from django.urls import reverse
 
 from integrations.models import CIConfiguration, GitHubConfiguration, GitLabConfiguration
 

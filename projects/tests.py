@@ -3,7 +3,6 @@ Tests pour l'application projects
 """
 
 from django.contrib.auth.models import Group, User
-from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -232,13 +231,13 @@ class ProjectViewsTest(TestCase):
             url = reverse("project_settings", kwargs={"project_id": self.project.id})
             response = self.client.get(url)
             self.assertIn(response.status_code, [200, 404])  # 404 si la vue n'existe pas encore
-        except:
+        except Exception:
             self.assertTrue(True)  # Skip si l'URL n'existe pas
 
     def test_project_access_permissions(self):
         """Test les permissions d'accès aux projets"""
         # Utilisateur sans permissions
-        regular_user = User.objects.create_user(username="regular", password="pass")
+        User.objects.create_user(username="regular", password="pass")
         self.client.login(username="regular", password="pass")
 
         # Accès à la vue de détail sans contexte utilisateur
@@ -273,11 +272,9 @@ class ProjectViewsTest(TestCase):
         from testing.models import Test, TestExecution
 
         # Créer des objets liés
-        test = Test.objects.create(
-            title="Project Test", file_path="tests/project.spec.js", line=1, column=1, project=self.project
-        )
+        Test.objects.create(title="Project Test", file_path="tests/project.spec.js", line=1, column=1, project=self.project)
 
-        execution = TestExecution.objects.create(project=self.project, start_time=timezone.now(), duration=1000.0, raw_json={})
+        TestExecution.objects.create(project=self.project, start_time=timezone.now(), duration=1000.0, raw_json={})
 
         project_id = self.project.id
 

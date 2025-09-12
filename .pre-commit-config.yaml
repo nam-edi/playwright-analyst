@@ -32,12 +32,11 @@ repos:
       - id: isort
         args: [--profile=black, --line-length=127]
 
-  # Linting avec flake8 (configuration simplifiée)
+  # Linting avec flake8 (utilise setup.cfg)
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
     hooks:
       - id: flake8
-        args: [--max-line-length=127, --extend-ignore=E203, W503]
 
   # Django specific
   - repo: local

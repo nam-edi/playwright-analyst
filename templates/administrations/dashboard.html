@@ -2,10 +2,10 @@
 endblock %} {% block content %}
 <div
   class="flex h-screen bg-gray-50"
-  x-data="{ 
-    sidebarOpen: true, 
+  x-data="{
+    sidebarOpen: true,
     activeSection: getInitialSection(),
-    
+
     init() {
         // Écouter les changements de section pour mettre à jour l'URL
         this.$watch('activeSection', value => {

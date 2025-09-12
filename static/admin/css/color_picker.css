@@ -207,20 +207,20 @@ input[type="color"]:focus {
         flex-direction: column;
         gap: 15px;
     }
-    
+
     .used-colors-container {
         flex: 1;
         max-width: 100%;
     }
-    
+
     .used-colors-grid {
         grid-template-columns: repeat(8, 1fr);
     }
-    
+
     .color-category-grid {
         grid-template-columns: repeat(8, 1fr);
     }
-    
+
     .color-preset {
         width: 28px;
         height: 28px;
@@ -231,21 +231,21 @@ input[type="color"]:focus {
     .used-colors-grid {
         grid-template-columns: repeat(6, 1fr);
     }
-    
+
     .color-category-grid {
         grid-template-columns: repeat(6, 1fr);
     }
-    
+
     .color-preset {
         width: 24px;
         height: 24px;
     }
-    
+
     .color-picker-widget-container {
         padding: 10px;
         max-width: 100%;
     }
-    
+
     .color-presets-container, .used-colors-container {
         padding: 10px;
     }

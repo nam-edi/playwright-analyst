@@ -120,12 +120,12 @@
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const messages = document.querySelectorAll('.django-message');
-        
+
         messages.forEach(function(message) {
           // Faire disparaître le message après 10 secondes (10000ms)
           setTimeout(function() {
             message.style.opacity = '0';
-            
+
             // Supprimer complètement l'élément du DOM après la transition
             setTimeout(function() {
               if (message.parentNode) {

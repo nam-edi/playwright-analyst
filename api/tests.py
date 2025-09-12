@@ -3,18 +3,16 @@ Tests pour l'application api
 """
 
 import json
-import secrets
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from api.models import APIKey
 from projects.models import Project
-from testing.models import Test, TestExecution, TestResult
+from testing.models import TestExecution
 
 
 class APIKeyModelTest(TestCase):
@@ -215,7 +213,7 @@ class APIViewsTest(TestCase):
     def test_api_upload_valid_request(self):
         """Test un upload valide via API"""
         # Créer des données de test valides
-        test_data = {
+        _ = {
             "execution": {"name": "API Test Execution", "browser": "chromium", "environment": "test"},
             "results": [
                 {
@@ -257,7 +255,7 @@ class APIViewsTest(TestCase):
     def test_api_key_all_projects_access(self):
         """Test l'accès à tous les projets quand aucun projet spécifique n'est assigné"""
         # Clé sans projets spécifiés
-        universal_key = APIKey.objects.create(name="Universal Key", user=self.user, key="universal-key-123")
+        _ = APIKey.objects.create(name="Universal Key", user=self.user, key="universal-key-123")
         # Ne pas ajouter de projets spécifiques
 
         # Créer un autre projet
@@ -265,7 +263,7 @@ class APIViewsTest(TestCase):
 
         # Devrait pouvoir uploader sur n'importe quel projet
         url = reverse("api_upload_results", kwargs={"project_id": another_project.id})
-        test_data = {"execution": {"name": "Universal Test", "browser": "firefox"}, "results": []}
+        _ = {"execution": {"name": "Universal Test", "browser": "firefox"}, "results": []}
 
         response = self.client.post(
             url,
