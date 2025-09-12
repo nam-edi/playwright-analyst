@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {% block title %}Gestion des projets{% endblock %} {%
+{% extends 'base.html' %} {% block title %}Gestion des projets {% endblock %} {%
 block content %}
 <div class="max-w-full mx-auto sm:px-6 lg:px-8">
   <div class="px-4 sm:px-0">
@@ -47,6 +47,7 @@ block content %}
           Créez, modifiez et gérez vos projets Playwright
         </p>
       </div>
+      {% if user_permissions.can_manage_projects %}
       <div>
         <a
           href="{% url 'project_create' %}"
@@ -68,6 +69,7 @@ block content %}
           Nouveau projet
         </a>
       </div>
+      {% endif %}
     </div>
 
     <!-- Liste des projets -->
@@ -182,7 +184,8 @@ block content %}
                 Features
               </a>
 
-              <!-- Modifier -->
+              <!-- Modifier - Seulement pour Admin -->
+              {% if user_permissions.can_manage_projects %}
               <a
                 href="{% url 'project_edit' project.id %}"
                 class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -203,8 +206,10 @@ block content %}
                 </svg>
                 Modifier
               </a>
+              {% endif %}
 
-              <!-- Supprimer -->
+              <!-- Supprimer - Seulement pour Admin -->
+              {% if user_permissions.can_manage_projects %}
               <button
                 type="button"
                 onclick="confirmDelete('{{ project.name }}', '{% url 'project_delete' project.id %}')"
@@ -226,6 +231,7 @@ block content %}
                 </svg>
                 Supprimer
               </button>
+              {% endif %}
             </div>
           </div>
         </li>
@@ -252,6 +258,7 @@ block content %}
       <p class="mt-1 text-sm text-gray-500">
         Commencez par créer votre premier projet.
       </p>
+      {% if user_permissions.can_manage_projects %}
       <div class="mt-6">
         <a
           href="{% url 'project_create' %}"
@@ -273,6 +280,7 @@ block content %}
           Nouveau projet
         </a>
       </div>
+      {% endif %}
     </div>
     {% endif %}
 

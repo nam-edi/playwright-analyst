@@ -1,0 +1,440 @@
+<!-- Section API Documentation -->
+<div class="space-y-6">
+  <!-- Introduction à l'API -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">API REST PW-Analyst</h3>
+      <p class="text-sm text-gray-600 mt-1">
+        Interface programmable pour intégrer PW-Analyst dans vos workflows CI/CD
+      </p>
+    </div>
+    <div class="px-6 py-4">
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">
+            Fonctionnalités principales
+          </h4>
+          <ul class="space-y-2 text-sm text-gray-600">
+            <li class="flex items-center">
+              <svg
+                class="h-4 w-4 text-green-500 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+              Import automatique de résultats de tests
+            </li>
+            <li class="flex items-center">
+              <svg
+                class="h-4 w-4 text-green-500 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+              Consultation des projets et tests
+            </li>
+            <li class="flex items-center">
+              <svg
+                class="h-4 w-4 text-green-500 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+              Gestion des statuts de tests
+            </li>
+            <li class="flex items-center">
+              <svg
+                class="h-4 w-4 text-green-500 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+              Authentification par clé API
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">URL de base</h4>
+          <div class="bg-gray-100 rounded-md p-3">
+            <code class="text-sm text-gray-800"
+              >{{ request.build_absolute_uri }}/api/</code
+            >
+          </div>
+
+          <h4 class="text-sm font-medium text-gray-900 mb-3 mt-4">
+            Authentification
+          </h4>
+          <div class="text-sm text-gray-600">
+            <p class="mb-2">Header requis :</p>
+            <div class="bg-gray-100 rounded-md p-3">
+              <code class="text-sm text-gray-800"
+                >Authorization: ApiKey &lt;votre-cle&gt;</code
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Endpoints principaux -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Endpoints Principaux</h3>
+    </div>
+    <div class="px-6 py-4">
+      <div class="space-y-6">
+        <!-- Projets -->
+        <div class="border-l-4 border-blue-400 pl-4">
+          <h4 class="text-base font-medium text-gray-900">📁 Projets</h4>
+
+          <div class="mt-3 space-y-3">
+            <div class="bg-gray-50 rounded-md p-3">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-900"
+                  >Liste des projets</span
+                >
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                  >GET</span
+                >
+              </div>
+              <code class="text-sm text-gray-700">/api/projects/</code>
+            </div>
+
+            <div class="bg-gray-50 rounded-md p-3">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-900"
+                  >Détails d'un projet</span
+                >
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                  >GET</span
+                >
+              </div>
+              <code class="text-sm text-gray-700">/api/projects/{id}/</code>
+            </div>
+
+            <div class="bg-gray-50 rounded-md p-3">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-900"
+                  >Créer un projet</span
+                >
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                  >POST</span
+                >
+              </div>
+              <code class="text-sm text-gray-700">/api/projects/</code>
+              <p class="text-xs text-gray-500 mt-1">
+                ⚠️ Nécessite les droits Admin
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tests -->
+        <div class="border-l-4 border-green-400 pl-4">
+          <h4 class="text-base font-medium text-gray-900">🧪 Tests</h4>
+
+          <div class="mt-3 space-y-3">
+            <div class="bg-gray-50 rounded-md p-3">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-900"
+                  >Tests d'un projet</span
+                >
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                  >GET</span
+                >
+              </div>
+              <code class="text-sm text-gray-700"
+                >/api/projects/{id}/tests/</code
+              >
+            </div>
+
+            <div class="bg-gray-50 rounded-md p-3">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-900"
+                  >Créer un test</span
+                >
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                  >POST</span
+                >
+              </div>
+              <code class="text-sm text-gray-700"
+                >/api/projects/{id}/tests/</code
+              >
+              <p class="text-xs text-gray-500 mt-1">
+                ⚠️ Nécessite les droits Manager ou Admin
+              </p>
+            </div>
+
+            <div class="bg-gray-50 rounded-md p-3">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-900"
+                  >Modifier un test</span
+                >
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
+                  >PUT</span
+                >
+              </div>
+              <code class="text-sm text-gray-700">/api/tests/{id}/</code>
+              <p class="text-xs text-gray-500 mt-1">
+                ⚠️ Nécessite les droits Manager ou Admin
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Résultats -->
+        <div class="border-l-4 border-orange-400 pl-4">
+          <h4 class="text-base font-medium text-gray-900">📊 Résultats</h4>
+
+          <div class="mt-3 space-y-3">
+            <div class="bg-gray-50 rounded-md p-3">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-900"
+                  >Import de résultats</span
+                >
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                  >POST</span
+                >
+              </div>
+              <code class="text-sm text-gray-700">/api/results/import/</code>
+              <p class="text-xs text-gray-500 mt-1">
+                ⚠️ Nécessite les droits Manager ou Admin
+              </p>
+            </div>
+
+            <div class="bg-gray-50 rounded-md p-3">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-900"
+                  >Historique des exécutions</span
+                >
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                  >GET</span
+                >
+              </div>
+              <code class="text-sm text-gray-700"
+                >/api/executions/?project={id}</code
+              >
+            </div>
+
+            <div class="bg-gray-50 rounded-md p-3">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-900"
+                  >Détails d'une exécution</span
+                >
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                  >GET</span
+                >
+              </div>
+              <code class="text-sm text-gray-700">/api/executions/{id}/</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exemples d'utilisation -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Exemples d'Utilisation</h3>
+    </div>
+    <div class="px-6 py-4">
+      <div class="space-y-6">
+        <!-- Import de résultats -->
+        <div>
+          <h4 class="text-base font-medium text-gray-900 mb-3">
+            Import de résultats depuis CI/CD
+          </h4>
+          <div class="bg-gray-900 rounded-md p-4 overflow-x-auto">
+            <pre class="text-sm text-gray-100"><code># Exemple avec curl
+curl -X POST {{ request.build_absolute_uri }}/api/results/import/ \
+  -H "Authorization: ApiKey your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_id": 1,
+    "execution_name": "Build #123",
+    "results": [
+      {
+        "test_name": "test_login",
+        "status": "passed",
+        "duration": 1.25,
+        "message": "Test passed successfully"
+      },
+      {
+        "test_name": "test_payment",
+        "status": "failed",
+        "duration": 2.10,
+        "message": "Payment gateway timeout"
+      }
+    ]
+  }'</code></pre>
+          </div>
+        </div>
+
+        <!-- Script Python -->
+        <div>
+          <h4 class="text-base font-medium text-gray-900 mb-3">
+            Script Python pour automatisation
+          </h4>
+          <div class="bg-gray-900 rounded-md p-4 overflow-x-auto">
+            <pre class="text-sm text-gray-100"><code>import requests
+import json
+
+# Configuration
+API_BASE = "{{ request.build_absolute_uri }}/api"
+API_KEY = "your-api-key-here"
+headers = {
+    "Authorization": f"ApiKey {API_KEY}",
+    "Content-Type": "application/json"
+}
+
+# Récupérer la liste des projets
+projects = requests.get(f"{API_BASE}/projects/", headers=headers)
+print(f"Projets disponibles: {len(projects.json())}")
+
+# Importer des résultats
+results_data = {
+    "project_id": 1,
+    "execution_name": f"Nightly Build {datetime.now().strftime('%Y%m%d')}",
+    "results": [
+        {
+            "test_name": "integration_test_suite",
+            "status": "passed",
+            "duration": 45.30
+        }
+    ]
+}
+
+response = requests.post(
+    f"{API_BASE}/results/import/", 
+    headers=headers,
+    data=json.dumps(results_data)
+)
+
+if response.status_code == 201:
+    print("Résultats importés avec succès!")
+else:
+    print(f"Erreur: {response.status_code} - {response.text}")</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gestion des clés API -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Gestion des Clés API</h3>
+    </div>
+    <div class="px-6 py-4">
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">
+            Obtenir une clé API
+          </h4>
+          <ol class="space-y-2 text-sm text-gray-600">
+            <li class="flex">
+              <span
+                class="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-0.5"
+                >1</span
+              >
+              <span>Connectez-vous avec un compte Manager ou Admin</span>
+            </li>
+            <li class="flex">
+              <span
+                class="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-0.5"
+                >2</span
+              >
+              <span>Accédez à votre profil utilisateur</span>
+            </li>
+            <li class="flex">
+              <span
+                class="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-0.5"
+                >3</span
+              >
+              <span>Générez une nouvelle clé API</span>
+            </li>
+            <li class="flex">
+              <span
+                class="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-0.5"
+                >4</span
+              >
+              <span
+                >Copiez et sauvegardez la clé (elle ne sera plus affichée)</span
+              >
+            </li>
+          </ol>
+        </div>
+
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">Sécurité</h4>
+          <ul class="space-y-2 text-sm text-gray-600">
+            <li class="flex items-start">
+              <span
+                class="flex-shrink-0 h-1.5 w-1.5 bg-gray-400 rounded-full mt-2 mr-3"
+              ></span>
+              <span>Ne partagez jamais vos clés API</span>
+            </li>
+            <li class="flex items-start">
+              <span
+                class="flex-shrink-0 h-1.5 w-1.5 bg-gray-400 rounded-full mt-2 mr-3"
+              ></span>
+              <span>Utilisez des clés différentes par environnement</span>
+            </li>
+            <li class="flex items-start">
+              <span
+                class="flex-shrink-0 h-1.5 w-1.5 bg-gray-400 rounded-full mt-2 mr-3"
+              ></span>
+              <span>Révoquez les clés compromises immédiatement</span>
+            </li>
+            <li class="flex items-start">
+              <span
+                class="flex-shrink-0 h-1.5 w-1.5 bg-gray-400 rounded-full mt-2 mr-3"
+              ></span>
+              <span>Les clés héritent des permissions de l'utilisateur</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -99,7 +99,7 @@
         <div class="text-xs text-gray-600 mb-2">
           Historique des 10 dernières exécutions:
         </div>
-        {% with recent_results=test.results.all|slice:":10" %} {% if
+        {% with recent_results=test.results.all|slice:"-10:" %} {% if
         recent_results %}
         <div class="flex gap-1 items-center">
           {% for result in recent_results %}

@@ -1,0 +1,701 @@
+{% extends "base.html" %} {% block title %}Administration - Playwright Analyst{%
+endblock %} {% block content %}
+<div
+  class="flex h-screen bg-gray-50"
+  x-data="{ 
+    sidebarOpen: true, 
+    activeSection: getInitialSection(),
+    
+    init() {
+        // Écouter les changements de section pour mettre à jour l'URL
+        this.$watch('activeSection', value => {
+            const url = new URL(window.location);
+            url.searchParams.set('section', value);
+            window.history.pushState({}, '', url);
+        });
+    }
+}"
+>
+  <!-- Sidebar -->
+  <div class="flex-shrink-0 w-64 bg-white border-r border-gray-200 shadow-sm">
+    <div class="flex flex-col h-full">
+      <!-- Header du sidebar -->
+      <div class="flex items-center px-4 py-4 border-b border-gray-200">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <svg
+              class="w-8 h-8 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              ></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              ></path>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h2 class="text-lg font-semibold text-gray-900">Administration</h2>
+            <p class="text-sm text-gray-500">Tableau de bord</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+        <!-- Projets -->
+        <a
+          href="?section=projects"
+          @click.prevent="activeSection = 'projects'"
+          :class="{ 'bg-blue-50 border-r-2 border-blue-600 text-blue-700': activeSection === 'projects' }"
+          class="group flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+        >
+          <svg
+            class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500"
+            :class="{ 'text-blue-500': activeSection === 'projects' }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2 2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+            ></path>
+          </svg>
+          Projets
+        </a>
+
+        <!-- Tags -->
+        <a
+          href="?section=tags"
+          @click.prevent="activeSection = 'tags'"
+          :class="{ 'bg-blue-50 border-r-2 border-blue-600 text-blue-700': activeSection === 'tags' }"
+          class="group flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+        >
+          <svg
+            class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500"
+            :class="{ 'text-blue-500': activeSection === 'tags' }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+            ></path>
+          </svg>
+          Tags
+        </a>
+
+        <!-- Séparateur -->
+        <div class="border-t border-gray-200 my-4"></div>
+
+        <!-- Administration Django -->
+        {% if user_permissions.can_access_admin %}
+        <a
+          href="{% url 'admin_redirect' %}"
+          class="group flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+        >
+          <svg
+            class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+            ></path>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            ></path>
+          </svg>
+          Administration Django
+          <svg
+            class="ml-auto h-4 w-4 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            ></path>
+          </svg>
+        </a>
+        {% endif %}
+      </nav>
+
+      <!-- Footer du sidebar -->
+      <div class="flex-shrink-0 flex border-t border-gray-200 p-4">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div
+              class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium"
+            >
+              {{ user.username|first|upper }}
+            </div>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm font-medium text-gray-700">{{ user.username }}</p>
+            <div class="flex space-x-1">
+              {% if user_permissions.is_admin %}
+              <span
+                class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
+                >Admin</span
+              >
+              {% endif %} {% if user_permissions.is_manager %}
+              <span
+                class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800"
+                >Manager</span
+              >
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="flex-1 overflow-hidden">
+    <!-- Header de la page -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+      <div class="px-6 py-4">
+        <div class="flex items-center justify-between">
+          <h1
+            class="text-2xl font-bold text-gray-900"
+            x-text="
+                        activeSection === 'projects' ? 'Gestion des Projets' :
+                        activeSection === 'tags' ? 'Gestion des Tags' :
+                        activeSection === 'import' ? 'Importation de Données' :
+                        activeSection === 'help' ? 'Aide Groupes & Permissions' :
+                        'Administration'
+                    "
+          ></h1>
+          <a
+            href="{% url 'home' %}"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              ></path>
+            </svg>
+            Retour au Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zone de contenu -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <!-- Section Projets -->
+      {% include 'administrations/_projects_section.html' %}
+
+      <!-- Section Tags -->
+      {% include 'administrations/_tags_section.html' %}
+    </div>
+  </div>
+</div>
+
+<!-- Modal de modification de couleur de tag -->
+<div
+  id="editTagColorModal"
+  class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"
+>
+  <div
+    class="relative top-20 mx-auto p-6 border max-w-md shadow-lg rounded-lg bg-white"
+  >
+    <div class="text-center">
+      <div
+        class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100"
+      >
+        <svg
+          class="h-6 w-6 text-blue-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM7 3H5a2 2 0 00-2 2v12a4 4 0 004 4h2V3z"
+          ></path>
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mt-3">
+        Changer la couleur du tag
+      </h3>
+      <p class="text-sm text-gray-500 mt-1">
+        Tag: "<span
+          id="editTagNameDisplay"
+          class="font-medium text-gray-900"
+        ></span
+        >"
+      </p>
+
+      <form id="editTagColorForm" method="post" class="mt-4">
+        {% csrf_token %}
+        <input type="hidden" id="editTagId" name="tag_id" />
+
+        <!-- Prévisualisation compacte -->
+        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div class="flex items-center justify-center space-x-2">
+            <div
+              id="colorPreview"
+              class="w-6 h-6 rounded-full border border-gray-300 shadow-sm"
+            ></div>
+            <span
+              id="tagNamePreview"
+              class="text-base font-medium text-gray-900"
+            ></span>
+          </div>
+          <code
+            id="colorCodeDisplay"
+            class="text-xs text-gray-500 mt-1 block"
+          ></code>
+        </div>
+
+        <!-- Sélecteur de couleur -->
+        <div class="mb-4">
+          <label
+            for="editTagColor"
+            class="block text-sm font-medium text-gray-700 mb-2"
+            >Nouvelle couleur</label
+          >
+          <input
+            type="color"
+            id="editTagColor"
+            name="color"
+            class="w-full h-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            onchange="updateColorPreview()"
+          />
+        </div>
+
+        <div class="flex justify-center space-x-3 mt-6">
+          <button
+            type="button"
+            onclick="closeEditTagColorModal()"
+            class="px-4 py-2 bg-white text-gray-500 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+          >
+            Sauvegarder
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div
+  id="deleteModal"
+  class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"
+>
+  <div
+    class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+  >
+    <div class="mt-3 text-center">
+      <div
+        class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100"
+      >
+        <svg
+          class="h-6 w-6 text-red-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+          ></path>
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mt-2">
+        Supprimer le projet
+      </h3>
+      <div class="mt-2 px-7 py-3">
+        <p class="text-sm text-gray-500">
+          Êtes-vous sûr de vouloir supprimer le projet "<span
+            id="projectName"
+            class="font-medium"
+          ></span
+          >" ?<br /><br />
+          <strong class="text-red-600"
+            >Cette action est irréversible et supprimera toutes les données
+            associées (tests, exécutions, etc.).</strong
+          >
+        </p>
+      </div>
+      <div class="flex justify-center space-x-3 mt-4">
+        <button
+          onclick="closeDeleteModal()"
+          class="px-4 py-2 bg-white text-gray-500 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
+        >
+          Annuler
+        </button>
+        <form id="deleteForm" method="post" class="inline">
+          {% csrf_token %}
+          <button
+            type="submit"
+            class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+          >
+            Supprimer
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Fonction pour récupérer la section initiale depuis l'URL
+  function getInitialSection() {
+    // Récupérer le paramètre 'section' de l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const section = urlParams.get("section");
+
+    // Valider que la section existe, sinon défaut à 'projects'
+    const validSections = ["projects", "tags", "import", "users", "help"];
+    return validSections.includes(section) ? section : "projects";
+  }
+
+  // Gestion des couleurs de tags
+  function editTagColor(tagId, tagName, tagColor) {
+    document.getElementById("editTagId").value = tagId;
+    document.getElementById("editTagNameDisplay").textContent = tagName;
+    document.getElementById("tagNamePreview").textContent = tagName;
+    document.getElementById("editTagColor").value = tagColor;
+    document.getElementById("editTagColorForm").action =
+      '{% url "update_tag_color" %}';
+
+    // Mettre à jour la prévisualisation
+    updateColorPreview();
+
+    document.getElementById("editTagColorModal").classList.remove("hidden");
+  }
+
+  function closeEditTagColorModal() {
+    document.getElementById("editTagColorModal").classList.add("hidden");
+  }
+
+  function updateColorPreview() {
+    const colorInput = document.getElementById("editTagColor");
+    const colorPreview = document.getElementById("colorPreview");
+    const colorCodeDisplay = document.getElementById("colorCodeDisplay");
+
+    if (colorInput && colorPreview && colorCodeDisplay) {
+      const color = colorInput.value;
+      colorPreview.style.backgroundColor = color;
+      colorCodeDisplay.textContent = color;
+    }
+  }
+
+  // Gestion des projets
+  function confirmDelete(projectName, deleteUrl) {
+    document.getElementById("projectName").textContent = projectName;
+    document.getElementById("deleteForm").action = deleteUrl;
+    document.getElementById("deleteModal").classList.remove("hidden");
+  }
+
+  function closeDeleteModal() {
+    document.getElementById("deleteModal").classList.add("hidden");
+  }
+
+  // Gestion de l'upload de fichiers
+  document.addEventListener("DOMContentLoaded", function () {
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("json_file");
+    const form = document.getElementById("upload-form");
+    const uploadBtn = document.getElementById("upload-btn");
+    const uploadText = document.getElementById("upload-text");
+    const uploadLoading = document.getElementById("upload-loading");
+    const messageArea = document.getElementById("message-area");
+
+    // Vérifier si les éléments existent (section importation)
+    if (!dropZone || !fileInput || !form) return;
+
+    // Initialiser l'état du bouton
+    updateUploadButton(false);
+
+    // Click sur la zone de drop
+    dropZone.addEventListener("click", () => {
+      fileInput.click();
+    });
+
+    // Drag & drop handlers
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("border-blue-400", "bg-blue-50");
+    });
+
+    dropZone.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("border-blue-400", "bg-blue-50");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("border-blue-400", "bg-blue-50");
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        fileInput.files = files;
+        displayFileInfo(files[0]);
+        updateUploadButton(true);
+      }
+    });
+
+    // Changement de fichier
+    fileInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) {
+        displayFileInfo(e.target.files[0]);
+        updateUploadButton(true);
+      } else {
+        updateUploadButton(false);
+      }
+    });
+
+    // Soumission du formulaire
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!fileInput.files.length) {
+        showMessage("Veuillez sélectionner un fichier", "error");
+        return;
+      }
+
+      // Afficher le loading
+      uploadBtn.disabled = true;
+      uploadBtn.style.backgroundColor = "#3b82f6"; // blue-600
+      uploadBtn.style.opacity = "1";
+      uploadText.classList.add("hidden");
+      uploadLoading.classList.remove("hidden");
+
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch('{% url "process_json_upload" %}', {
+          method: "POST",
+          body: formData,
+          headers: {
+            "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
+              .value,
+          },
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showMessage(result.message, "success");
+          // Réinitialiser le formulaire
+          clearUploadForm();
+        } else {
+          showMessage(result.error || "Erreur lors de l'importation", "error");
+        }
+      } catch (error) {
+        showMessage("Erreur de connexion", "error");
+      } finally {
+        // Masquer le loading et restaurer l'état du bouton
+        uploadBtn.disabled = false;
+        uploadText.classList.remove("hidden");
+        uploadLoading.classList.add("hidden");
+        updateUploadButton(fileInput.files.length > 0);
+      }
+    });
+  });
+
+  function displayFileInfo(file) {
+    const dropContent = document.getElementById("drop-content");
+    const fileInfo = document.getElementById("file-info");
+    const fileName = document.getElementById("file-name");
+    const fileSize = document.getElementById("file-size");
+
+    if (!dropContent || !fileInfo || !fileName || !fileSize) return;
+
+    dropContent.classList.add("hidden");
+    fileInfo.classList.remove("hidden");
+
+    fileName.textContent = file.name;
+    fileSize.textContent = formatFileSize(file.size);
+  }
+
+  function clearFile() {
+    const dropContent = document.getElementById("drop-content");
+    const fileInfo = document.getElementById("file-info");
+    const fileInput = document.getElementById("json_file");
+
+    if (!dropContent || !fileInfo || !fileInput) return;
+
+    fileInput.value = "";
+    dropContent.classList.remove("hidden");
+    fileInfo.classList.add("hidden");
+    updateUploadButton(false);
+  }
+
+  function clearUploadForm() {
+    const form = document.getElementById("upload-form");
+    const messageArea = document.getElementById("message-area");
+
+    if (form) {
+      form.reset();
+      clearFile();
+    }
+
+    if (messageArea) {
+      messageArea.classList.add("hidden");
+    }
+  }
+
+  function updateUploadButton(hasFile) {
+    const uploadBtn = document.getElementById("upload-btn");
+    const uploadText = document.getElementById("upload-text");
+
+    if (!uploadBtn || !uploadText) return;
+
+    if (hasFile) {
+      uploadBtn.disabled = false;
+      uploadBtn.style.backgroundColor = "#10b981"; // green-600
+      uploadBtn.style.opacity = "1";
+      uploadBtn.style.cursor = "pointer";
+      uploadText.textContent = "Lancer l'importation";
+      uploadBtn.onmouseover = function () {
+        this.style.backgroundColor = "#059669";
+      }; // green-700
+      uploadBtn.onmouseout = function () {
+        this.style.backgroundColor = "#10b981";
+      }; // green-600
+    } else {
+      uploadBtn.disabled = true;
+      uploadBtn.style.backgroundColor = "#6b7280"; // gray-500
+      uploadBtn.style.opacity = "0.5";
+      uploadBtn.style.cursor = "not-allowed";
+      uploadText.textContent = "Sélectionnez d'abord un fichier";
+      uploadBtn.onmouseover = null;
+      uploadBtn.onmouseout = null;
+    }
+  }
+
+  function formatFileSize(bytes) {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  }
+
+  function showMessage(message, type) {
+    const messageArea = document.getElementById("message-area");
+    if (!messageArea) return;
+
+    const bgColor =
+      type === "success"
+        ? "bg-green-50 border-green-200"
+        : "bg-red-50 border-red-200";
+    const textColor = type === "success" ? "text-green-800" : "text-red-800";
+    const iconColor = type === "success" ? "text-green-400" : "text-red-400";
+    const icon =
+      type === "success"
+        ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>'
+        : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+
+    messageArea.innerHTML = `
+        <div class="rounded-md p-4 ${bgColor} border">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        ${icon}
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium ${textColor}">${message}</p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    messageArea.classList.remove("hidden");
+
+    // Auto-hide success messages
+    if (type === "success") {
+      setTimeout(() => {
+        messageArea.classList.add("hidden");
+      }, 5000);
+    }
+  }
+
+  // Fermer la modal avec Escape
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      closeDeleteModal();
+    }
+  });
+
+  // Fermer la modal en cliquant en dehors
+  document.addEventListener("click", function (event) {
+    const deleteModal = document.getElementById("deleteModal");
+    if (deleteModal && event.target === deleteModal) {
+      closeDeleteModal();
+    }
+  });
+</script>
+
+<style>
+  /* Styles personnalisés pour les barres de défilement */
+  .overflow-y-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .overflow-y-scroll::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 4px;
+  }
+
+  .overflow-y-scroll::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+  }
+
+  .overflow-y-scroll::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+</style>
+
+{% endblock %}

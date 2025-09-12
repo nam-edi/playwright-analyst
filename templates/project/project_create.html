@@ -1,563 +1,282 @@
-{% extends 'base.html' %} {% block title %}Nouveau projet{% endblock %} {% block
-content %}
-<div class="max-w-full mx-auto sm:px-6 lg:px-8">
-  <div class="px-4 sm:px-0">
-    <!-- Breadcrumb -->
-    <nav class="flex mb-6" aria-label="Breadcrumb">
-      <ol class="inline-flex items-center space-x-1 md:space-x-3">
-        <li class="inline-flex items-center">
-          <a
-            href="{% url 'home' %}"
-            class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary-600"
-          >
-            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"
-              ></path>
-            </svg>
-            Accueil
-          </a>
-        </li>
-        <li>
-          <div class="flex items-center">
-            <svg
-              class="w-6 h-6 text-gray-400"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-            <a
-              href="{% url 'projects_list' %}"
-              class="ml-1 text-sm font-medium text-gray-700 hover:text-primary-600 md:ml-2"
-              >Projets</a
-            >
-          </div>
-        </li>
-        <li>
-          <div class="flex items-center">
-            <svg
-              class="w-6 h-6 text-gray-400"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2"
-              >Nouveau projet</span
-            >
-          </div>
-        </li>
-      </ol>
-    </nav>
+{% extends 'base.html' %}
+{% block title %}
+  Nouveau projet
+{% endblock %}
 
-    <!-- Header de la page -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">Créer un nouveau projet</h1>
-      <p class="mt-2 text-lg text-gray-600">
-        Ajoutez un nouveau projet pour organiser vos tests Playwright
-      </p>
-    </div>
-
-    <!-- Formulaire -->
-    <div class="bg-white shadow rounded-lg">
-      <form method="post" class="space-y-6">
-        {% csrf_token %}
-
-        <!-- Header du formulaire -->
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-lg font-medium text-gray-900">
-            Informations du projet
-          </h3>
-          <p class="mt-1 text-sm text-gray-600">
-            Renseignez les informations de base pour votre nouveau projet.
-          </p>
-        </div>
-
-        <!-- Champs du formulaire -->
-        <div class="px-6 pb-6 space-y-6">
-          <!-- Nom du projet -->
-          <div>
-            <label for="name" class="block text-sm font-medium text-gray-700">
-              Nom du projet *
-            </label>
-            <div class="mt-1">
-              <input
-                type="text"
-                id="name"
-                name="name"
-                required
-                maxlength="200"
-                class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                placeholder="Mon projet Playwright"
-              />
+{% block content %}
+  <div class="max-w-full mx-auto sm:px-6 lg:px-8">
+    <div class="px-4 sm:px-0">
+      <!-- Breadcrumb -->
+      <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+          <li class="inline-flex items-center">
+            <a href="{% url 'home' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary-600">
+              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+              </svg>Accueil
+            </a>
+          </li>
+          <li>
+            <div class="flex items-center">
+              <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+              </svg>
+              <a
+              href="/administration/?section=projects" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary-600 md:ml-2">Projets</a>
             </div>
-            <p class="mt-2 text-sm text-gray-500">
-              Choisissez un nom descriptif et unique pour votre projet.
-            </p>
-          </div>
-
-          <!-- Description -->
-          <div>
-            <label
-              for="description"
-              class="block text-sm font-medium text-gray-700"
-            >
-              Description
-            </label>
-            <div class="mt-1">
-              <textarea
-                id="description"
-                name="description"
-                rows="4"
-                class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                placeholder="Description optionnelle du projet..."
-              ></textarea>
+          </li>
+          <li>
+            <div class="flex items-center">
+              <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+              </svg>
+              <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Nouveau projet</span>
             </div>
-            <p class="mt-2 text-sm text-gray-500">
-              Décrivez brièvement l'objectif ou le contexte de ce projet
-              (optionnel).
-            </p>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Header de la page -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Créer un nouveau projet</h1>
+        <p class="mt-2 text-lg text-gray-600">Ajoutez un nouveau projet pour organiser vos tests Playwright</p>
+      </div>
+
+      <!-- Formulaire -->
+      <div class="bg-white shadow rounded-lg">
+        <form method="post" class="space-y-6">
+          {% csrf_token %}
+
+          <!-- Header du formulaire -->
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Informations du projet</h3>
+            <p class="mt-1 text-sm text-gray-600">Renseignez les informations de base pour votre nouveau projet.</p>
           </div>
 
-          <!-- Configuration CI -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-3">
-              Configuration CI (optionnel)
-            </label>
-
-            <!-- Option : Utiliser une configuration existante -->
-            <div class="space-y-4">
-              <div>
-                <label class="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="ci_option"
-                    value="existing"
-                    class="form-radio text-primary-600"
-                    checked
-                    onclick="toggleCIForm()"
-                  />
-                  <span class="ml-2 text-sm text-gray-700"
-                    >Utiliser une configuration existante</span
-                  >
-                </label>
-                <div id="existing-ci-form" class="mt-2">
-                  <select
-                    id="ci_configuration_id"
-                    name="ci_configuration_id"
-                    class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  >
-                    <option value="">Aucune configuration CI</option>
-                    {% for ci_config in ci_configurations %}
-                    <option value="{{ ci_config.id }}">
-                      {{ ci_config.name }} ({{ ci_config.get_provider_display
-                      }})
-                    </option>
-                    {% endfor %}
-                  </select>
-                </div>
+          <!-- Champs du formulaire -->
+          <div class="px-6 pb-6 space-y-6">
+            <!-- Nom du projet -->
+            <div>
+              <label for="name" class="block text-sm font-medium text-gray-700">Nom du projet *</label>
+              <div class="mt-1">
+                <input type="text" id="name" name="name" required maxlength="200" class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Mon projet Playwright" />
               </div>
+              <p class="mt-2 text-sm text-gray-500">Choisissez un nom descriptif et unique pour votre projet.</p>
+            </div>
 
-              <!-- Option : Créer une nouvelle configuration -->
-              <div>
-                <label class="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="ci_option"
-                    value="new"
-                    class="form-radio text-primary-600"
-                    onclick="toggleCIForm()"
-                  />
-                  <span class="ml-2 text-sm text-gray-700"
-                    >Créer une nouvelle configuration CI</span
-                  >
-                </label>
+            <!-- Description -->
+            <div>
+              <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+              <div class="mt-1">
+                <textarea id="description" name="description" rows="4" class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Description optionnelle du projet..."></textarea>
+              </div>
+              <p class="mt-2 text-sm text-gray-500">Décrivez brièvement l'objectif ou le contexte de ce projet (optionnel).</p>
+            </div>
 
-                <div id="new-ci-form" class="mt-3 space-y-4 hidden">
-                  <input
-                    type="hidden"
-                    name="create_new_ci"
-                    id="create_new_ci"
-                  />
+            <!-- Configuration CI -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">Configuration CI (optionnel)</label>
 
-                  <!-- Nom de la configuration -->
-                  <div>
-                    <label
-                      for="ci_name"
-                      class="block text-sm font-medium text-gray-700"
-                    >
-                      Nom de la configuration *
-                    </label>
-                    <input
-                      type="text"
-                      id="ci_name"
-                      name="ci_name"
-                      class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      placeholder="Ma config CI"
-                    />
-                  </div>
-
-                  <!-- Provider -->
-                  <div>
-                    <label
-                      for="ci_provider"
-                      class="block text-sm font-medium text-gray-700"
-                    >
-                      Fournisseur CI *
-                    </label>
-                    <select
-                      id="ci_provider"
-                      name="ci_provider"
-                      class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      onchange="toggleProviderFields()"
-                    >
-                      <option value="">Sélectionnez un fournisseur</option>
-                      <option value="gitlab">GitLab</option>
-                      <option value="github">GitHub</option>
+              <!-- Option : Utiliser une configuration existante -->
+              <div class="space-y-4">
+                <div>
+                  <label class="inline-flex items-center">
+                    <input type="radio" name="ci_option" value="existing" class="form-radio text-primary-600" checked onclick="toggleCIForm()" />
+                    <span class="ml-2 text-sm text-gray-700">Utiliser une configuration existante</span>
+                  </label>
+                  <div id="existing-ci-form" class="mt-2">
+                    <select id="ci_configuration_id" name="ci_configuration_id" class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                      <option value="">Aucune configuration CI</option>
+                      {% for ci_config in ci_configurations %}
+                        <option value="{{ ci_config.id }}">{{ ci_config.name }} ({{ ci_config.get_provider_display }})</option>
+                      {% endfor %}
                     </select>
                   </div>
+                </div>
 
-                  <!-- Configuration GitLab -->
-                  <div id="gitlab-fields" class="space-y-4 hidden">
-                    <div
-                      class="bg-orange-50 border border-orange-200 rounded-lg p-4"
-                    >
-                      <h4 class="text-sm font-medium text-orange-800 mb-2">
-                        Configuration GitLab
-                      </h4>
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label
-                            for="gitlab_url"
-                            class="block text-sm font-medium text-gray-700"
-                          >
-                            URL GitLab *
-                          </label>
-                          <input
-                            type="url"
-                            id="gitlab_url"
-                            name="gitlab_url"
-                            class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="https://gitlab.com"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            for="project_id"
-                            class="block text-sm font-medium text-gray-700"
-                          >
-                            ID du projet GitLab *
-                          </label>
-                          <input
-                            type="text"
-                            id="project_id"
-                            name="project_id"
-                            class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="12345"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            for="access_token"
-                            class="block text-sm font-medium text-gray-700"
-                          >
-                            Token d'accès *
-                          </label>
-                          <input
-                            type="password"
-                            id="access_token"
-                            name="access_token"
-                            class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="glpat-xxxxxxxxxxxxxxxxxxxx"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            for="job_name"
-                            class="block text-sm font-medium text-gray-700"
-                          >
-                            Nom du job *
-                          </label>
-                          <input
-                            type="text"
-                            id="job_name"
-                            name="job_name"
-                            class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="test"
-                          />
-                        </div>
-                        <div class="md:col-span-2">
-                          <label
-                            for="artifact_path"
-                            class="block text-sm font-medium text-gray-700"
-                          >
-                            Chemin vers le JSON *
-                          </label>
-                          <input
-                            type="text"
-                            id="artifact_path"
-                            name="artifact_path"
-                            class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="playwright-report/results.json"
-                          />
+                <!-- Option : Créer une nouvelle configuration -->
+                <div>
+                  <label class="inline-flex items-center">
+                    <input type="radio" name="ci_option" value="new" class="form-radio text-primary-600" onclick="toggleCIForm()" />
+                    <span class="ml-2 text-sm text-gray-700">Créer une nouvelle configuration CI</span>
+                  </label>
+
+                  <div id="new-ci-form" class="mt-3 space-y-4 hidden">
+                    <input type="hidden" name="create_new_ci" id="create_new_ci" />
+
+                    <!-- Nom de la configuration -->
+                    <div>
+                      <label for="ci_name" class="block text-sm font-medium text-gray-700">Nom de la configuration *</label>
+                      <input type="text" id="ci_name" name="ci_name" class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Ma config CI" />
+                    </div>
+
+                    <!-- Provider -->
+                    <div>
+                      <label for="ci_provider" class="block text-sm font-medium text-gray-700">Fournisseur CI *</label>
+                      <select id="ci_provider" name="ci_provider" class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" onchange="toggleProviderFields()">
+                        <option value="">Sélectionnez un fournisseur</option>
+                        <option value="gitlab">GitLab</option>
+                        <option value="github">GitHub</option>
+                      </select>
+                    </div>
+
+                    <!-- Configuration GitLab -->
+                    <div id="gitlab-fields" class="space-y-4 hidden">
+                      <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                        <h4 class="text-sm font-medium text-orange-800 mb-2">Configuration GitLab</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label for="gitlab_url" class="block text-sm font-medium text-gray-700">URL GitLab *</label>
+                            <input type="url" id="gitlab_url" name="gitlab_url" class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="https://gitlab.com" />
+                          </div>
+                          <div>
+                            <label for="project_id" class="block text-sm font-medium text-gray-700">ID du projet GitLab *</label>
+                            <input type="text" id="project_id" name="project_id" class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="12345" />
+                          </div>
+                          <div>
+                            <label for="access_token" class="block text-sm font-medium text-gray-700">Token d'accès *</label>
+                            <input type="password" id="access_token" name="access_token" class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="glpat-xxxxxxxxxxxxxxxxxxxx" />
+                          </div>
+                          <div>
+                            <label for="job_name" class="block text-sm font-medium text-gray-700">Nom du job *</label>
+                            <input type="text" id="job_name" name="job_name" class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="test" />
+                          </div>
+                          <div class="md:col-span-2">
+                            <label for="artifact_path" class="block text-sm font-medium text-gray-700">Chemin vers le JSON *</label>
+                            <input type="text" id="artifact_path" name="artifact_path" class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="playwright-report/results.json" />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <!-- Configuration GitHub -->
-                  <div id="github-fields" class="space-y-4 hidden">
-                    <div
-                      class="bg-gray-50 border border-gray-200 rounded-lg p-4"
-                    >
-                      <h4 class="text-sm font-medium text-gray-800 mb-2">
-                        Configuration GitHub Actions
-                      </h4>
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label
-                            for="repository"
-                            class="block text-sm font-medium text-gray-700"
-                          >
-                            Repository *
-                          </label>
-                          <input
-                            type="text"
-                            id="repository"
-                            name="repository"
-                            class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="owner/repo"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            for="github_token"
-                            class="block text-sm font-medium text-gray-700"
-                          >
-                            Token d'accès *
-                          </label>
-                          <input
-                            type="password"
-                            id="github_token"
-                            name="github_token"
-                            class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            for="workflow_name"
-                            class="block text-sm font-medium text-gray-700"
-                          >
-                            Nom du workflow *
-                          </label>
-                          <input
-                            type="text"
-                            id="workflow_name"
-                            name="workflow_name"
-                            class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="CI"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            for="artifact_name"
-                            class="block text-sm font-medium text-gray-700"
-                          >
-                            Nom de l'artifact *
-                          </label>
-                          <input
-                            type="text"
-                            id="artifact_name"
-                            name="artifact_name"
-                            class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="playwright-report"
-                          />
-                        </div>
-                        <div class="md:col-span-2">
-                          <label
-                            for="json_filename"
-                            class="block text-sm font-medium text-gray-700"
-                          >
-                            Nom du fichier JSON *
-                          </label>
-                          <input
-                            type="text"
-                            id="json_filename"
-                            name="json_filename"
-                            class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="results.json"
-                          />
+                    <!-- Configuration GitHub -->
+                    <div id="github-fields" class="space-y-4 hidden">
+                      <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 class="text-sm font-medium text-gray-800 mb-2">Configuration GitHub Actions</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label for="repository" class="block text-sm font-medium text-gray-700">Repository *</label>
+                            <input type="text" id="repository" name="repository" class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="owner/repo" />
+                          </div>
+                          <div>
+                            <label for="github_token" class="block text-sm font-medium text-gray-700">Token d'accès *</label>
+                            <input type="password" id="github_token" name="github_token" class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+                          </div>
+                          <div>
+                            <label for="workflow_name" class="block text-sm font-medium text-gray-700">Nom du workflow *</label>
+                            <input type="text" id="workflow_name" name="workflow_name" class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="CI" />
+                          </div>
+                          <div>
+                            <label for="artifact_name" class="block text-sm font-medium text-gray-700">Nom de l'artifact *</label>
+                            <input type="text" id="artifact_name" name="artifact_name" class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="playwright-report" />
+                          </div>
+                          <div class="md:col-span-2">
+                            <label for="json_filename" class="block text-sm font-medium text-gray-700">Nom du fichier JSON *</label>
+                            <input type="text" id="json_filename" name="json_filename" class="mt-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="results.json" />
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+
+              <p class="mt-2 text-sm text-gray-500">Sélectionnez une configuration CI existante ou créez-en une nouvelle pour récupérer automatiquement les résultats de tests depuis votre pipeline.</p>
+              {% if not ci_configurations %}
+                <p class="mt-2 text-sm text-amber-600">
+                  <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>Aucune configuration CI existante. Vous pouvez en créer une nouvelle ci-dessous.
+                </p>
+              {% endif %}
             </div>
-
-            <p class="mt-2 text-sm text-gray-500">
-              Sélectionnez une configuration CI existante ou créez-en une
-              nouvelle pour récupérer automatiquement les résultats de tests
-              depuis votre pipeline.
-            </p>
-            {% if not ci_configurations %}
-            <p class="mt-2 text-sm text-amber-600">
-              <svg
-                class="w-4 h-4 inline mr-1"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Aucune configuration CI existante. Vous pouvez en créer une
-              nouvelle ci-dessous.
-            </p>
-            {% endif %}
           </div>
-        </div>
 
-        <!-- Actions -->
-        <div
-          class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center"
-        >
-          <div class="flex space-x-3">
-            <a
-              href="{% url 'projects_list' %}"
-              class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-            >
-              Annuler
-            </a>
-            <button
-              type="submit"
-              class="bg-blue-600 hover:bg-blue-700 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-            >
-              Créer le projet
-            </button>
+          <!-- Actions -->
+          <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+            <div class="flex space-x-3">
+              <a
+              href="/administration/?section=projects" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">Annuler</a>
+              <button type="submit" class="bg-blue-600 hover:bg-blue-700 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">Créer le projet</button>
+            </div>
           </div>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
 
-    <!-- Section d'aide -->
-    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <svg
-            class="h-5 w-5 text-blue-400"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-blue-800">
-            À propos des projets
-          </h3>
-          <div class="mt-2 text-sm text-blue-700">
-            <p>
-              Un projet permet d'organiser et de regrouper vos tests Playwright.
-              Après création :
-            </p>
-            <ul class="mt-2 list-disc list-inside space-y-1">
-              <li>
-                Vous pourrez importer des résultats de tests au format JSON
-              </li>
-              <li>
-                Les features par défaut seront activées (évolution des tests,
-                etc.)
-              </li>
-              <li>
-                Vous pourrez personnaliser les fonctionnalités via la
-                configuration des features
-              </li>
-              <li>Le projet apparaîtra dans le sélecteur du header</li>
-              <li>
-                Vous pouvez configurer une intégration CI (GitLab ou GitHub)
-                pour récupérer automatiquement les résultats
-              </li>
-              <li>
-                Les configurations CI créées ici seront réutilisables pour
-                d'autres projets
-              </li>
-            </ul>
+      <!-- Section d'aide -->
+      <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-blue-800">À propos des projets</h3>
+            <div class="mt-2 text-sm text-blue-700">
+              <p>Un projet permet d'organiser et de regrouper vos tests Playwright. Après création :</p>
+              <ul class="mt-2 list-disc list-inside space-y-1">
+                <li>Vous pourrez importer des résultats de tests au format JSON</li>
+                <li>Les features par défaut seront activées (évolution des tests, etc.)</li>
+                <li>Vous pourrez personnaliser les fonctionnalités via la configuration des features</li>
+                <li>Le projet apparaîtra dans le sélecteur du header</li>
+                <li>Vous pouvez configurer une intégration CI (GitLab ou GitHub) pour récupérer automatiquement les résultats</li>
+                <li>Les configurations CI créées ici seront réutilisables pour d'autres projets</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<script>
-  function toggleCIForm() {
-    const existingOption = document.querySelector(
-      'input[name="ci_option"][value="existing"]'
-    );
-    const newOption = document.querySelector(
-      'input[name="ci_option"][value="new"]'
-    );
-    const existingForm = document.getElementById("existing-ci-form");
-    const newForm = document.getElementById("new-ci-form");
-    const createNewCiInput = document.getElementById("create_new_ci");
-
-    if (existingOption.checked) {
-      existingForm.classList.remove("hidden");
-      newForm.classList.add("hidden");
-      createNewCiInput.value = "";
-
-      // Réinitialiser les champs de nouvelle configuration
-      document.getElementById("ci_name").value = "";
-      document.getElementById("ci_provider").value = "";
-      toggleProviderFields();
-    } else if (newOption.checked) {
-      existingForm.classList.add("hidden");
-      newForm.classList.remove("hidden");
-      createNewCiInput.value = "on";
-
-      // Réinitialiser la sélection existante
-      document.getElementById("ci_configuration_id").value = "";
+  <script>
+    function toggleCIForm() {
+      const existingOption = document.querySelector('input[name="ci_option"][value="existing"]')
+      const newOption = document.querySelector('input[name="ci_option"][value="new"]')
+      const existingForm = document.getElementById('existing-ci-form')
+      const newForm = document.getElementById('new-ci-form')
+      const createNewCiInput = document.getElementById('create_new_ci')
+    
+      if (existingOption.checked) {
+        existingForm.classList.remove('hidden')
+        newForm.classList.add('hidden')
+        createNewCiInput.value = ''
+    
+        // Réinitialiser les champs de nouvelle configuration
+        document.getElementById('ci_name').value = ''
+        document.getElementById('ci_provider').value = ''
+        toggleProviderFields()
+      } else if (newOption.checked) {
+        existingForm.classList.add('hidden')
+        newForm.classList.remove('hidden')
+        createNewCiInput.value = 'on'
+    
+        // Réinitialiser la sélection existante
+        document.getElementById('ci_configuration_id').value = ''
+      }
     }
-  }
-
-  function toggleProviderFields() {
-    const provider = document.getElementById("ci_provider").value;
-    const gitlabFields = document.getElementById("gitlab-fields");
-    const githubFields = document.getElementById("github-fields");
-
-    if (provider === "gitlab") {
-      gitlabFields.classList.remove("hidden");
-      githubFields.classList.add("hidden");
-    } else if (provider === "github") {
-      gitlabFields.classList.add("hidden");
-      githubFields.classList.remove("hidden");
-    } else {
-      gitlabFields.classList.add("hidden");
-      githubFields.classList.add("hidden");
+    
+    function toggleProviderFields() {
+      const provider = document.getElementById('ci_provider').value
+      const gitlabFields = document.getElementById('gitlab-fields')
+      const githubFields = document.getElementById('github-fields')
+    
+      if (provider === 'gitlab') {
+        gitlabFields.classList.remove('hidden')
+        githubFields.classList.add('hidden')
+      } else if (provider === 'github') {
+        gitlabFields.classList.add('hidden')
+        githubFields.classList.remove('hidden')
+      } else {
+        gitlabFields.classList.add('hidden')
+        githubFields.classList.add('hidden')
+      }
     }
-  }
-
-  // Initialiser l'état au chargement de la page
-  document.addEventListener("DOMContentLoaded", function () {
-    toggleCIForm();
-  });
-</script>
+    
+    // Initialiser l'état au chargement de la page
+    document.addEventListener('DOMContentLoaded', function () {
+      toggleCIForm()
+    })
+  </script>
 {% endblock %}

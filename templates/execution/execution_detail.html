@@ -1,7 +1,13 @@
 {% extends 'base.html' %}
 {% load test_filters %}
 
-{% block title %}Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.name }}{% endblock %}
+{% block title %}
+{% if execution.raw_json.config.metadata.name or execution.raw_json.config.metadata.environment %}
+{% if execution.raw_json.config.metadata.name %}{{ execution.raw_json.config.metadata.name }}{% endif %}{% if execution.raw_json.config.metadata.name and execution.raw_json.config.metadata.environment %} - {% endif %}{% if execution.raw_json.config.metadata.environment %}{{ execution.raw_json.config.metadata.environment }}{% endif %} - {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.name }}
+{% else %}
+Exécution {{ execution.start_time|date:"d/m/Y H:i" }} - {{ execution.project.name }}
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -31,12 +37,21 @@
 
         <!-- Header de la page -->
         <div class="mb-8">
+            {% if execution.raw_json.config.metadata.name or execution.raw_json.config.metadata.environment %}
+            <h1 class="text-3xl font-bold text-gray-900">
+                {% if execution.raw_json.config.metadata.name %}{{ execution.raw_json.config.metadata.name }}{% endif %}{% if execution.raw_json.config.metadata.name and execution.raw_json.config.metadata.environment %} - {% endif %}{% if execution.raw_json.config.metadata.environment %}{{ execution.raw_json.config.metadata.environment }}{% endif %}
+            </h1>
+            <p class="mt-2 text-lg text-gray-600">
+                Exécution du {{ execution.start_time|date:"d/m/Y à H:i" }} - Projet : <span class="font-semibold">{{ execution.project.name }}</span>
+            </p>
+            {% else %}
             <h1 class="text-3xl font-bold text-gray-900">
                 Exécution du {{ execution.start_time|date:"d/m/Y à H:i" }}
             </h1>
             <p class="mt-2 text-lg text-gray-600">
                 Projet : <span class="font-semibold">{{ execution.project.name }}</span>
             </p>
+            {% endif %}
             
             <!-- Informations sur l'exécution -->
             <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -295,6 +310,21 @@
         </div>
         {% endif %}
 
+        <!-- Section de commentaire -->
+        <div class="mb-8">
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="px-6 py-4 bg-white border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Commentaire</h3>
+                    <p class="text-sm text-gray-600 mt-1">
+                        Ajoutez un commentaire sur cette exécution pour documenter les résultats ou noter des observations
+                    </p>
+                </div>
+                <div class="p-6">
+                    {% include 'cotton/execution-comment-fragment.html' with execution=execution %}
+                </div>
+            </div>
+        </div>
+
         <!-- Filtres et tri -->
         <div class="mb-6 bg-white p-4 rounded-lg shadow">
             <form method="get" class="space-y-4 md:space-y-0 md:flex md:items-end md:space-x-4">
@@ -418,23 +448,9 @@
                                     <!-- Titre et statut -->
                                     <div class="flex items-center space-x-3">
                                         <!-- Badge de statut principal -->
-                                        {% if result.status == 'passed' %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                ✓ PASS
-                                            </span>
-                                        {% elif result.status == 'failed' or result.status == 'unexpected' %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                ✗ FAIL
-                                            </span>
-                                        {% elif result.status == 'skipped' %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                ⊘ SKIP
-                                            </span>
-                                        {% elif result.status == 'flaky' %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                ⚠ FLAKY
-                                            </span>
-                                        {% endif %}
+                                        <div id="status-container-{{ result.id }}">
+                                            {% include 'cotton/status-badge.html' with result=result %}
+                                        </div>
 
                                         <!-- Titre du test -->
                                         <h3 class="text-sm font-medium text-gray-900 truncate flex-1 flex items-center">
@@ -599,6 +615,7 @@
     </div>
 </div>
 
+{% csrf_token %}
 <script>
 function openTestPanel() {
     const panel = document.getElementById('test-detail-panel');
@@ -682,10 +699,98 @@ function toggleGlobalStats() {
     }
 }
 
+// Fonctions pour l'édition des statuts
+function toggleStatusEditor(resultId) {
+    const editor = document.getElementById('status-editor-' + resultId);
+    const isHidden = editor.classList.contains('hidden');
+    
+    // Fermer tous les autres éditeurs
+    document.querySelectorAll('[id^="status-editor-"]').forEach(el => {
+        if (el.id !== 'status-editor-' + resultId) {
+            el.classList.add('hidden');
+        }
+    });
+    
+    // Basculer l'éditeur courant
+    if (isHidden) {
+        editor.classList.remove('hidden');
+    } else {
+        editor.classList.add('hidden');
+    }
+    
+    // Empêcher la propagation de l'événement pour éviter d'ouvrir le panneau de détails
+    event.stopPropagation();
+}
+
+function updateStatus(resultId, newStatus) {
+    // Récupérer le token CSRF
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Faire la requête HTMX pour mettre à jour le statut
+    fetch(`/result/${resultId}/status/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: `status=${newStatus}`
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Remplacer le conteneur du badge de statut
+        const container = document.getElementById('status-container-' + resultId);
+        container.innerHTML = html;
+        
+        // Fermer l'éditeur
+        const editor = document.getElementById('status-editor-' + resultId);
+        if (editor) {
+            editor.classList.add('hidden');
+        }
+        
+        // Afficher une notification de succès (optionnel)
+        showStatusUpdateNotification(newStatus);
+    })
+    .catch(error => {
+        console.error('Erreur lors de la mise à jour du statut:', error);
+        alert('Erreur lors de la mise à jour du statut');
+    });
+    
+    // Empêcher la propagation de l'événement
+    event.stopPropagation();
+}
+
+function showStatusUpdateNotification(status) {
+    // Créer une notification temporaire
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
+    notification.innerHTML = `Statut mis à jour vers: <strong>${status}</strong>`;
+    
+    document.body.appendChild(notification);
+    
+    // Supprimer la notification après 3 secondes
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Fermer les éditeurs de statut quand on clique ailleurs
+document.addEventListener('click', function(event) {
+    // Si le clic n'est pas sur un badge de statut ou un éditeur, fermer tous les éditeurs
+    if (!event.target.closest('[id^="status-badge-"]') && !event.target.closest('[id^="status-editor-"]')) {
+        document.querySelectorAll('[id^="status-editor-"]').forEach(el => {
+            el.classList.add('hidden');
+        });
+    }
+});
+
 // Fermer le panneau avec la touche Escape
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeTestPanel();
+        // Fermer aussi tous les éditeurs de statut
+        document.querySelectorAll('[id^="status-editor-"]').forEach(el => {
+            el.classList.add('hidden');
+        });
     }
 });
 

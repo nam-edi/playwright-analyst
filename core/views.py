@@ -16,19 +16,61 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.models import User
 from django.urls import reverse_lazy
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.utils.decorators import method_decorator
 import json
 import tempfile
 import os
 from datetime import datetime, timedelta
 from django.utils.dateparse import parse_datetime
-from .models import Test, TestResult, TestExecution, Project, Tag, ProjectFeature, CIConfiguration, GitHubConfiguration, GitLabConfiguration
+# Import depuis les nouvelles applications
+from projects.models import Project, ProjectFeature
+from testing.models import Test, TestResult, TestExecution, Tag
+from integrations.models import CIConfiguration, GitHubConfiguration, GitLabConfiguration
+from api.models import APIKey
+from .permissions import admin_required, manager_required, can_modify_data, admin_access_required, can_manage_projects
+from .services.context_service import ContextService
+
+
+def get_selected_project_for_user(request):
+    """
+    Fonction utilitaire pour récupérer le projet sélectionné en tenant compte du contexte utilisateur.
+    Retourne (selected_project, projects, auto_selected) où projects sont tous les projets accessibles.
+    """
+    selected_project = None
+    project_id = request.session.get('selected_project_id')
+    auto_selected = False
+    
+    # Récupérer tous les projets accessibles à l'utilisateur
+    projects = ContextService.get_user_accessible_projects(request.user)
+    projects_count = projects.count()
+    
+    # Si un seul projet est accessible, le sélectionner automatiquement
+    if projects_count == 1:
+        selected_project = projects.first()
+        request.session['selected_project_id'] = selected_project.id
+        auto_selected = True
+    elif project_id:
+        try:
+            # Vérifier que l'utilisateur peut accéder à ce projet
+            selected_project = projects.get(id=project_id)
+        except Project.DoesNotExist:
+            # Nettoyer la session si le projet n'existe pas ou n'est pas accessible
+            if 'selected_project_id' in request.session:
+                del request.session['selected_project_id']
+    
+    return selected_project, projects, auto_selected
 
 
 class CustomLoginView(LoginView):
     """Vue de connexion personnalisée qui ajoute un message de bienvenue"""
     template_name = 'registration/login.html'
     success_url = reverse_lazy('home')
+    
+
     
     def form_valid(self, form):
         """Ajouter un message de succès après connexion réussie"""
@@ -40,6 +82,30 @@ class CustomLoginView(LoginView):
             f'Bienvenue, {username} ! Vous êtes connecté et avez accès à toutes les fonctionnalités.'
         )
         return response
+    
+    def form_invalid(self, form):
+        """Gérer les erreurs de connexion avec des messages détaillés"""
+        # Vérifier si l'utilisateur existe
+        username = self.request.POST.get('username', '')
+        if username:
+            try:
+                user = User.objects.get(username=username)
+                messages.error(
+                    self.request,
+                    f'Utilisateur trouvé mais mot de passe incorrect pour "{username}". Veuillez vérifier votre mot de passe.'
+                )
+            except User.DoesNotExist:
+                messages.error(
+                    self.request,
+                    f'Aucun utilisateur trouvé avec le nom "{username}". Veuillez vérifier votre nom d\'utilisateur.'
+                )
+        else:
+            messages.error(
+                self.request,
+                'Veuillez remplir tous les champs requis.'
+            )
+        
+        return super().form_invalid(form)
 
 
 class CustomLogoutView(LogoutView):
@@ -60,125 +126,202 @@ class CustomLogoutView(LogoutView):
         return response
 
 
-@login_required
+@admin_access_required
 def admin_redirect(request):
     """Vue pour rediriger vers l'administration Django avec authentification requise"""
     return redirect('/admin/')
 
 
 def home(request):
-    # Récupérer le projet sélectionné depuis la session (utilisateurs connectés) ou localStorage via cookie
-    selected_project = None
+    # Si l'utilisateur n'est pas connecté, rediriger vers la page de login
+    if not request.user.is_authenticated:
+        return redirect('login')
+    # ...existing code...
     latest_execution = None
     latest_execution_stats = None
     success_rate_data = []
     duration_data = []
     heatmap_data = []
+    tags_map_data = []
+    tags_links_data = []
     
-    project_id = None
+    # Le projet sélectionné est géré par le context processor
+    # Récupérer depuis le contexte global
+    selected_project = None
+    if hasattr(request, '_cached_user'):
+        # Le context processor a déjà été exécuté
+        pass
     
-    # Pour les utilisateurs connectés, utiliser la session
-    if request.user.is_authenticated and 'selected_project_id' in request.session:
-        project_id = request.session['selected_project_id']
-    # Pour les utilisateurs non connectés, utiliser le cookie (localStorage côté client)
-    elif not request.user.is_authenticated and 'selectedProject' in request.COOKIES:
+    # Utiliser la session pour récupérer le projet sélectionné
+    if 'selected_project_id' in request.session:
         try:
-            project_id = int(request.COOKIES['selectedProject'])
-        except (ValueError, TypeError):
-            project_id = None
-    
-    if project_id:
-        try:
-            selected_project = Project.objects.get(id=project_id)
-            # Récupérer la dernière exécution du projet
-            latest_execution = selected_project.executions.first()
-            
-            if latest_execution:
-                # Calculer les statistiques de la dernière exécution
-                # Exclure les tests dont le statut attendu est "skipped"
-                latest_execution_stats = {
-                    'passed': latest_execution.test_results.filter(status='passed').count(),
-                    'failed': latest_execution.test_results.filter(status='failed').count(),
-                    'skipped': latest_execution.test_results.filter(status='skipped').exclude(expected_status='skipped').count(),
-                    'flaky': latest_execution.test_results.filter(status='flaky').count(),
-                    'total': latest_execution.test_results.exclude(expected_status='skipped').count(),
-                }
-            
-            # Données pour le graphique d'évolution du taux de réussite (20 dernières exécutions)
-            recent_executions = selected_project.executions.order_by('-start_time')[:20]
-            for execution in recent_executions:
-                total_tests = execution.test_results.exclude(expected_status='skipped').count()
-                passed_tests = execution.test_results.filter(status='passed').count()
-                success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
-                success_rate_data.append(round(success_rate, 1))
-            
-            # Données pour le graphique des durées d'exécution (20 dernières exécutions)
-            for execution in recent_executions:
-                duration_data.append(execution.duration)
-            
-            # Données pour la heatmap (mois en cours)
-            from django.utils import timezone
-            from datetime import datetime, timedelta
-            from django.db.models import Count
-            from django.db.models.functions import TruncDate
-            import calendar
-            
-            now = timezone.localtime(timezone.now())  # Convertir en heure locale
-            current_year = now.year
-            current_month = now.month
-            
-            # Premier et dernier jour du mois en cours en heure locale
-            first_day_of_month = timezone.make_aware(datetime(current_year, current_month, 1))
-            last_day_of_month = timezone.make_aware(datetime(current_year, current_month, calendar.monthrange(current_year, current_month)[1], 23, 59, 59))
-            
-            # Récupérer le nombre d'exécutions par jour pour le mois en cours
-            # Utiliser TruncDate avec timezone pour convertir en date locale
-            executions_by_day = selected_project.executions.filter(
-                start_time__gte=first_day_of_month,
-                start_time__lte=last_day_of_month
-            ).annotate(
-                day=TruncDate('start_time', tzinfo=timezone.get_current_timezone())
-            ).values('day').annotate(
-                count=Count('id')
-            ).order_by('day')
-            
-            # Créer un dictionnaire pour un accès rapide
-            execution_counts = {item['day'].strftime('%Y-%m-%d'): item['count'] for item in executions_by_day}
-            
-            # Générer les données pour tous les jours du mois en cours
-            days_in_month = calendar.monthrange(current_year, current_month)[1]
-            for day in range(1, days_in_month + 1):
-                date = datetime(current_year, current_month, day).date()
-                date_str = date.strftime('%Y-%m-%d')
-                count = execution_counts.get(date_str, 0)
-                heatmap_data.append({
-                    'date': date_str,
-                    'count': count
-                })
-                
-        except Project.DoesNotExist:
-            # Nettoyer la session/cookie si le projet n'existe pas
-            if request.user.is_authenticated and 'selected_project_id' in request.session:
+            from projects.models import Project
+            selected_project = Project.objects.get(id=request.session['selected_project_id'])
+            # Vérifier que l'utilisateur peut accéder à ce projet
+            accessible_projects = ContextService.get_user_accessible_projects(request.user)
+            if not accessible_projects.filter(id=selected_project.id).exists():
+                selected_project = None
                 del request.session['selected_project_id']
-            # Pour les non-connectés, on ne peut pas nettoyer le cookie ici, 
-            # ce sera fait côté JavaScript
+        except Project.DoesNotExist:
+            selected_project = None
+            if 'selected_project_id' in request.session:
+                del request.session['selected_project_id']
     
-    # Récupérer tous les projets pour la liste déroulante
-    projects = Project.objects.all()
+    if selected_project:
+        # Récupérer la dernière exécution du projet
+        latest_execution = selected_project.executions.order_by('-start_time').first()
+        
+        if latest_execution:
+            # Calculer les statistiques de la dernière exécution
+            # Exclure les tests dont le statut attendu est "skipped"
+            latest_execution_stats = {
+                'passed': latest_execution.test_results.filter(status='passed').count(),
+                'failed': latest_execution.test_results.filter(status='failed').count(),
+                'skipped': latest_execution.test_results.filter(status='skipped').exclude(expected_status='skipped').count(),
+                'flaky': latest_execution.test_results.filter(status='flaky').count(),
+                'total': latest_execution.test_results.exclude(expected_status='skipped').count(),
+            }
+        
+        # Données pour le graphique d'évolution du taux de réussite (20 dernières exécutions)
+        recent_executions = selected_project.executions.order_by('-start_time')[:20]
+        for execution in recent_executions:
+            total_tests = execution.test_results.exclude(expected_status='skipped').count()
+            passed_tests = execution.test_results.filter(status='passed').count()
+            success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+            success_rate_data.append(round(success_rate, 1))
+        
+        # Données pour le graphique des durées d'exécution (20 dernières exécutions)
+        for execution in recent_executions:
+            duration_data.append(execution.duration)
+        
+        # Données pour la heatmap (mois en cours)
+        from django.utils import timezone
+        from datetime import datetime, timedelta
+        from django.db.models import Count
+        from django.db.models.functions import TruncDate
+        import calendar
+        
+        now = timezone.localtime(timezone.now())  # Convertir en heure locale
+        current_year = now.year
+        current_month = now.month
+        
+        # Premier et dernier jour du mois en cours en heure locale
+        first_day_of_month = timezone.make_aware(datetime(current_year, current_month, 1))
+        last_day_of_month = timezone.make_aware(datetime(current_year, current_month, calendar.monthrange(current_year, current_month)[1], 23, 59, 59))
+        
+        # Récupérer le nombre d'exécutions par jour pour le mois en cours
+        # Utiliser TruncDate avec timezone pour convertir en date locale
+        executions_by_day = selected_project.executions.filter(
+            start_time__gte=first_day_of_month,
+            start_time__lte=last_day_of_month
+        ).annotate(
+            day=TruncDate('start_time', tzinfo=timezone.get_current_timezone())
+        ).values('day').annotate(
+            count=Count('id')
+        ).order_by('day')
+        
+        # Créer un dictionnaire pour un accès rapide
+        execution_counts = {item['day'].strftime('%Y-%m-%d'): item['count'] for item in executions_by_day}
+        
+        # Générer les données pour tous les jours du mois en cours
+        days_in_month = calendar.monthrange(current_year, current_month)[1]
+        for day in range(1, days_in_month + 1):
+            date = datetime(current_year, current_month, day).date()
+            date_str = date.strftime('%Y-%m-%d')
+            count = execution_counts.get(date_str, 0)
+            heatmap_data.append({
+                'date': date_str,
+                'count': count
+            })
+    
+    # Données pour la cartographie des tags (seulement si un projet est sélectionné et la feature activée)
+    tags_map_data = []
+    tags_links_data = []
+    if selected_project and selected_project.is_feature_enabled('tags_mapping'):
+        # Récupérer tous les tags du projet avec les statistiques des tests
+        tags_stats = Tag.objects.filter(
+            test__project=selected_project
+        ).distinct().annotate(
+            total_tests=Count('test', distinct=True)
+        ).order_by('name')
+        
+        tag_nodes = {}
+        for tag in tags_stats:
+            # Récupérer les statistiques détaillées pour ce tag
+            tag_tests = Test.objects.filter(project=selected_project, tags=tag)
+            
+            # Calculer les statistiques basées sur les derniers résultats de chaque test
+            passed_count = 0
+            failed_count = 0
+            skipped_count = 0
+            flaky_count = 0
+            total_count = 0
+            
+            for test in tag_tests:
+                latest_result = test.get_latest_result()
+                if latest_result and latest_result.expected_status != 'skipped':
+                    total_count += 1
+                    if latest_result.status == 'passed':
+                        passed_count += 1
+                    elif latest_result.status in ['failed', 'unexpected']:
+                        failed_count += 1
+                    elif latest_result.status == 'skipped':
+                        skipped_count += 1
+                    elif latest_result.status == 'flaky':
+                        flaky_count += 1
+            
+            # Calculer le taux de réussite
+            success_rate = (passed_count / total_count * 100) if total_count > 0 else 0
+            
+            tag_data = {
+                'id': tag.id,
+                'name': tag.name,
+                'color': tag.color,
+                'total_tests': total_count,
+                'passed_count': passed_count,
+                'failed_count': failed_count,
+                'skipped_count': skipped_count,
+                'flaky_count': flaky_count,
+                'success_rate': round(success_rate, 1)
+            }
+            
+            tags_map_data.append(tag_data)
+            tag_nodes[tag.id] = tag_data
+        
+        # Calculer les liens entre les tags (tests partagés)
+        from django.db.models import Q
+        for i, tag1 in enumerate(tags_stats):
+            for tag2 in tags_stats[i+1:]:  # Éviter les doublons
+                # Compter les tests qui ont les deux tags
+                shared_tests = Test.objects.filter(
+                    project=selected_project,
+                    tags=tag1
+                ).filter(tags=tag2).count()
+                
+                if shared_tests > 0:
+                    tags_links_data.append({
+                        'source': tag1.id,
+                        'target': tag2.id,
+                        'value': shared_tests
+                    })
+    
+    # Récupérer tous les projets accessibles à l'utilisateur pour la liste déroulante
+    projects = ContextService.get_user_accessible_projects(request.user)
     
     context = {
-        'selected_project': selected_project,
-        'projects': projects,
         'latest_execution': latest_execution,
         'latest_execution_stats': latest_execution_stats,
         'success_rate_data': success_rate_data,
         'duration_data': duration_data,
         'heatmap_data': heatmap_data,
+        'tags_map_data': tags_map_data,
+        'tags_links_data': tags_links_data,
     }
     
     return render(request, 'home.html', context)
 
 
+from django.contrib.auth.decorators import login_required
 @login_required
 def select_project(request):
     """Vue pour sélectionner un projet"""
@@ -187,7 +330,9 @@ def select_project(request):
         
         if project_id:
             try:
-                project = Project.objects.get(id=project_id)
+                # Vérifier que l'utilisateur peut accéder à ce projet
+                accessible_projects = ContextService.get_user_accessible_projects(request.user)
+                project = accessible_projects.get(id=project_id)
                 request.session['selected_project_id'] = project.id
                 messages.success(request, f'Projet "{project.name}" sélectionné')
                 
@@ -213,34 +358,16 @@ def select_project(request):
 
 def tests_list(request):
     """Vue pour afficher la liste des tests du projet sélectionné"""
-    # Récupérer le projet sélectionné depuis la session (utilisateurs connectés) ou localStorage via cookie
-    selected_project = None
-    project_id = None
-    
-    # Pour les utilisateurs connectés, utiliser la session
-    if request.user.is_authenticated and 'selected_project_id' in request.session:
-        project_id = request.session['selected_project_id']
-    # Pour les utilisateurs non connectés, utiliser le cookie (localStorage côté client)
-    elif not request.user.is_authenticated and 'selectedProject' in request.COOKIES:
-        try:
-            project_id = int(request.COOKIES['selectedProject'])
-        except (ValueError, TypeError):
-            project_id = None
-    
-    if project_id:
-        try:
-            selected_project = Project.objects.get(id=project_id)
-        except Project.DoesNotExist:
-            # Nettoyer la session/cookie si le projet n'existe pas
-            if request.user.is_authenticated and 'selected_project_id' in request.session:
-                del request.session['selected_project_id']
+    # Si l'utilisateur n'est pas connecté, afficher la page de login
+    if not request.user.is_authenticated:
+        return render(request, 'registration/login.html')
+    # ...existing code...
+    # Récupérer le projet sélectionné et les projets accessibles
+    selected_project, projects, auto_selected = get_selected_project_for_user(request)
     
     if not selected_project:
         messages.warning(request, 'Veuillez sélectionner un projet pour voir les tests.')
         return redirect('home')
-    
-    # Récupérer tous les projets pour le header
-    projects = Project.objects.all()
     
     # Récupérer les TESTS du projet sélectionné (pas les résultats)
     tests = Test.objects.filter(project=selected_project).prefetch_related(
@@ -264,7 +391,6 @@ def tests_list(request):
     page_obj = paginator.get_page(page_number)
     
     # Tags disponibles pour les filtres (directement depuis les tests)
-    from .models import Tag
     available_tags_qs = Tag.objects.filter(test__project=selected_project).distinct()
     available_tags = [
         {'id': tag.id, 'name': tag.name, 'color': tag.color} 
@@ -292,7 +418,7 @@ def test_detail(request, test_id):
     """Vue pour afficher les détails d'un test dans le panneau latéral"""
     test = get_object_or_404(Test, id=test_id)
     
-    # Récupérer toutes les exécutions du test, triées par date décroissante
+    # Récupérer toutes les exécutions du test, triées par date décroissante (plus récent en premier)
     test_results = test.results.select_related('execution').order_by('-start_time')
     
     # Pagination pour les résultats
@@ -309,6 +435,7 @@ def test_detail(request, test_id):
     return render(request, 'cotton/test-detail-panel.html', context)
 
 
+@can_modify_data
 def update_test_comment(request, test_id):
     """Vue pour mettre à jour le commentaire d'un test via HTMX"""
     if request.method != 'POST':
@@ -325,6 +452,46 @@ def update_test_comment(request, test_id):
     return render(request, 'cotton/test-comment-fragment.html', context)
 
 
+@can_modify_data
+def update_test_result_status(request, result_id):
+    """Vue pour mettre à jour le statut d'un résultat de test via HTMX"""
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    
+    result = get_object_or_404(TestResult, id=result_id)
+    new_status = request.POST.get('status', '').strip()
+    
+    # Vérifier que le nouveau statut est valide
+    valid_statuses = [choice[0] for choice in TestResult.STATUS_CHOICES]
+    if new_status not in valid_statuses:
+        return JsonResponse({'error': 'Statut invalide'}, status=400)
+    
+    old_status = result.status
+    result.status = new_status
+    result.save()
+    
+    # Retourner le fragment HTML mis à jour du badge de statut
+    context = {'result': result}
+    return render(request, 'cotton/status-badge.html', context)
+
+
+@can_modify_data
+def update_execution_comment(request, execution_id):
+    """Vue pour mettre à jour le commentaire d'une exécution via HTMX"""
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    
+    execution = get_object_or_404(TestExecution, id=execution_id)
+    comment = request.POST.get('comment', '').strip()
+    
+    execution.comment = comment
+    execution.save()
+    
+    # Retourner le fragment HTML mis à jour
+    context = {'execution': execution}
+    return render(request, 'cotton/execution-comment-fragment.html', context)
+
+
 def htmx_example(request):
     """Exemple de vue HTMX"""
     return HttpResponse("""
@@ -338,20 +505,14 @@ def htmx_example(request):
 
 def executions_list(request):
     """Vue pour afficher la liste des exécutions du projet sélectionné"""
-    # Récupérer le projet sélectionné depuis la session (utilisateurs connectés) ou localStorage via cookie
+    # Si l'utilisateur n'est pas connecté, afficher la page de login
+    if not request.user.is_authenticated:
+        return render(request, 'registration/login.html')
+    # ...existing code...
     selected_project = None
     project_id = None
-    
-    # Pour les utilisateurs connectés, utiliser la session
-    if request.user.is_authenticated and 'selected_project_id' in request.session:
+    if 'selected_project_id' in request.session:
         project_id = request.session['selected_project_id']
-    # Pour les utilisateurs non connectés, utiliser le cookie (localStorage côté client)
-    elif not request.user.is_authenticated and 'selectedProject' in request.COOKIES:
-        try:
-            project_id = int(request.COOKIES['selectedProject'])
-        except (ValueError, TypeError):
-            project_id = None
-    
     if project_id:
         try:
             selected_project = Project.objects.get(id=project_id)
@@ -462,22 +623,15 @@ def executions_list(request):
 
 def execution_detail(request, execution_id):
     """Vue pour afficher le détail d'une exécution avec tous ses tests"""
+    # Si l'utilisateur n'est pas connecté, afficher la page de login
+    if not request.user.is_authenticated:
+        return render(request, 'registration/login.html')
+    # ...existing code...
     execution = get_object_or_404(TestExecution, id=execution_id)
-    
-    # Vérifier que l'exécution appartient au projet sélectionné (si défini)
     selected_project = None
     project_id = None
-    
-    # Pour les utilisateurs connectés, utiliser la session
-    if request.user.is_authenticated and 'selected_project_id' in request.session:
+    if 'selected_project_id' in request.session:
         project_id = request.session['selected_project_id']
-    # Pour les utilisateurs non connectés, utiliser le cookie (localStorage côté client)
-    elif not request.user.is_authenticated and 'selectedProject' in request.COOKIES:
-        try:
-            project_id = int(request.COOKIES['selectedProject'])
-        except (ValueError, TypeError):
-            project_id = None
-    
     if project_id:
         try:
             selected_project = Project.objects.get(id=project_id)
@@ -649,7 +803,7 @@ def execution_detail(request, execution_id):
     return render(request, 'execution/execution_detail.html', context)
 
 
-@login_required
+@can_modify_data
 def upload_json(request):
     """Vue pour afficher la page d'upload de fichiers JSON"""
     # Récupérer le projet sélectionné depuis la session
@@ -671,7 +825,7 @@ def upload_json(request):
     return render(request, 'import/upload_json.html', context)
 
 
-@login_required
+@can_modify_data
 def process_json_upload(request):
     """Vue pour traiter l'upload et l'importation d'un fichier JSON"""
     if request.method != 'POST':
@@ -725,6 +879,14 @@ def process_json_upload(request):
 def import_json_data(project, data):
     """Fonction pour importer les données JSON (basée sur la commande Django)"""
     
+    # Vérifier que les données sont bien un dictionnaire
+    if not isinstance(data, dict):
+        raise ValueError(f"Les données JSON doivent être un objet (dictionnaire), reçu: {type(data)}")
+    
+    # Vérifier que les champs requis sont présents
+    if 'suites' not in data:
+        raise ValueError("Les données JSON doivent contenir un champ 'suites'")
+    
     # Créer l'exécution de test
     execution = create_test_execution(project, data)
     
@@ -740,8 +902,21 @@ def create_test_execution(project, data):
     config = data.get('config', {})
     metadata = config.get('metadata', {})
     git_commit = metadata.get('gitCommit', {})
-    ci = metadata.get('ci', {})
+    ci_data = metadata.get('ci', {})
     stats = data.get('stats', {})
+
+    # Vérifier que ci est bien un dictionnaire, sinon utiliser un dict vide
+    if not isinstance(ci_data, dict):
+        ci_data = {}
+
+    # Vérifier que git_commit est bien un dictionnaire
+    if not isinstance(git_commit, dict):
+        git_commit = {}
+    
+    # Vérifier que author est bien un dictionnaire
+    author = git_commit.get('author', {})
+    if not isinstance(author, dict):
+        author = {}
 
     # Convertir les timestamps
     start_time = parse_datetime(stats.get('startTime'))
@@ -759,10 +934,10 @@ def create_test_execution(project, data):
         git_commit_short_hash=git_commit.get('shortHash', ''),
         git_branch=git_commit.get('branch', ''),
         git_commit_subject=git_commit.get('subject', ''),
-        git_author_name=git_commit.get('author', {}).get('name', ''),
-        git_author_email=git_commit.get('author', {}).get('email', ''),
-        ci_build_href=ci.get('buildHref', ''),
-        ci_commit_href=ci.get('commitHref', ''),
+        git_author_name=author.get('name', ''),
+        git_author_email=author.get('email', ''),
+        ci_build_href=ci_data.get('buildHref', ''),
+        ci_commit_href=ci_data.get('commitHref', ''),
         start_time=start_time,
         duration=stats.get('duration', 0),
         expected_tests=stats.get('expected', 0),
@@ -966,7 +1141,8 @@ def process_spec(spec, execution, file_path, parent_tags=None):
         if tag_name:  # Éviter les tags vides
             tag, created = Tag.objects.get_or_create(
                 name=tag_name,
-                defaults={'color': '#3b82f6'}
+                project=execution.project,
+                defaults={'color': Tag.get_next_available_color(execution.project)}
             )
             test.tags.add(tag)
 
@@ -1067,39 +1243,49 @@ def process_test_result(test_data, test, execution):
         )
 
 
-@login_required
+@can_modify_data
 def fetch_from_ci(request, project_id):
     """Vue pour récupérer automatiquement les résultats depuis la CI"""
-    from .services.ci_services import fetch_latest_test_results, fetch_test_results_by_job_id, CIServiceError
+    from .services.ci_services import fetch_test_results_by_job_id, CIServiceError
     
     project = get_object_or_404(Project, id=project_id)
     
+    # Définir ce projet comme sélectionné dans la session
+    if request.user.is_authenticated:
+        request.session['selected_project_id'] = project.id
+    
+    # Récupérer tous les projets pour le header
+    if request.user.is_authenticated:
+        projects = Project.objects.filter(created_by=request.user).order_by('name')
+    else:
+        projects = Project.objects.all().order_by('name')
+    
     if not project.has_ci_configuration():
         messages.error(request, "Ce projet n'a pas de configuration CI.")
-        return redirect('upload_json')
+        return redirect('/administration/?section=import')
     
     if request.method == 'GET':
         # Afficher le formulaire de sélection
         context = {
             'project': project,
+            'projects': projects,  # Pour le sélecteur dans le header
+            'selected_project': project,  # Pour la sélection dans le header
             'ci_provider': project.get_ci_provider(),
             'ci_config': project.get_ci_config_details()
         }
         return render(request, 'import/fetch_from_ci.html', context)
     
     elif request.method == 'POST':
-        branch = request.POST.get('branch', 'main')
         job_id = request.POST.get('job_id', '').strip()
         
+        if not job_id:
+            messages.error(request, "Vous devez spécifier un Job ID.")
+            return redirect('fetch_from_ci', project_id=project_id)
+        
         try:
-            if job_id:
-                # Récupérer depuis un job spécifique
-                json_data = fetch_test_results_by_job_id(project, job_id)
-                source_info = f"Job ID: {job_id}"
-            else:
-                # Récupérer le dernier job réussi
-                json_data = fetch_latest_test_results(project, branch)
-                source_info = f"Dernier job réussi sur '{branch}'"
+            # Récupérer depuis le job spécifique
+            json_data = fetch_test_results_by_job_id(project, job_id)
+            source_info = f"Job ID: {job_id}"
             
             if not json_data:
                 messages.error(request, "Aucun résultat trouvé.")
@@ -1119,6 +1305,9 @@ def fetch_from_ci(request, project_id):
         except CIServiceError as e:
             messages.error(request, f"Erreur CI: {e}")
             return redirect('fetch_from_ci', project_id=project_id)
+        except ValueError as e:
+            messages.error(request, f"Erreur de format des données: {e}")
+            return redirect('fetch_from_ci', project_id=project_id)
         except Exception as e:
             messages.error(request, f"Erreur lors de l'import: {e}")
             return redirect('fetch_from_ci', project_id=project_id)
@@ -1126,7 +1315,7 @@ def fetch_from_ci(request, project_id):
     return HttpResponseNotAllowed(['GET', 'POST'])
 
 
-@login_required
+@manager_required
 def project_features(request, project_id):
     """Vue pour gérer les features d'un projet"""
     project = get_object_or_404(Project, id=project_id)
@@ -1147,7 +1336,7 @@ def project_features(request, project_id):
                 feature.save()
         
         messages.success(request, f'Configuration des features mise à jour pour le projet "{project.name}".')
-        return redirect('project_features', project_id=project.id)
+        return redirect('/administration/?section=projects')
     
     # Récupérer toutes les features du projet avec les valeurs par défaut
     project_features = {}
@@ -1180,36 +1369,7 @@ def project_features(request, project_id):
     
     return render(request, 'project/project_features.html', context)
 
-
-@login_required
-def projects_list(request):
-    """Vue pour lister tous les projets"""
-    projects = Project.objects.all().annotate(
-        executions_count=Count('executions'),
-        tests_count=Count('tests', distinct=True)
-    ).order_by('-created_at')
-    
-    # Récupérer tous les projets pour le header
-    all_projects = Project.objects.all()
-    
-    # Récupérer le projet sélectionné depuis la session
-    selected_project = None
-    if 'selected_project_id' in request.session:
-        try:
-            selected_project = Project.objects.get(id=request.session['selected_project_id'])
-        except Project.DoesNotExist:
-            del request.session['selected_project_id']
-    
-    context = {
-        'projects': all_projects,  # Pour le header
-        'projects_list': projects,  # Pour la liste principale
-        'selected_project': selected_project,
-    }
-    
-    return render(request, 'project/projects_list.html', context)
-
-
-@login_required
+@can_manage_projects
 def project_create(request):
     """Vue pour créer un nouveau projet"""
     if request.method == 'POST':
@@ -1253,8 +1413,6 @@ def project_create(request):
                 ci_configuration = None
                 if create_new_ci and ci_provider and ci_name:
                     try:
-                        from .models import CIConfiguration, GitLabConfiguration, GitHubConfiguration
-                        
                         # Créer la configuration CI de base
                         ci_configuration = CIConfiguration.objects.create(
                             name=ci_name,
@@ -1312,7 +1470,7 @@ def project_create(request):
                         
                 elif ci_configuration_id:
                     try:
-                        from .models import CIConfiguration
+                        
                         ci_configuration = CIConfiguration.objects.get(id=ci_configuration_id)
                     except CIConfiguration.DoesNotExist:
                         messages.warning(request, 'Configuration CI introuvable, projet créé sans configuration CI.')
@@ -1337,10 +1495,10 @@ def project_create(request):
                     if ci_configuration:
                         success_msg += f' Configuration CI "{ci_configuration.name}" associée.'
                     messages.success(request, success_msg)
-                    return redirect('projects_list')
+                    return redirect('/administration/?section=projects')
     
     # Récupérer toutes les configurations CI disponibles
-    from .models import CIConfiguration
+    
     ci_configurations = CIConfiguration.objects.all()
     
     # Récupérer tous les projets pour le header
@@ -1363,7 +1521,7 @@ def project_create(request):
     return render(request, 'project/project_create.html', context)
 
 
-@login_required
+@can_manage_projects
 def project_edit(request, project_id):
     """Vue pour modifier un projet"""
     project = get_object_or_404(Project, id=project_id)
@@ -1385,7 +1543,7 @@ def project_edit(request, project_id):
                 ci_configuration = None
                 if ci_configuration_id:
                     try:
-                        from .models import CIConfiguration
+                        
                         ci_configuration = CIConfiguration.objects.get(id=ci_configuration_id)
                     except CIConfiguration.DoesNotExist:
                         messages.warning(request, 'Configuration CI introuvable, projet modifié sans configuration CI.')
@@ -1396,7 +1554,7 @@ def project_edit(request, project_id):
                 project.save()
                 
                 messages.success(request, f'Projet "{name}" modifié avec succès.')
-                return redirect('projects_list')
+                return redirect('/administration/?section=projects')
     
     # Calculer les statistiques du projet
     executions_count = project.executions.count()
@@ -1404,7 +1562,6 @@ def project_edit(request, project_id):
     features_count = ProjectFeature.objects.filter(project=project).count()
     
     # Récupérer toutes les configurations CI disponibles
-    from .models import CIConfiguration
     ci_configurations = CIConfiguration.objects.all()
     
     # Récupérer tous les projets pour le header
@@ -1431,7 +1588,7 @@ def project_edit(request, project_id):
     return render(request, 'project/project_edit.html', context)
 
 
-@login_required
+@can_manage_projects
 def project_delete(request, project_id):
     """Vue pour supprimer un projet"""
     project = get_object_or_404(Project, id=project_id)
@@ -1445,10 +1602,10 @@ def project_delete(request, project_id):
         
         project.delete()
         messages.success(request, f'Projet "{project_name}" supprimé avec succès.')
-        return redirect('projects_list')
-    
+        return redirect('/administration/?section=projects')
+
     # Si ce n'est pas une requête POST, rediriger vers la liste
-    return redirect('projects_list')
+    return redirect('/administration/?section=projects')
 
 
 def ci_status_check(request, project_id):
@@ -1471,22 +1628,24 @@ def ci_status_check(request, project_id):
                 'message': 'Service CI non disponible'
             })
         
-        # Tester la connexion en récupérant le dernier job
-        branch = request.GET.get('branch', 'main')
-        latest_job_id = ci_service.get_latest_successful_job_id(branch)
+        # Test basique de la configuration CI
+        # Pour GitLab, on peut tester l'accès aux projets
+        # Pour GitHub, on peut tester l'accès au repository
+        if hasattr(ci_service, 'base_url'):  # GitLab
+            test_url = f"{ci_service.base_url}/api/v4/projects/{ci_service.project_id}"
+            import requests
+            response = requests.get(test_url, headers=ci_service.headers, timeout=10)
+            response.raise_for_status()
+        else:  # GitHub
+            test_url = f"https://api.github.com/repos/{ci_service.repository}"
+            import requests
+            response = requests.get(test_url, headers=ci_service.headers, timeout=10)
+            response.raise_for_status()
         
-        if latest_job_id:
-            return JsonResponse({
-                'status': 'success',
-                'message': f'Connexion réussie. Dernier job: {latest_job_id}',
-                'latest_job_id': latest_job_id,
-                'branch': branch
-            })
-        else:
-            return JsonResponse({
-                'status': 'warning',
-                'message': f'Connexion réussie mais aucun job trouvé sur la branche "{branch}"'
-            })
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Connexion réussie. Configuration CI valide.'
+        })
             
     except CIServiceError as e:
         return JsonResponse({
@@ -1498,3 +1657,268 @@ def ci_status_check(request, project_id):
             'status': 'error',
             'message': f'Erreur inattendue: {e}'
         })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_upload_results(request, project_id):
+    """
+    API endpoint pour upload direct des résultats depuis la CI
+    
+    Accepte:
+    - Content-Type: application/json (JSON dans le body)
+    - Content-Type: multipart/form-data (fichier JSON)
+    
+    Paramètres optionnels:
+    - api_key: Clé d'API pour authentification (en header X-API-Key ou en paramètre)
+    """
+    try:
+        # Récupération du projet
+        try:
+            project = Project.objects.get(id=project_id)
+        except Project.DoesNotExist:
+            return JsonResponse({
+                'error': 'Projet non trouvé',
+                'status': 'error'
+            }, status=404)
+        
+        # Authentification par clé API
+        api_key = request.headers.get('X-API-Key') or request.GET.get('api_key')
+        if api_key:
+            try:
+                # APIKey déjà importé en haut du fichier
+                api_key_obj = APIKey.objects.select_related('user').prefetch_related('projects').get(
+                    key=api_key,
+                    is_active=True
+                )
+                
+                # Vérifier l'expiration
+                if api_key_obj.is_expired:
+                    return JsonResponse({
+                        'error': 'Clé API expirée',
+                        'status': 'error'
+                    }, status=401)
+                
+                # Vérifier les permissions
+                if not api_key_obj.can_upload:
+                    return JsonResponse({
+                        'error': 'Clé API sans permission d\'upload',
+                        'status': 'error'
+                    }, status=403)
+                
+                # Vérifier l'accès au projet
+                if not api_key_obj.can_access_project(project):
+                    return JsonResponse({
+                        'error': 'Clé API sans accès à ce projet',
+                        'status': 'error'
+                    }, status=403)
+                
+                # Mettre à jour la date de dernière utilisation
+                api_key_obj.update_last_used()
+                
+            except APIKey.DoesNotExist:
+                return JsonResponse({
+                    'error': 'Clé API invalide',
+                    'status': 'error'
+                }, status=401)
+        else:
+            # Pour l'instant, on accepte les requêtes sans clé API
+            # TODO: Rendre l'authentification obligatoire en production
+            pass
+        
+        # Récupération des données JSON
+        json_data = None
+        
+        if request.content_type == 'application/json':
+            # JSON dans le body de la requête
+            try:
+                json_data = json.loads(request.body.decode('utf-8'))
+            except json.JSONDecodeError as e:
+                return JsonResponse({
+                    'error': f'JSON invalide: {e}',
+                    'status': 'error'
+                }, status=400)
+                
+        elif request.content_type.startswith('multipart/form-data'):
+            # Fichier JSON uploadé
+            if 'file' not in request.FILES:
+                return JsonResponse({
+                    'error': 'Aucun fichier fourni. Utilisez le champ "file"',
+                    'status': 'error'
+                }, status=400)
+            
+            uploaded_file = request.FILES['file']
+            try:
+                json_data = json.loads(uploaded_file.read().decode('utf-8'))
+            except json.JSONDecodeError as e:
+                return JsonResponse({
+                    'error': f'Fichier JSON invalide: {e}',
+                    'status': 'error'
+                }, status=400)
+        else:
+            return JsonResponse({
+                'error': 'Content-Type non supporté. Utilisez application/json ou multipart/form-data',
+                'status': 'error'
+            }, status=400)
+        
+        if not json_data:
+            return JsonResponse({
+                'error': 'Aucune donnée JSON fournie',
+                'status': 'error'
+            }, status=400)
+        
+        # Validation basique de la structure JSON Playwright
+        if 'suites' not in json_data:
+            return JsonResponse({
+                'error': 'Structure JSON invalide: "suites" manquant',
+                'status': 'error'
+            }, status=400)
+        
+        # Import des données
+        try:
+            execution = import_json_data(project, json_data)
+            
+            return JsonResponse({
+                'message': 'Résultats importés avec succès',
+                'status': 'success',
+                'execution_id': execution.id,
+                'execution_url': request.build_absolute_uri(
+                    f'/execution/{execution.id}/'
+                ),
+                'project': project.name,
+                'created_at': execution.created_at.isoformat()
+            }, status=201)
+            
+        except Exception as e:
+            return JsonResponse({
+                'error': f'Erreur lors de l\'import: {e}',
+                'status': 'error'
+            }, status=500)
+    
+    except Exception as e:
+        return JsonResponse({
+            'error': f'Erreur serveur: {e}',
+            'status': 'error'
+        }, status=500)
+
+
+@login_required
+def api_documentation(request):
+    """Page de documentation de l'API"""
+    return render(request, 'api/api_documentation.html')
+
+
+def api_key_help(request):
+    """Page d'aide pour la gestion des clés API"""
+    return render(request, 'api/api_key_help.html')
+
+
+@login_required
+def help_groups_permissions(request):
+    """Page d'aide pour les groupes et permissions"""
+    return render(request, 'help/groups_permissions.html')
+
+
+@login_required
+def administration_dashboard(request):
+    """Page principale d'administration avec menu latéral"""
+    from .services.context_service import ContextService
+    
+    # Récupérer les projets accessibles par l'utilisateur selon son contexte
+    accessible_projects = ContextService.get_user_accessible_projects(request.user)
+    
+    # Récupérer tous les projets avec leurs statistiques pour la section projets
+    projects_list = accessible_projects.annotate(
+        executions_count=Count('executions'),
+        tests_count=Count('tests', distinct=True)
+    ).order_by('-created_at')
+    
+    # Récupérer tous les projets accessibles pour le header
+    all_projects = accessible_projects
+    
+    # Récupérer le projet sélectionné depuis la session
+    selected_project = None
+    if 'selected_project_id' in request.session:
+        try:
+            selected_project = accessible_projects.get(id=request.session['selected_project_id'])
+        except Project.DoesNotExist:
+            del request.session['selected_project_id']
+    
+    # Vérifier si le projet sélectionné a une configuration CI
+    has_ci_configuration = False
+    ci_provider = None
+    if selected_project:
+        try:
+            # Importer dynamiquement CIConfiguration pour éviter les imports circulaires
+            from integrations.models import CIConfiguration
+            ci_config = CIConfiguration.objects.filter(project=selected_project).first()
+            if ci_config:
+                has_ci_configuration = True
+                ci_provider = ci_config.get_provider_display()
+        except:
+            pass
+    
+    # Récupérer tous les tags pour la section tags, filtrés par les projets accessibles
+    from testing.models import Tag
+    all_tags = Tag.objects.filter(
+        project__in=accessible_projects
+    ).select_related('project').order_by('project__name', 'name')
+    
+    context = {
+        'projects': all_projects,  # Pour le header
+        'projects_list': projects_list,  # Pour la section projets
+        'selected_project': selected_project,
+        'has_ci_configuration': has_ci_configuration,
+        'ci_provider': ci_provider,
+        'all_tags': all_tags,  # Pour la section tags
+    }
+    
+    return render(request, 'administrations/dashboard.html', context)
+
+def documentation(request):
+    """Page principale d'administration avec menu latéral"""
+    from .services.context_service import ContextService
+    
+    # Récupérer les projets accessibles par l'utilisateur selon son contexte
+    accessible_projects = ContextService.get_user_accessible_projects(request.user)
+    
+    # Récupérer tous les projets avec leurs statistiques pour la section projets
+    projects_list = accessible_projects.annotate(
+        executions_count=Count('executions'),
+        tests_count=Count('tests', distinct=True)
+    ).order_by('-created_at')
+    
+    # Récupérer tous les projets accessibles pour le header
+    all_projects = accessible_projects
+    
+    # Récupérer le projet sélectionné depuis la session
+    selected_project = None
+    if 'selected_project_id' in request.session:
+        try:
+            selected_project = accessible_projects.get(id=request.session['selected_project_id'])
+        except Project.DoesNotExist:
+            del request.session['selected_project_id']
+    
+    # Vérifier si le projet sélectionné a une configuration CI
+    has_ci_configuration = False
+    ci_provider = None
+    if selected_project:
+        try:
+            # Importer dynamiquement CIConfiguration pour éviter les imports circulaires
+            from integrations.models import CIConfiguration
+            ci_config = CIConfiguration.objects.filter(project=selected_project).first()
+            if ci_config:
+                has_ci_configuration = True
+                ci_provider = ci_config.get_provider_display()
+        except:
+            pass
+    
+    context = {
+        'projects': all_projects,  # Pour le header
+        'projects_list': projects_list,  # Pour la section projets
+        'selected_project': selected_project,
+        'has_ci_configuration': has_ci_configuration,
+        'ci_provider': ci_provider,
+    }
+
+    return render(request, 'documentations/documentation.html', context)

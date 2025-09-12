@@ -1,0 +1,147 @@
+{% extends "base.html" %} {% load static %} {% block title %}Gestion des
+Utilisateurs{% endblock %} {% block content %}
+<div class="container mx-auto px-6 py-8">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Gestion des Utilisateurs</h1>
+    <div class="flex space-x-3">
+      <a
+        href="{% url 'groups_info' %}"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Info Groupes
+      </a>
+      <a
+        href="{% url 'groups_list' %}"
+        class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Liste Groupes
+      </a>
+    </div>
+  </div>
+
+  {% if messages %} {% for message in messages %}
+  <div
+    class="mb-4 p-4 rounded-md {% if message.tags == 'success' %}bg-green-50 text-green-700{% elif message.tags == 'error' %}bg-red-50 text-red-700{% else %}bg-blue-50 text-blue-700{% endif %}"
+  >
+    {{ message }}
+  </div>
+  {% endfor %} {% endif %}
+
+  <div class="bg-white shadow overflow-hidden sm:rounded-md">
+    <ul class="divide-y divide-gray-200">
+      {% for user in users %}
+      <li class="px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div
+                class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center"
+              >
+                <span class="text-sm font-medium text-gray-700">
+                  {{ user.first_name.0|default:user.username.0|upper }}
+                </span>
+              </div>
+            </div>
+            <div class="ml-4">
+              <div class="flex items-center">
+                <p class="text-sm font-medium text-gray-900">
+                  {{ user.first_name }} {{ user.last_name }} {% if not
+                  user.first_name and not user.last_name %} {{ user.username }}
+                  {% endif %}
+                </p>
+                {% if user.is_superuser %}
+                <span
+                  class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                >
+                  Superuser
+                </span>
+                {% endif %} {% if not user.is_active %}
+                <span
+                  class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                >
+                  Inactif
+                </span>
+                {% endif %}
+              </div>
+              <div class="flex items-center mt-1">
+                <p class="text-sm text-gray-500">{{ user.email }}</p>
+                <span class="mx-2 text-gray-300">•</span>
+                <p class="text-sm text-gray-500">@{{ user.username }}</p>
+              </div>
+              <div class="flex items-center mt-1">
+                {% if user.groups.exists %}
+                <div class="flex space-x-1">
+                  {% for group in user.groups.all %}
+                  <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if group.name == 'Admin' %}bg-red-100 text-red-800 {% elif group.name == 'Manager' %}bg-yellow-100 text-yellow-800 {% elif group.name == 'Viewer' %}bg-green-100 text-green-800 {% else %}bg-gray-100 text-gray-800{% endif %}"
+                  >
+                    {{ group.name }}
+                  </span>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <span class="text-sm text-gray-500 italic"
+                  >Aucun groupe assigné</span
+                >
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button
+              onclick="toggleUserActive({{ user.id }}, {{ user.is_active|yesno:'true,false' }})"
+              class="{% if user.is_active %}bg-red-600 hover:bg-red-700{% else %}bg-green-600 hover:bg-green-700{% endif %} text-white font-bold py-2 px-3 rounded text-sm"
+            >
+              {% if user.is_active %}Désactiver{% else %}Activer{% endif %}
+            </button>
+            <a
+              href="{% url 'user_edit' user.id %}"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded text-sm"
+            >
+              Modifier
+            </a>
+          </div>
+        </div>
+      </li>
+      {% empty %}
+      <li class="px-6 py-4 text-center text-gray-500">
+        Aucun utilisateur trouvé.
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<script>
+  async function toggleUserActive(userId, isActive) {
+    const action = isActive ? "désactiver" : "activer";
+
+    if (!confirm(`Êtes-vous sûr de vouloir ${action} cet utilisateur ?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/admin/users/${userId}/toggle-active/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
+            .value,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        location.reload();
+      } else {
+        alert(data.error || "Une erreur est survenue");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Une erreur est survenue lors de la requête");
+    }
+  }
+</script>
+
+{% csrf_token %} {% endblock %}

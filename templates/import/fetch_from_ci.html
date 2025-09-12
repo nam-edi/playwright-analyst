@@ -2,6 +2,53 @@
 project.name }}{% endblock %} {% block content %}
 <div class="container mx-auto px-4 py-8">
   <div class="max-w-2xl mx-auto">
+    <!-- Breadcrumb / Lien de retour -->
+    <div class="mb-6">
+      <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+          <li class="inline-flex items-center">
+            <a
+              href="{% url 'upload_json' %}"
+              class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                ></path>
+              </svg>
+              Retour à l'import
+            </a>
+          </li>
+          <li>
+            <div class="flex items-center">
+              <svg
+                class="w-6 h-6 text-gray-400"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+              <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2"
+                >Récupération CI</span
+              >
+            </div>
+          </li>
+        </ol>
+      </nav>
+    </div>
+
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h1 class="text-2xl font-bold text-gray-900 mb-6">
         Récupération automatique depuis CI
@@ -65,57 +112,6 @@ project.name }}{% endblock %} {% block content %}
         {% csrf_token %}
 
         <div>
-          <label
-            for="fetch-option"
-            class="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Option de récupération
-          </label>
-          <div class="space-y-3">
-            <label class="flex items-center">
-              <input
-                type="radio"
-                name="fetch_option"
-                value="latest"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                checked
-              />
-              <span class="ml-2 text-sm text-gray-700"
-                >Récupérer le dernier job réussi</span
-              >
-            </label>
-            <label class="flex items-center">
-              <input
-                type="radio"
-                name="fetch_option"
-                value="specific"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-              />
-              <span class="ml-2 text-sm text-gray-700"
-                >Spécifier un job ID</span
-              >
-            </label>
-          </div>
-        </div>
-
-        <div id="branch-section">
-          <label for="branch" class="block text-sm font-medium text-gray-700">
-            Branche
-          </label>
-          <input
-            type="text"
-            id="branch"
-            name="branch"
-            value="main"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="main"
-          />
-          <p class="mt-1 text-xs text-gray-500">
-            Branche pour récupérer le dernier job réussi
-          </p>
-        </div>
-
-        <div id="job-id-section" class="hidden">
           <label for="job_id" class="block text-sm font-medium text-gray-700">
             {% if ci_provider == 'gitlab' %}Job ID GitLab{% else %}Run ID
             GitHub{% endif %}
@@ -124,6 +120,7 @@ project.name }}{% endblock %} {% block content %}
             type="text"
             id="job_id"
             name="job_id"
+            required
             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="{% if ci_provider == 'gitlab' %}ID du job GitLab{% else %}ID du run GitHub Actions{% endif %}"
           />
@@ -169,33 +166,11 @@ project.name }}{% endblock %} {% block content %}
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const fetchOptions = document.querySelectorAll(
-      'input[name="fetch_option"]'
-    );
-    const branchSection = document.getElementById("branch-section");
-    const jobIdSection = document.getElementById("job-id-section");
     const testConnectionBtn = document.getElementById("test-connection");
     const connectionStatus = document.getElementById("connection-status");
 
-    // Gestion du changement d'option
-    fetchOptions.forEach((radio) => {
-      radio.addEventListener("change", function () {
-        if (this.value === "latest") {
-          branchSection.classList.remove("hidden");
-          jobIdSection.classList.add("hidden");
-          document.getElementById("job_id").required = false;
-        } else {
-          branchSection.classList.add("hidden");
-          jobIdSection.classList.remove("hidden");
-          document.getElementById("job_id").required = true;
-        }
-      });
-    });
-
     // Test de connexion
     testConnectionBtn.addEventListener("click", function () {
-      const branch = document.getElementById("branch").value || "main";
-
       // Affichage du loading
       connectionStatus.innerHTML = `
             <div class="flex items-center text-sm text-gray-600">
@@ -207,11 +182,7 @@ project.name }}{% endblock %} {% block content %}
             </div>
         `;
 
-      fetch(
-        `{% url 'ci_status_check' project.id %}?branch=${encodeURIComponent(
-          branch
-        )}`
-      )
+      fetch(`{% url 'ci_status_check' project.id %}`)
         .then((response) => response.json())
         .then((data) => {
           let statusClass, icon;

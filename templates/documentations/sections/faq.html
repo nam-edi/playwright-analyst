@@ -1,0 +1,840 @@
+<!-- Section FAQ -->
+<div class="space-y-6">
+  <!-- Questions générales -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Questions Fréquentes</h3>
+      <p class="text-sm text-gray-600 mt-1">
+        Réponses aux questions les plus courantes sur PW-Analyst
+      </p>
+    </div>
+    <div class="px-6 py-4">
+      <div class="space-y-6">
+        <!-- Catégorie : Général -->
+        <div>
+          <h4
+            class="text-base font-medium text-gray-900 mb-4 flex items-center"
+          >
+            <svg
+              class="w-5 h-5 text-blue-600 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            Questions Générales
+          </h4>
+
+          <div class="space-y-4">
+            <!-- FAQ 1 -->
+            <div class="border border-gray-200 rounded-lg">
+              <button
+                class="w-full px-4 py-3 text-left flex justify-between items-center hover:bg-gray-50"
+                onclick="toggleFaq('faq1')"
+              >
+                <span class="text-sm font-medium text-gray-900"
+                  >Qu'est-ce que PW-Analyst et à quoi sert-il ?</span
+                >
+                <svg
+                  class="w-5 h-5 text-gray-500 transform transition-transform"
+                  id="faq1-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+              <div id="faq1" class="hidden px-4 pb-3">
+                <div class="text-sm text-gray-600 bg-gray-50 rounded p-3">
+                  <p class="mb-2">
+                    <strong>PW-Analyst</strong> est une plateforme centralisée
+                    de gestion et d'analyse des tests automatisés. Elle permet
+                    de :
+                  </p>
+                  <ul class="list-disc ml-5 space-y-1">
+                    <li>
+                      Collecter automatiquement les résultats de vos tests
+                      depuis vos pipelines CI/CD
+                    </li>
+                    <li>
+                      Organiser vos tests par projets et catégories avec un
+                      système de tags
+                    </li>
+                    <li>
+                      Analyser les tendances de qualité avec des dashboards et
+                      rapports détaillés
+                    </li>
+                    <li>
+                      Gérer les permissions d'équipe avec des rôles
+                      hiérarchiques (Viewer, Manager, Admin)
+                    </li>
+                    <li>
+                      Identifier les tests instables (flaky tests) et les
+                      régressions
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 2 -->
+            <div class="border border-gray-200 rounded-lg">
+              <button
+                class="w-full px-4 py-3 text-left flex justify-between items-center hover:bg-gray-50"
+                onclick="toggleFaq('faq2')"
+              >
+                <span class="text-sm font-medium text-gray-900"
+                  >Quels sont les prérequis pour installer PW-Analyst ?</span
+                >
+                <svg
+                  class="w-5 h-5 text-gray-500 transform transition-transform"
+                  id="faq2-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+              <div id="faq2" class="hidden px-4 pb-3">
+                <div class="text-sm text-gray-600 bg-gray-50 rounded p-3">
+                  <p class="mb-2"><strong>Prérequis minimum :</strong></p>
+                  <ul class="list-disc ml-5 space-y-1 mb-3">
+                    <li>Python 3.9 ou supérieur</li>
+                    <li>
+                      Base de données (SQLite pour dev, PostgreSQL recommandé
+                      pour production)
+                    </li>
+                    <li>512 MB RAM minimum (2 GB recommandé)</li>
+                    <li>200 MB d'espace disque</li>
+                  </ul>
+                  <p class="mb-2">
+                    <strong>Optionnel pour de meilleures performances :</strong>
+                  </p>
+                  <ul class="list-disc ml-5 space-y-1">
+                    <li>Redis pour le cache et les tâches asynchrones</li>
+                    <li>
+                      Serveur web (Nginx/Apache) + Gunicorn pour la production
+                    </li>
+                    <li>Certificat SSL pour HTTPS</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 3 -->
+            <div class="border border-gray-200 rounded-lg">
+              <button
+                class="w-full px-4 py-3 text-left flex justify-between items-center hover:bg-gray-50"
+                onclick="toggleFaq('faq3')"
+              >
+                <span class="text-sm font-medium text-gray-900"
+                  >Comment importer mes résultats de tests existants ?</span
+                >
+                <svg
+                  class="w-5 h-5 text-gray-500 transform transition-transform"
+                  id="faq3-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+              <div id="faq3" class="hidden px-4 pb-3">
+                <div class="text-sm text-gray-600 bg-gray-50 rounded p-3">
+                  <p class="mb-2">
+                    Plusieurs méthodes d'import sont disponibles :
+                  </p>
+                  <div class="space-y-2">
+                    <div>
+                      <strong>1. Import via API REST :</strong>
+                      <div
+                        class="ml-4 mt-1 bg-gray-900 text-gray-100 p-2 rounded text-xs"
+                      >
+                        <code
+                          >curl -X POST /api/results/import/ -H "Authorization:
+                          ApiKey your-key" -d @results.json</code
+                        >
+                      </div>
+                    </div>
+                    <div>
+                      <strong>2. Formats supportés :</strong>
+                      <ul class="ml-4 list-disc">
+                        <li>JSON natif PW-Analyst</li>
+                        <li>JUnit XML</li>
+                        <li>TestNG XML</li>
+                        <li>pytest JSON</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <strong>3. Interface web :</strong> Upload manuel de
+                      fichiers via l'interface d'administration (pour les
+                      Managers/Admins)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Catégorie : Permissions -->
+        <div>
+          <h4
+            class="text-base font-medium text-gray-900 mb-4 flex items-center"
+          >
+            <svg
+              class="w-5 h-5 text-green-600 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              ></path>
+            </svg>
+            Permissions et Groupes
+          </h4>
+
+          <div class="space-y-4">
+            <!-- FAQ 4 -->
+            <div class="border border-gray-200 rounded-lg">
+              <button
+                class="w-full px-4 py-3 text-left flex justify-between items-center hover:bg-gray-50"
+                onclick="toggleFaq('faq4')"
+              >
+                <span class="text-sm font-medium text-gray-900"
+                  >Quelle est la différence entre Manager et Admin ?</span
+                >
+                <svg
+                  class="w-5 h-5 text-gray-500 transform transition-transform"
+                  id="faq4-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+              <div id="faq4" class="hidden px-4 pb-3">
+                <div class="text-sm text-gray-600 bg-gray-50 rounded p-3">
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <p class="font-semibold text-yellow-700 mb-2">
+                        👷 MANAGER :
+                      </p>
+                      <ul class="list-disc ml-4 space-y-1">
+                        <li>Toutes les permissions Viewer</li>
+                        <li>Création/modification des tests</li>
+                        <li>Import de résultats de tests</li>
+                        <li>Gestion des tags (couleurs, etc.)</li>
+                        <li>Modification des statuts de tests</li>
+                        <li>
+                          <strong class="text-red-600"
+                            >✗ Pas de gestion des projets</strong
+                          >
+                        </li>
+                        <li>
+                          <strong class="text-red-600"
+                            >✗ Pas d'accès administration</strong
+                          >
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p class="font-semibold text-red-700 mb-2">👑 ADMIN :</p>
+                      <ul class="list-disc ml-4 space-y-1">
+                        <li>Toutes les permissions Manager</li>
+                        <li>
+                          <strong class="text-green-600"
+                            >✓ Création/modification/suppression des
+                            projets</strong
+                          >
+                        </li>
+                        <li>
+                          <strong class="text-green-600"
+                            >✓ Accès interface d'administration Django</strong
+                          >
+                        </li>
+                        <li>
+                          <strong class="text-green-600"
+                            >✓ Gestion des utilisateurs et groupes</strong
+                          >
+                        </li>
+                        <li>
+                          <strong class="text-green-600"
+                            >✓ Configuration système complète</strong
+                          >
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 5 -->
+            <div class="border border-gray-200 rounded-lg">
+              <button
+                class="w-full px-4 py-3 text-left flex justify-between items-center hover:bg-gray-50"
+                onclick="toggleFaq('faq5')"
+              >
+                <span class="text-sm font-medium text-gray-900"
+                  >Un utilisateur peut-il appartenir à plusieurs groupes ?</span
+                >
+                <svg
+                  class="w-5 h-5 text-gray-500 transform transition-transform"
+                  id="faq5-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+              <div id="faq5" class="hidden px-4 pb-3">
+                <div class="text-sm text-gray-600 bg-gray-50 rounded p-3">
+                  <p class="mb-2">
+                    <strong
+                      >Non, un utilisateur ne peut appartenir qu'à un seul
+                      groupe à la fois</strong
+                    >
+                    par conception. Cela simplifie la gestion des permissions et
+                    évite les conflits.
+                  </p>
+                  <div class="bg-blue-50 border-l-4 border-blue-400 p-3 mt-3">
+                    <p class="text-blue-700 text-sm">
+                      <strong>💡 Astuce :</strong> Les groupes sont
+                      hiérarchiques. Un Admin hérite automatiquement de toutes
+                      les permissions Manager et Viewer. Il n'est donc pas
+                      nécessaire d'assigner plusieurs groupes.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 6 -->
+            <div class="border border-gray-200 rounded-lg">
+              <button
+                class="w-full px-4 py-3 text-left flex justify-between items-center hover:bg-gray-50"
+                onclick="toggleFaq('faq6')"
+              >
+                <span class="text-sm font-medium text-gray-900"
+                  >Comment obtenir une clé API pour l'intégration CI/CD ?</span
+                >
+                <svg
+                  class="w-5 h-5 text-gray-500 transform transition-transform"
+                  id="faq6-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+              <div id="faq6" class="hidden px-4 pb-3">
+                <div class="text-sm text-gray-600 bg-gray-50 rounded p-3">
+                  <ol class="list-decimal ml-4 space-y-2">
+                    <li>
+                      <strong
+                        >Connectez-vous avec un compte Manager ou Admin</strong
+                      >
+                      (les Viewers n'ont pas accès aux clés API)
+                    </li>
+                    <li>
+                      Allez dans votre
+                      <strong>Profil utilisateur</strong> (icône en haut à
+                      droite)
+                    </li>
+                    <li>Cliquez sur <strong>"Gestion des clés API"</strong></li>
+                    <li>Cliquez sur <strong>"Générer nouvelle clé"</strong></li>
+                    <li>
+                      <strong>Copiez immédiatement la clé</strong> - elle ne
+                      sera plus affichée par la suite
+                    </li>
+                    <li>
+                      Configurez la clé dans vos variables d'environnement CI/CD
+                    </li>
+                  </ol>
+                  <div
+                    class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded"
+                  >
+                    <p class="text-yellow-700 text-xs">
+                      <strong>⚠️ Sécurité :</strong> La clé hérite des
+                      permissions de votre compte. Ne la partagez jamais et
+                      révoquez-la si elle est compromise.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Catégorie : Technique -->
+        <div>
+          <h4
+            class="text-base font-medium text-gray-900 mb-4 flex items-center"
+          >
+            <svg
+              class="w-5 h-5 text-purple-600 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              ></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              ></path>
+            </svg>
+            Questions Techniques
+          </h4>
+
+          <div class="space-y-4">
+            <!-- FAQ 7 -->
+            <div class="border border-gray-200 rounded-lg">
+              <button
+                class="w-full px-4 py-3 text-left flex justify-between items-center hover:bg-gray-50"
+                onclick="toggleFaq('faq7')"
+              >
+                <span class="text-sm font-medium text-gray-900"
+                  >Quelle base de données utiliser en production ?</span
+                >
+                <svg
+                  class="w-5 h-5 text-gray-500 transform transition-transform"
+                  id="faq7-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+              <div id="faq7" class="hidden px-4 pb-3">
+                <div class="text-sm text-gray-600 bg-gray-50 rounded p-3">
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <p class="font-semibold text-green-700 mb-2">
+                        ✅ RECOMMANDÉ :
+                      </p>
+                      <ul class="list-disc ml-4 space-y-1">
+                        <li>
+                          <strong>PostgreSQL 12+</strong> - Excellent pour
+                          production
+                        </li>
+                        <li>
+                          Meilleures performances pour les requêtes complexes
+                        </li>
+                        <li>Support natif des types JSON</li>
+                        <li>Transactions ACID complètes</li>
+                        <li>Backup et réplication avancés</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p class="font-semibold text-yellow-700 mb-2">
+                        ⚠️ ALTERNATIFS :
+                      </p>
+                      <ul class="list-disc ml-4 space-y-1">
+                        <li>
+                          <strong>MySQL 8.0+</strong> - Acceptable si déjà
+                          utilisé
+                        </li>
+                        <li>
+                          <strong>SQLite</strong> - Uniquement pour
+                          développement/test
+                        </li>
+                      </ul>
+                      <div
+                        class="mt-3 p-2 bg-red-50 border border-red-200 rounded"
+                      >
+                        <p class="text-red-700 text-xs">
+                          <strong>❌ Éviter :</strong> SQLite en production
+                          (problèmes de concurrence avec plusieurs utilisateurs)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 8 -->
+            <div class="border border-gray-200 rounded-lg">
+              <button
+                class="w-full px-4 py-3 text-left flex justify-between items-center hover:bg-gray-50"
+                onclick="toggleFaq('faq8')"
+              >
+                <span class="text-sm font-medium text-gray-900"
+                  >Comment configurer HTTPS en production ?</span
+                >
+                <svg
+                  class="w-5 h-5 text-gray-500 transform transition-transform"
+                  id="faq8-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+              <div id="faq8" class="hidden px-4 pb-3">
+                <div class="text-sm text-gray-600 bg-gray-50 rounded p-3">
+                  <p class="mb-3">
+                    <strong>Configuration recommandée avec Nginx :</strong>
+                  </p>
+                  <div
+                    class="bg-gray-900 text-gray-100 p-3 rounded text-xs mb-3 overflow-x-auto"
+                  >
+                    <pre><code># /etc/nginx/sites-available/pw-analyst
+server {
+    listen 80;
+    server_name votre-domaine.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name votre-domaine.com;
+    
+    ssl_certificate /path/to/certificate.crt;
+    ssl_certificate_key /path/to/private.key;
+    
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+}</code></pre>
+                  </div>
+                  <p>
+                    <strong>Options pour obtenir un certificat SSL :</strong>
+                  </p>
+                  <ul class="list-disc ml-4 space-y-1 mt-2">
+                    <li>
+                      <strong>Let's Encrypt</strong> (gratuit) :
+                      <code>certbot --nginx -d votre-domaine.com</code>
+                    </li>
+                    <li>
+                      <strong>Certificat payant</strong> (Comodo, DigiCert,
+                      etc.)
+                    </li>
+                    <li>
+                      <strong>Wildcard certificate</strong> pour plusieurs
+                      sous-domaines
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 9 -->
+            <div class="border border-gray-200 rounded-lg">
+              <button
+                class="w-full px-4 py-3 text-left flex justify-between items-center hover:bg-gray-50"
+                onclick="toggleFaq('faq9')"
+              >
+                <span class="text-sm font-medium text-gray-900"
+                  >Comment sauvegarder mes données ?</span
+                >
+                <svg
+                  class="w-5 h-5 text-gray-500 transform transition-transform"
+                  id="faq9-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+              <div id="faq9" class="hidden px-4 pb-3">
+                <div class="text-sm text-gray-600 bg-gray-50 rounded p-3">
+                  <div class="space-y-3">
+                    <div>
+                      <p class="font-semibold mb-2">
+                        1. Sauvegarde de la base de données :
+                      </p>
+                      <div
+                        class="bg-gray-900 text-gray-100 p-2 rounded text-xs"
+                      >
+                        <code
+                          >pg_dump pw_analyst > backup_$(date +%Y%m%d).sql</code
+                        >
+                      </div>
+                    </div>
+                    <div>
+                      <p class="font-semibold mb-2">
+                        2. Sauvegarde des fichiers statiques :
+                      </p>
+                      <div
+                        class="bg-gray-900 text-gray-100 p-2 rounded text-xs"
+                      >
+                        <code
+                          >tar -czf media_backup.tar.gz
+                          /path/to/pw-analyst/media/</code
+                        >
+                      </div>
+                    </div>
+                    <div>
+                      <p class="font-semibold mb-2">
+                        3. Script de sauvegarde automatique (crontab) :
+                      </p>
+                      <div
+                        class="bg-gray-900 text-gray-100 p-2 rounded text-xs"
+                      >
+                        <code
+                          ># Sauvegarde quotidienne à 2h du matin 0 2 * * *
+                          /usr/local/bin/backup-pw-analyst.sh</code
+                        >
+                      </div>
+                    </div>
+                    <div class="p-3 bg-blue-50 border border-blue-200 rounded">
+                      <p class="text-blue-700 text-xs">
+                        <strong>💡 Conseil :</strong> Testez régulièrement vos
+                        sauvegardes en restaurant sur un environnement de test.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Catégorie : Dépannage -->
+        <div>
+          <h4
+            class="text-base font-medium text-gray-900 mb-4 flex items-center"
+          >
+            <svg
+              class="w-5 h-5 text-red-600 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"
+              ></path>
+            </svg>
+            Dépannage
+          </h4>
+
+          <div class="space-y-4">
+            <!-- FAQ 10 -->
+            <div class="border border-gray-200 rounded-lg">
+              <button
+                class="w-full px-4 py-3 text-left flex justify-between items-center hover:bg-gray-50"
+                onclick="toggleFaq('faq10')"
+              >
+                <span class="text-sm font-medium text-gray-900"
+                  >L'import de résultats échoue avec une erreur 403</span
+                >
+                <svg
+                  class="w-5 h-5 text-gray-500 transform transition-transform"
+                  id="faq10-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+              <div id="faq10" class="hidden px-4 pb-3">
+                <div class="text-sm text-gray-600 bg-gray-50 rounded p-3">
+                  <p class="mb-3">
+                    <strong>Causes possibles et solutions :</strong>
+                  </p>
+                  <div class="space-y-3">
+                    <div class="flex items-start space-x-3">
+                      <span
+                        class="flex-shrink-0 w-5 h-5 bg-red-100 text-red-800 rounded-full flex items-center justify-center text-xs font-medium"
+                        >1</span
+                      >
+                      <div>
+                        <p class="font-medium">Clé API invalide ou expirée</p>
+                        <p class="text-xs">
+                          → Régénérez une nouvelle clé API dans votre profil
+                        </p>
+                      </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                      <span
+                        class="flex-shrink-0 w-5 h-5 bg-red-100 text-red-800 rounded-full flex items-center justify-center text-xs font-medium"
+                        >2</span
+                      >
+                      <div>
+                        <p class="font-medium">Permissions insuffisantes</p>
+                        <p class="text-xs">
+                          → Seuls les Managers et Admins peuvent importer des
+                          résultats
+                        </p>
+                      </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                      <span
+                        class="flex-shrink-0 w-5 h-5 bg-red-100 text-red-800 rounded-full flex items-center justify-center text-xs font-medium"
+                        >3</span
+                      >
+                      <div>
+                        <p class="font-medium">Format du header incorrect</p>
+                        <p class="text-xs">
+                          → Utilisez :
+                          <code>Authorization: ApiKey votre-cle</code>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 11 -->
+            <div class="border border-gray-200 rounded-lg">
+              <button
+                class="w-full px-4 py-3 text-left flex justify-between items-center hover:bg-gray-50"
+                onclick="toggleFaq('faq11')"
+              >
+                <span class="text-sm font-medium text-gray-900"
+                  >Le site est très lent, comment l'optimiser ?</span
+                >
+                <svg
+                  class="w-5 h-5 text-gray-500 transform transition-transform"
+                  id="faq11-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+              <div id="faq11" class="hidden px-4 pb-3">
+                <div class="text-sm text-gray-600 bg-gray-50 rounded p-3">
+                  <p class="mb-3">
+                    <strong>Optimisations recommandées :</strong>
+                  </p>
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <p class="font-semibold mb-2">🚀 Performance</p>
+                      <ul class="list-disc ml-4 space-y-1 text-xs">
+                        <li>Configurer Redis pour le cache</li>
+                        <li>Utiliser PostgreSQL au lieu de SQLite</li>
+                        <li>Activer la compression gzip dans Nginx</li>
+                        <li>Servir les fichiers statiques via CDN</li>
+                        <li>Optimiser les index de base de données</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p class="font-semibold mb-2">⚙️ Configuration</p>
+                      <ul class="list-disc ml-4 space-y-1 text-xs">
+                        <li>Augmenter les workers Gunicorn</li>
+                        <li>Configurer le pool de connexions DB</li>
+                        <li>Activer le cache des templates Django</li>
+                        <li>Utiliser Celery pour les tâches lourdes</li>
+                        <li>Monitorer avec des outils comme Sentry</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Script JavaScript pour les FAQ accordéons -->
+<script>
+  function toggleFaq(faqId) {
+    const content = document.getElementById(faqId);
+    const icon = document.getElementById(faqId + "-icon");
+
+    if (content.classList.contains("hidden")) {
+      content.classList.remove("hidden");
+      icon.style.transform = "rotate(180deg)";
+    } else {
+      content.classList.add("hidden");
+      icon.style.transform = "rotate(0deg)";
+    }
+  }
+</script>

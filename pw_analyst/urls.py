@@ -26,7 +26,12 @@ urlpatterns = [
     path('accounts/login/', CustomLoginView.as_view(), name='login'),
     path('accounts/logout/', CustomLogoutView.as_view(), name='logout'),
     path('accounts/', include('django.contrib.auth.urls')),
+    # Applications principales
     path('', include('core.urls')),
+    path('projects/', include('projects.urls')),
+    path('', include('testing.urls')),
+    path('integrations/', include('integrations.urls')),
+    path('api/', include('api.urls')),
 ]
 
 # Serve static files during development

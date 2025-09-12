@@ -1,5 +1,8 @@
-{% extends 'base.html' %} {% block title %}Éditer - {{ project.name }}{%
-endblock %} {% block content %}
+{% extends 'base.html' %} 
+
+{% block title %}Éditer - {{ project.name }}{% endblock %} 
+
+{% block content %}
 <div class="max-w-full mx-auto sm:px-6 lg:px-8">
   <div class="px-4 sm:px-0">
     <!-- Breadcrumb -->
@@ -32,7 +35,7 @@ endblock %} {% block content %}
               ></path>
             </svg>
             <a
-              href="{% url 'projects_list' %}"
+              href="/administration/?section=projects"
               class="ml-1 text-sm font-medium text-gray-700 hover:text-primary-600 md:ml-2"
               >Projets</a
             >
@@ -216,7 +219,7 @@ endblock %} {% block content %}
         >
           <div class="flex space-x-3">
             <a
-              href="{% url 'projects_list' %}"
+              href="/administration/?section=projects"
               class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               Annuler
@@ -263,6 +266,7 @@ endblock %} {% block content %}
         <div class="border-t border-gray-200"></div>
 
         <!-- Zone de danger -->
+        {% if user_permissions.can_manage_projects %}
         <div class="bg-red-50 border border-red-200 rounded-lg p-4">
           <div class="flex items-start">
             <div class="flex-shrink-0">
@@ -310,6 +314,7 @@ endblock %} {% block content %}
             </div>
           </div>
         </div>
+        {% endif %}
       </div>
     </div>
   </div>

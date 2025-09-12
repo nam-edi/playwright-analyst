@@ -2,61 +2,27 @@
 
 **Analyseur de résultats de tests Playwright** - Une application Django pour visualiser, analyser et gérer les résultats de vos tests Playwright avec intégration CI/CD.
 
+![Django Version](https://img.shields.io/badge/Django-5.2.5-green.svg)
+![Python Version](https://img.shields.io/badge/Python-3.8+-blue.svg)
+![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)
+![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)
+
 ## 📋 Table des matières
 
 - [Aperçu](#-aperçu)
-- [Fonctionnalités](#-fonctionnalités-principales)
-- [Stack technique](#️-stack-technique)
 - [Installation](#-installation)
 - [Configuration](#️-configuration)
-- [Utilisation](#-utilisation)
-- [Intégration CI/CD](#-intégration-cicd)
-- [API](#-api)
 - [Déploiement](#-déploiement)
 - [Développement](#-développement)
+- [Troubleshooting](#-troubleshooting)
 - [Contribution](#-contribution)
+- [Licence](#-licence)
 
 ## 🎯 Aperçu
 
 PW-Analyst est une application web Django conçue pour centraliser et analyser les résultats de tests Playwright. Elle permet aux équipes de développement de suivre l'évolution de leurs tests, identifier les régressions et analyser les tendances de qualité.
 
-### ✨ Fonctionnalités principales
-
-- **📊 Dashboard interactif** - Vue d'ensemble des résultats de tests
-- **📈 Analyse de tendances** - Évolution de la qualité dans le temps
-- **🔍 Recherche avancée** - Filtrage par tags, statuts, fichiers
-- **🏷️ Système de tags** - Catégorisation flexible des tests
-- **🔗 Intégration CI/CD** - Récupération automatique depuis GitLab/GitHub
-- **📝 Commentaires** - Annotation des tests pour documentation
-- **📱 Interface responsive** - Compatible mobile et desktop
-- **⚡ Performance optimisée** - Pagination et lazy loading
-
-## 🛠️ Stack technique
-
-### Backend
-
-- **Django 5.2.5** - Framework web Python
-- **SQLite** - Base de données (configurable pour PostgreSQL/MySQL)
-- **Django Cotton** - Composants de templates réutilisables
-- **Django Compressor** - Optimisation des assets statiques
-
-### Frontend
-
-- **Tailwind CSS** - Framework CSS utilitaire
-- **JavaScript Vanilla** - Interactions côté client
-- **HTMX** (optionnel) - Interactions AJAX simplifiées
-
-### Intégrations
-
-- **GitLab API** - Récupération d'artifacts CI/CD
-- **GitHub Actions API** - Récupération d'artifacts GitHub
-- **Requests** - Client HTTP pour les APIs externes
-
-### Outils de développement
-
-- **WhiteNoise** - Gestion des fichiers statiques
-- **Django LibSass** - Compilation SCSS
-- **Compressor** - Minification CSS/JS
+**Documentation complète disponible directement dans l'interface de l'application.**
 
 ## 🚀 Installation
 
@@ -71,8 +37,8 @@ PW-Analyst est une application web Django conçue pour centraliser et analyser l
 1. **Cloner le repository**
 
 ```bash
-git clone https://github.com/votre-username/pw-analyst.git
-cd pw-analyst
+git clone https://github.com/nam-edi/playwright-analyst.git
+cd playwright-analyst
 ```
 
 2. **Créer un environnement virtuel**
@@ -164,149 +130,6 @@ DATABASES = {
 }
 ```
 
-## 📖 Utilisation
-
-### 1. Créer un projet
-
-1. Accédez à l'admin Django : `http://localhost:8000/admin/`
-2. Créez un nouveau **Projet**
-3. Optionnellement, configurez une **Configuration CI**
-
-### 2. Importer des résultats de tests
-
-#### Upload manuel
-
-1. Allez sur "Importer des résultats"
-2. Sélectionnez votre projet
-3. Uploadez votre fichier JSON Playwright
-
-#### Récupération automatique CI/CD
-
-1. Configurez une intégration CI/CD dans l'admin
-2. Associez-la à votre projet
-3. Utilisez l'option "Récupérer depuis CI"
-
-### 3. Analyser les résultats
-
-- **Vue d'ensemble** : Dashboard avec métriques globales
-- **Tests** : Liste détaillée avec filtres et recherche
-- **Exécutions** : Historique des runs de tests
-- **Tags** : Gestion et filtrage par catégories
-
-### 4. Gestion des tags
-
-```python
-# Exemple d'utilisation des tags
-# Les tags sont automatiquement extraits du JSON Playwright
-# ou peuvent être ajoutés manuellement
-
-# Dans vos tests Playwright :
-test.describe('Login @auth @critical', () => {
-  test('should login successfully', async ({ page }) => {
-    // votre test
-  });
-});
-```
-
-## 🔗 Intégration CI/CD
-
-### GitLab CI/CD
-
-1. **Configuration GitLab**
-
-```yaml
-# .gitlab-ci.yml
-test:
-  stage: test
-  script:
-    - npm ci
-    - npx playwright test --reporter=json --outputFile=test-results.json
-  artifacts:
-    when: always
-    paths:
-      - test-results.json
-    expire_in: 1 week
-```
-
-2. **Configuration dans PW-Analyst**
-
-- URL GitLab : `https://gitlab.com`
-- ID du projet : `12345` (visible dans Settings → General)
-- Token d'accès : Token avec scope `read_api`
-- Nom du job : `test`
-- Chemin JSON : `test-results.json`
-
-### GitHub Actions
-
-1. **Configuration GitHub Actions**
-
-```yaml
-# .github/workflows/playwright.yml
-name: Playwright Tests
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-      - run: npm ci
-      - run: npx playwright test --reporter=json --outputFile=test-results.json
-      - uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: playwright-results
-          path: test-results.json
-```
-
-2. **Configuration dans PW-Analyst**
-
-- Repository : `owner/repo`
-- Token d'accès : GitHub Personal Access Token
-- Workflow : `Playwright Tests`
-- Artifact : `playwright-results`
-- Fichier JSON : `test-results.json`
-
-## 🔌 API
-
-### Endpoints principaux
-
-```http
-# Projets
-GET    /api/projects/                 # Liste des projets
-POST   /api/projects/                 # Créer un projet
-GET    /api/projects/{id}/            # Détail d'un projet
-
-# Exécutions
-GET    /api/executions/               # Liste des exécutions
-POST   /api/executions/               # Importer une exécution
-GET    /api/executions/{id}/          # Détail d'une exécution
-
-# Tests
-GET    /api/tests/                    # Liste des tests
-GET    /api/tests/{id}/               # Détail d'un test
-PUT    /api/tests/{id}/comment/       # Ajouter un commentaire
-
-# CI/CD
-POST   /api/ci/fetch/                 # Récupérer depuis CI
-GET    /api/ci/status/                # Status de la connexion CI
-```
-
-### Exemple d'utilisation
-
-```python
-import requests
-
-# Importer des résultats
-with open('test-results.json', 'r') as f:
-    data = {
-        'project_id': 1,
-        'json_data': f.read()
-    }
-    response = requests.post('http://localhost:8000/api/executions/', 
-                           json=data)
-```
-
 ## 🚀 Déploiement
 
 ### Déploiement avec Docker
@@ -323,12 +146,12 @@ COPY . .
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
-CMD ["gunicorn", "myproject.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "pw_analyst.wsgi:application", "--bind", "0.0.0.0:8000"]
 ```
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+version: "3.8"
 services:
   web:
     build: .
@@ -366,29 +189,6 @@ SECURE_HSTS_SECONDS=31536000
 
 ## 🔧 Développement
 
-### Structure du projet
-
-```
-pw-analyst/
-├── core/                     # Application principale
-│   ├── models.py            # Modèles de données
-│   ├── views.py             # Vues et logique métier
-│   ├── admin.py             # Interface d'administration
-│   ├── urls.py              # Routes URL
-│   ├── services/            # Services externes (CI/CD)
-│   ├── management/commands/ # Commandes de gestion
-│   └── templatetags/        # Filtres de template
-├── templates/               # Templates Django
-│   ├── base.html           # Template de base
-│   ├── cotton/             # Composants Cotton
-│   └── ...
-├── static/                  # Fichiers statiques source
-├── staticfiles/            # Fichiers statiques collectés
-├── myproject/              # Configuration Django
-├── requirements.txt        # Dépendances Python
-└── manage.py              # Script de gestion Django
-```
-
 ### Commandes utiles
 
 ```bash
@@ -412,35 +212,54 @@ python manage.py dumpdata core > backup.json
 
 # Import personnalisé
 python manage.py import_playwright data/test-results.json --project=1
+
+# Collecte des fichiers statiques
+python manage.py collectstatic      # Collecter les fichiers statiques
+python manage.py collectstatic --clear --noinput  # Forcer la recollecte
 ```
 
-### Ajout de nouvelles fonctionnalités
+## 🔧 Troubleshooting
 
-1. **Nouveau modèle**
+### Problèmes courants
 
-```python
-# core/models.py
-class NouveuModele(models.Model):
-    name = models.CharField(max_length=200)
-    
-    class Meta:
-        verbose_name = "Nouveau Modèle"
-```
-
-2. **Migration**
+#### Erreur de migration
 
 ```bash
-python manage.py makemigrations
+# Solution : Réinitialiser la base de données
+python manage.py migrate --fake-initial
+# ou supprimer db.sqlite3 et relancer les migrations
+rm db.sqlite3
 python manage.py migrate
 ```
 
-3. **Admin**
+#### Problème de fichiers statiques
 
-```python
-# core/admin.py
-@admin.register(NouveuModele)
-class NouveauModeleAdmin(admin.ModelAdmin):
-    list_display = ['name']
+```bash
+# Solution : Recollecte des fichiers statiques
+python manage.py collectstatic --clear --noinput
+```
+
+#### Erreur d'importation CI/CD
+
+- Vérifiez la validité de votre token d'accès
+- Assurez-vous que l'ID du projet/repository est correct
+- Vérifiez que l'artifact existe et contient le fichier JSON
+
+#### Performance lente
+
+- Vérifiez les index de base de données
+- Considérez l'utilisation de PostgreSQL pour de gros volumes
+- Activez le cache Django en production
+
+### Logs et débogage
+
+```bash
+# Activer le mode debug
+export DEBUG=True
+python manage.py runserver
+
+# Vérifier la configuration
+python manage.py check
 ```
 
 ## 🤝 Contribution
@@ -470,31 +289,17 @@ isort .
 flake8 .
 ```
 
-### Tests
-
-```python
-# core/tests.py
-from django.test import TestCase
-from .models import Project
-
-class ProjectTestCase(TestCase):
-    def test_project_creation(self):
-        project = Project.objects.create(
-            name="Test Project",
-            description="Test description"
-        )
-        self.assertEqual(project.name, "Test Project")
-```
-
 ## 📄 Licence
 
 Ce projet est sous licence Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0).
 
 **Vous êtes libre de :**
+
 - 🔄 Partager, copier et redistribuer le matériel
 - 🔧 Adapter, modifier et construire à partir du matériel
 
 **Sous les conditions suivantes :**
+
 - 📝 **Attribution** : Vous devez créditer l'auteur original (Damien Hoffmann)
 - 💰 **Non Commercial** : Vous ne pouvez pas utiliser ce matériel à des fins commerciales
 - 🔄 **Partage dans les mêmes conditions** : Si vous modifiez le projet, vous devez le distribuer sous la même licence
@@ -503,17 +308,9 @@ Voir le fichier `LICENSE` pour plus de détails ou visitez [Creative Commons](ht
 
 ## 🆘 Support
 
-- **Issues** : [GitHub Issues](https://github.com/votre-username/pw-analyst/issues)
-- **Documentation** : [Wiki du projet](https://github.com/votre-username/pw-analyst/wiki)
-- **Email** : <support@votre-domaine.com>
-
-## 🙏 Remerciements
-
-- [Django](https://djangoproject.com/) - Framework web Python
-- [Playwright](https://playwright.dev/) - Framework de test
-- [Tailwind CSS](https://tailwindcss.com/) - Framework CSS
-- [Django Cotton](https://django-cotton.com/) - Composants Django
+- **Issues** : [GitHub Issues](https://github.com/nam-edi/playwright-analyst/issues)
+- **Documentation** : Disponible directement dans l'interface de l'application
 
 ---
 
-**Développé avec ❤️ par [Damien HOFFMANN](https://github.com/votre-username)**
+**Développé avec ❤️ par [Damien HOFFMANN](https://github.com/nam-edi)**

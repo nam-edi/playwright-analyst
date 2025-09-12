@@ -13,10 +13,125 @@ from django.contrib import messages
 from django.db.models import Count, Avg, Case, When, FloatField, Q, F
 from django.http import HttpResponse
 from django.forms.widgets import TextInput
+from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import csv
-from .models import Project, Tag, TestExecution, Test, TestResult, CIConfiguration, GitLabConfiguration, GitHubConfiguration, ProjectFeature
+# Les modèles ont été déplacés dans leurs applications respectives
+# Import temporaire pour éviter les erreurs
+from projects.models import Project, ProjectFeature
+from testing.models import Tag, TestExecution, Test, TestResult
+from integrations.models import CIConfiguration, GitLabConfiguration, GitHubConfiguration
+from api.models import APIKey
 from .widgets import ColorPickerWidget
+
+# Importer les vues personnalisées pour l'admin
+from . import admin_views
+
+
+class EmptyTokenWidget(forms.TextInput):
+    """Widget qui force le champ à être vide en modification"""
+    
+    def __init__(self, attrs=None):
+        default_attrs = {
+            'placeholder': 'Laissez vide pour conserver le token actuel',
+            'style': 'border-left: 3px solid #10b981; background-color: #f0fdf4; color: #000000; width: 400px; font-family: monospace;'
+        }
+        if attrs:
+            default_attrs.update(attrs)
+        super().__init__(default_attrs)
+    
+    def format_value(self, value):
+        """Toujours retourner une chaîne vide"""
+        return ''
+    
+    def value_from_datadict(self, data, files, name):
+        """Récupérer la valeur du formulaire"""
+        return data.get(name, '')
+
+
+class GitLabConfigurationForm(forms.ModelForm):
+    """Formulaire personnalisé pour GitLabConfiguration avec token masqué"""
+    
+    class Meta:
+        model = GitLabConfiguration
+        fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:  # En modification
+            # Utiliser le widget personnalisé qui force le champ vide
+            self.fields['access_token'].widget = EmptyTokenWidget()
+            self.fields['access_token'].required = False
+            self.fields['access_token'].help_text = 'Laissez vide pour conserver le token actuel, ou saisissez un nouveau token pour le remplacer.'
+            self.fields['access_token'].label = 'Nouveau token d\'accès (optionnel)'
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        # Si en modification et token vide, conserver l'ancien
+        if self.instance.pk and not self.cleaned_data.get('access_token'):
+            old_instance = GitLabConfiguration.objects.get(pk=self.instance.pk)
+            instance.access_token = old_instance.access_token
+        if commit:
+            instance.save()
+        return instance
+
+
+class APIKeyForm(forms.ModelForm):
+    """Formulaire personnalisé pour APIKey avec clé masquée et régénération"""
+    
+    regenerate_key = forms.BooleanField(
+        required=False,
+        label='Régénérer la clé API',
+        help_text='⚠️ Attention : Cocher cette case générera une nouvelle clé et invalidera l\'ancienne définitivement !',
+        widget=forms.CheckboxInput(attrs={'style': 'transform: scale(1.2); margin-right: 8px;'})
+    )
+    
+    class Meta:
+        model = APIKey
+        exclude = ['key']  # Exclure complètement le champ key du formulaire
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Gérer la régénération de clé
+        if self.cleaned_data.get('regenerate_key'):
+            import secrets
+            instance.key = secrets.token_urlsafe(32)
+        elif self.instance.pk:
+            # Conserver l'ancienne clé si pas de régénération
+            old_instance = APIKey.objects.get(pk=self.instance.pk)
+            instance.key = old_instance.key
+        
+        if commit:
+            instance.save()
+        return instance
+
+
+class GitHubConfigurationForm(forms.ModelForm):
+    """Formulaire personnalisé pour GitHubConfiguration avec token masqué"""
+    
+    class Meta:
+        model = GitHubConfiguration
+        fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:  # En modification
+            # Utiliser le widget personnalisé qui force le champ vide
+            self.fields['access_token'].widget = EmptyTokenWidget()
+            self.fields['access_token'].required = False
+            self.fields['access_token'].help_text = 'Laissez vide pour conserver le token actuel, ou saisissez un nouveau token pour le remplacer.'
+            self.fields['access_token'].label = 'Nouveau token d\'accès (optionnel)'
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        # Si en modification et token vide, conserver l'ancien
+        if self.instance.pk and not self.cleaned_data.get('access_token'):
+            old_instance = GitHubConfiguration.objects.get(pk=self.instance.pk)
+            instance.access_token = old_instance.access_token
+        if commit:
+            instance.save()
+        return instance
 
 
 class TestResultStatusFilter(admin.SimpleListFilter):
@@ -200,7 +315,7 @@ class ExecutionListFilter(admin.SimpleListFilter):
 
 
 class TagAdminForm(forms.ModelForm):
-    """Formulaire personnalisé pour le modèle Tag avec sélecteur de couleur"""
+    """Formulaire personnalisé pour le modèle Tag avec sélecteur de couleur et validation"""
     
     class Meta:
         model = Tag
@@ -210,6 +325,71 @@ class TagAdminForm(forms.ModelForm):
                 'title': 'Choisissez une couleur pour ce tag'
             })
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Déterminer le projet : soit depuis l'instance existante, soit depuis les données POST
+        project_id = None
+        if self.instance and self.instance.project_id:
+            project_id = self.instance.project_id
+        elif 'data' in kwargs and kwargs['data'] and 'project' in kwargs['data']:
+            # Nouveau tag : récupérer le projet depuis les données POST
+            project_id = kwargs['data'].get('project')
+        
+        # Si on a un projet, obtenir les couleurs déjà utilisées
+        if project_id:
+            used_colors = self.get_used_colors_for_project(project_id)
+            used_color_values = [color for color, name in used_colors]
+            
+            # Passer les couleurs utilisées au widget
+            if 'color' in self.fields:
+                self.fields['color'].widget.attrs['data-used-colors'] = used_color_values
+            
+            if used_colors:
+                self.fields['color'].help_text = self.build_color_help_text(used_colors)
+    
+    def get_used_colors_for_project(self, project_id):
+        """Récupère les couleurs déjà utilisées dans le projet"""
+        used_colors = Tag.objects.filter(
+            project_id=project_id
+        ).exclude(
+            pk=self.instance.pk if self.instance.pk else None
+        ).values_list('color', 'name')
+        return list(used_colors)
+    
+    def build_color_help_text(self, used_colors):
+        """Construit le texte d'aide avec les couleurs déjà utilisées"""
+        if not used_colors:
+            return "Toutes les couleurs sont disponibles pour ce projet."
+        
+        help_text = "⚠️ <strong>Couleurs déjà utilisées dans ce projet :</strong><br>"
+        for color, tag_name in used_colors:
+            help_text += f'<span style="display: inline-block; width: 12px; height: 12px; background-color: {color}; border: 1px solid #ccc; margin-right: 5px; vertical-align: middle;"></span>'
+            help_text += f'<code>{color}</code> (utilisée par "{tag_name}")<br>'
+        
+        return mark_safe(help_text)
+    
+    def clean_color(self):
+        """Validation personnalisée de la couleur"""
+        color = self.cleaned_data.get('color')
+        project = self.cleaned_data.get('project')
+        
+        if color and project:
+            # Vérifier si la couleur est déjà utilisée dans ce projet
+            existing_tags = Tag.objects.filter(
+                project=project,
+                color=color
+            ).exclude(pk=self.instance.pk if self.instance.pk else None)
+            
+            if existing_tags.exists():
+                existing_tag = existing_tags.first()
+                raise forms.ValidationError(
+                    f'La couleur {color} est déjà utilisée par le tag "{existing_tag.name}" de ce projet. '
+                    f'Veuillez choisir une autre couleur.'
+                )
+        
+        return color
 
 
 class ProjectFeatureInline(admin.TabularInline):
@@ -220,17 +400,38 @@ class ProjectFeatureInline(admin.TabularInline):
     fields = ['feature_key', 'is_enabled', 'created_at', 'updated_at']
 
 
-@admin.register(Project)
-class ProjectAdmin(admin.ModelAdmin):
-    list_display = ['name', 'created_by', 'ci_provider', 'created_at', 'execution_count', 'features_display']
+class TagInline(admin.TabularInline):
+    """Inline pour gérer les tags d'un projet"""
+    model = Tag
+    extra = 0
+    readonly_fields = ['created_at', 'test_count']
+    fields = ['name', 'color', 'test_count', 'created_at']
+    
+    def test_count(self, obj):
+        if obj.pk:
+            return obj.test_set.count()
+        return 0
+    test_count.short_description = 'Tests'
+
+
+# @admin.register(Project)  # Désactivé - modèle déplacé vers projects.admin
+class ProjectAdmin_OLD(admin.ModelAdmin):
+    list_display = ['name', 'created_by', 'ci_provider', 'created_at', 'execution_count', 'tags_count', 'features_display']
     list_filter = ['created_at', 'created_by', 'ci_configuration__provider']
     search_fields = ['name', 'description']
     readonly_fields = ['created_at', 'updated_at']
-    inlines = [ProjectFeatureInline]
+    inlines = [TagInline, ProjectFeatureInline]
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('tags')
     
     def execution_count(self, obj):
         return obj.executions.count()
     execution_count.short_description = 'Exécutions'
+    
+    def tags_count(self, obj):
+        return obj.tags.count()
+    tags_count.short_description = 'Tags'
     
     def ci_provider(self, obj):
         if obj.ci_configuration:
@@ -248,8 +449,8 @@ class ProjectAdmin(admin.ModelAdmin):
     features_display.short_description = 'Features actives'
 
 
-@admin.register(ProjectFeature)
-class ProjectFeatureAdmin(admin.ModelAdmin):
+# @admin.register(ProjectFeature)  # Désactivé - modèle déplacé vers projects.admin
+class ProjectFeatureAdmin_OLD(admin.ModelAdmin):
     list_display = ['project', 'feature_key', 'is_enabled', 'created_at']
     list_filter = ['feature_key', 'is_enabled', 'created_at']
     search_fields = ['project__name']
@@ -260,11 +461,16 @@ class ProjectFeatureAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related('project')
 
 
-@admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
+# @admin.register(Tag)  # Désactivé - modèle déplacé vers testing.admin
+class TagAdmin_OLD(admin.ModelAdmin):
     form = TagAdminForm
-    list_display = ['name', 'color_display', 'test_count']
-    search_fields = ['name']
+    list_display = ['name', 'project', 'color_display', 'test_count']
+    list_filter = ['project', 'created_at']
+    search_fields = ['name', 'project__name']
+    readonly_fields = ['created_at']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('project')
     
     def color_display(self, obj):
         """Affiche un aperçu de la couleur"""
@@ -289,8 +495,8 @@ class TagAdmin(admin.ModelAdmin):
         js = ('admin/js/color_picker.js',)
 
 
-@admin.register(TestExecution)
-class TestExecutionAdmin(admin.ModelAdmin):
+# @admin.register(TestExecution)  # Désactivé - modèle déplacé vers testing.admin
+class TestExecutionAdmin_OLD(admin.ModelAdmin):
     list_display = ['project', 'start_time', 'duration_seconds', 'total_tests_display', 'success_rate_display', 'git_branch']
     list_filter = ['start_time', 'project', 'git_branch', 'playwright_version', DateRangeFilter]
     search_fields = ['project__name', 'git_commit_hash', 'git_commit_subject']
@@ -399,11 +605,11 @@ class TestExecutionAdmin(admin.ModelAdmin):
     success_rate_display.short_description = 'Taux de réussite'
 
 
-@admin.register(Test)
-class TestAdmin(admin.ModelAdmin):
-    list_display = ['title', 'file_path', 'line', 'tag_list', 'has_comment', 'result_count']
-    list_filter = ['tags', 'created_at', TestCommentFilter]
-    search_fields = ['title', 'file_path', 'story', 'test_id', 'comment']
+# @admin.register(Test)  # Désactivé - modèle déplacé vers testing.admin
+class TestAdmin_OLD(admin.ModelAdmin):
+    list_display = ['title', 'project', 'file_path', 'line', 'tag_list', 'has_comment', 'result_count']
+    list_filter = ['project', 'created_at', TestCommentFilter]
+    search_fields = ['title', 'file_path', 'story', 'test_id', 'comment', 'project__name']
     filter_horizontal = ['tags']
     inlines = [TestResultInline]
     
@@ -432,8 +638,34 @@ class TestAdmin(admin.ModelAdmin):
             'tags', 'results__execution'
         ).select_related('project')
     
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        """Filtrer les tags par projet du test en cours d'édition"""
+        if db_field.name == "tags":
+            # Obtenir l'ID du test en cours d'édition depuis l'URL
+            if request.resolver_match and request.resolver_match.kwargs.get('object_id'):
+                try:
+                    test_id = request.resolver_match.kwargs['object_id']
+                    test = Test.objects.get(pk=test_id)
+                    kwargs["queryset"] = Tag.objects.filter(project=test.project)
+                except Test.DoesNotExist:
+                    pass
+            # Pour les nouveaux tests, on ne peut pas filtrer car on ne connaît pas encore le projet
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+    
     def tag_list(self, obj):
-        return ", ".join([tag.name for tag in obj.tags.all()[:3]])
+        tags = obj.tags.all()[:3]
+        if tags:
+            tag_display = []
+            for tag in tags:
+                tag_display.append(format_html(
+                    '<span style="background-color: {}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">{}</span>',
+                    tag.color, tag.name
+                ))
+            result = ' '.join(tag_display)
+            if obj.tags.count() > 3:
+                result += f' <span style="color: #6b7280;">+{obj.tags.count() - 3}</span>'
+            return format_html(result)
+        return "-"
     tag_list.short_description = 'Tags'
     
     def has_comment(self, obj):
@@ -451,8 +683,8 @@ class TestAdmin(admin.ModelAdmin):
     result_count.short_description = 'Résultats'
 
 
-@admin.register(TestResult)
-class TestResultAdmin(admin.ModelAdmin):
+# @admin.register(TestResult)  # Désactivé - modèle déplacé vers testing.admin
+class TestResultAdmin_OLD(admin.ModelAdmin):
     list_display = ['test', 'execution_display', 'status', 'duration_seconds', 'has_errors', 'start_time']
     list_filter = ['status', ExecutionListFilter, 'execution__project', 'start_time', TestResultStatusFilter]
     search_fields = ['test__title', 'execution__project__name']
@@ -525,18 +757,82 @@ class GitLabConfigurationInline(admin.StackedInline):
     """Inline pour la configuration GitLab"""
     model = GitLabConfiguration
     extra = 0
-    fields = ['gitlab_url', 'project_id', 'access_token', 'job_name', 'artifact_path']
+    readonly_fields = ['masked_access_token']
+    
+    def get_fields(self, request, obj=None):
+        """Personnalise les champs selon le contexte"""
+        if obj and hasattr(obj, 'gitlab_config'):
+            # Modification : montrer le token masqué en premier
+            return ['gitlab_url', 'project_id', 'masked_access_token', 'access_token', 'job_name', 'artifact_path']
+        else:
+            # Création : pas de token masqué encore
+            return ['gitlab_url', 'project_id', 'access_token', 'job_name', 'artifact_path']
+    
+    def get_formset(self, request, obj=None, **kwargs):
+        """Personnalise le formset pour vider le champ access_token en modification"""
+        formset = super().get_formset(request, obj, **kwargs)
+        if obj and hasattr(obj, 'gitlab_config'):
+            # En modification, redéfinir complètement le champ access_token
+            from django import forms
+            formset.form.base_fields['access_token'] = forms.CharField(
+                max_length=200,
+                required=False,
+                initial='',
+                widget=forms.TextInput(attrs={'placeholder': 'Laissez vide pour conserver'}),
+                help_text='Laissez vide pour conserver le token actuel',
+                label='Nouveau token (optionnel)'
+            )
+        return formset
+    
+    def masked_access_token(self, obj):
+        """Affiche le token masqué pour la sécurité"""
+        if obj and obj.access_token:
+            return format_html('<code style="font-family: monospace; color: #10b981;">{}</code>', obj.masked_access_token)
+        return "-"
+    masked_access_token.short_description = 'Token actuel (masqué)'
 
 
 class GitHubConfigurationInline(admin.StackedInline):
     """Inline pour la configuration GitHub"""
     model = GitHubConfiguration
     extra = 0
-    fields = ['repository', 'access_token', 'workflow_name', 'artifact_name', 'json_filename']
+    readonly_fields = ['masked_access_token']
+    
+    def get_fields(self, request, obj=None):
+        """Personnalise les champs selon le contexte"""
+        if obj and hasattr(obj, 'github_config'):
+            # Modification : montrer le token masqué en premier
+            return ['repository', 'masked_access_token', 'access_token', 'workflow_name', 'artifact_name', 'json_filename']
+        else:
+            # Création : pas de token masqué encore
+            return ['repository', 'access_token', 'workflow_name', 'artifact_name', 'json_filename']
+    
+    def get_formset(self, request, obj=None, **kwargs):
+        """Personnalise le formset pour vider le champ access_token en modification"""
+        formset = super().get_formset(request, obj, **kwargs)
+        if obj and hasattr(obj, 'github_config'):
+            # En modification, redéfinir complètement le champ access_token
+            from django import forms
+            formset.form.base_fields['access_token'] = forms.CharField(
+                max_length=200,
+                required=False,
+                initial='',
+                widget=forms.TextInput(attrs={'placeholder': 'Laissez vide pour conserver'}),
+                help_text='Laissez vide pour conserver le token actuel',
+                label='Nouveau token (optionnel)'
+            )
+        return formset
+    
+    def masked_access_token(self, obj):
+        """Affiche le token masqué pour la sécurité"""
+        if obj and obj.access_token:
+            return format_html('<code style="font-family: monospace; color: #10b981;">{}</code>', obj.masked_access_token)
+        return "-"
+    masked_access_token.short_description = 'Token actuel (masqué)'
 
 
-@admin.register(CIConfiguration)
-class CIConfigurationAdmin(admin.ModelAdmin):
+# @admin.register(CIConfiguration)  # Désactivé - modèle déplacé vers integrations.admin
+class CIConfigurationAdmin_OLD(admin.ModelAdmin):
     list_display = ['name', 'provider', 'created_at', 'projects_count']
     list_filter = ['provider', 'created_at']
     search_fields = ['name']
@@ -555,18 +851,229 @@ class CIConfigurationAdmin(admin.ModelAdmin):
     projects_count.short_description = 'Projets utilisant cette config'
 
 
-@admin.register(GitLabConfiguration)
-class GitLabConfigurationAdmin(admin.ModelAdmin):
-    list_display = ['ci_config', 'gitlab_url', 'project_id', 'job_name']
+# @admin.register(GitLabConfiguration)  # Désactivé - modèle déplacé vers integrations.admin
+class GitLabConfigurationAdmin_OLD(admin.ModelAdmin):
+    form = GitLabConfigurationForm
+    list_display = ['ci_config', 'gitlab_url', 'project_id', 'job_name', 'masked_token_display']
     search_fields = ['ci_config__name', 'project_id', 'job_name']
-    fields = ['ci_config', 'gitlab_url', 'project_id', 'access_token', 'job_name', 'artifact_path']
+    readonly_fields = ['masked_access_token']
+    
+    fieldsets = (
+        ('Configuration CI', {
+            'fields': ('ci_config',)
+        }),
+        ('Connexion GitLab', {
+            'fields': ('gitlab_url', 'project_id')
+        }),
+        ('Authentification', {
+            'fields': ('masked_access_token', 'access_token'),
+            'description': 'Le token actuel est masqué ci-dessus. Laissez le champ ci-dessous vide pour conserver le token existant, ou saisissez un nouveau token pour le remplacer.'
+        }),
+        ('Configuration des artifacts', {
+            'fields': ('job_name', 'artifact_path')
+        })
+    )
+    
+    def get_fieldsets(self, request, obj=None):
+        """Retourne les fieldsets seulement en modification"""
+        if obj:
+            return self.fieldsets
+        else:
+            return (
+                ('Configuration', {
+                    'fields': ('ci_config', 'gitlab_url', 'project_id', 'access_token', 'job_name', 'artifact_path')
+                }),
+            )
+    
+    def masked_access_token(self, obj):
+        """Affiche le token masqué pour la sécurité"""
+        if obj and obj.access_token:
+            return format_html('<code style="font-family: monospace; color: #10b981;">{}</code>', obj.masked_access_token)
+        return "-"
+    masked_access_token.short_description = 'Token actuel (masqué)'
+    
+    def masked_token_display(self, obj):
+        """Affichage du token masqué dans la liste"""
+        if obj and obj.access_token:
+            return format_html('<code style="font-family: monospace; font-size: 0.9em;">{}</code>', obj.masked_access_token)
+        return format_html('<span style="color: #ef4444;">Non configuré</span>')
+    masked_token_display.short_description = 'Token'
 
 
-@admin.register(GitHubConfiguration)
-class GitHubConfigurationAdmin(admin.ModelAdmin):
-    list_display = ['ci_config', 'repository', 'workflow_name', 'artifact_name']
+# @admin.register(GitHubConfiguration)  # Désactivé - modèle déplacé vers integrations.admin
+class GitHubConfigurationAdmin_OLD(admin.ModelAdmin):
+    form = GitHubConfigurationForm
+    list_display = ['ci_config', 'repository', 'workflow_name', 'artifact_name', 'masked_token_display']
     search_fields = ['ci_config__name', 'repository', 'workflow_name']
-    fields = ['ci_config', 'repository', 'access_token', 'workflow_name', 'artifact_name', 'json_filename']
+    readonly_fields = ['masked_access_token']
+    
+    fieldsets = (
+        ('Configuration CI', {
+            'fields': ('ci_config',)
+        }),
+        ('Repository GitHub', {
+            'fields': ('repository',)
+        }),
+        ('Authentification', {
+            'fields': ('masked_access_token', 'access_token'),
+            'description': 'Le token actuel est masqué ci-dessus. Laissez le champ ci-dessous vide pour conserver le token existant, ou saisissez un nouveau token pour le remplacer.'
+        }),
+        ('Configuration du workflow', {
+            'fields': ('workflow_name', 'artifact_name', 'json_filename')
+        })
+    )
+    
+    def get_fieldsets(self, request, obj=None):
+        """Retourne les fieldsets seulement en modification"""
+        if obj:
+            return self.fieldsets
+        else:
+            return (
+                ('Configuration', {
+                    'fields': ('ci_config', 'repository', 'access_token', 'workflow_name', 'artifact_name', 'json_filename')
+                }),
+            )
+    
+    def masked_access_token(self, obj):
+        """Affiche le token masqué pour la sécurité"""
+        if obj and obj.access_token:
+            return format_html('<code style="font-family: monospace; color: #10b981;">{}</code>', obj.masked_access_token)
+        return "-"
+    masked_access_token.short_description = 'Token actuel (masqué)'
+    
+    def masked_token_display(self, obj):
+        """Affichage du token masqué dans la liste"""
+        if obj and obj.access_token:
+            return format_html('<code style="font-family: monospace; font-size: 0.9em;">{}</code>', obj.masked_access_token)
+        return format_html('<span style="color: #ef4444;">Non configuré</span>')
+    masked_token_display.short_description = 'Token'
+
+
+# @admin.register(APIKey)  # Désactivé - modèle déplacé vers api.admin
+class APIKeyAdmin_OLD(admin.ModelAdmin):
+    form = APIKeyForm
+    list_display = ['name', 'user', 'masked_key', 'projects_count', 'permissions_display', 'is_active', 'last_used', 'expires_at']
+    list_filter = ['is_active', 'can_upload', 'can_read', 'created_at', 'expires_at']
+    search_fields = ['name', 'user__username', 'user__email']
+    readonly_fields = ['created_at', 'last_used', 'masked_key']
+    exclude_in_creation = ['key', 'masked_key', 'regenerate_key']
+    filter_horizontal = ['projects']
+    
+    fieldsets = (
+        ('Informations générales', {
+            'fields': ('name', 'user', 'masked_key')
+        }),
+        ('Régénération', {
+            'fields': ('regenerate_key',),
+            'description': 'Cochez cette case pour générer une nouvelle clé API. L\'ancienne clé sera immédiatement invalidée.',
+            'classes': ('wide',)
+        }),
+        ('Permissions', {
+            'fields': ('can_upload', 'can_read', 'projects'),
+            'description': 'Si aucun projet n\'est sélectionné, la clé aura accès à tous les projets.'
+        }),
+        ('État', {
+            'fields': ('is_active', 'expires_at')
+        }),
+        ('Métadonnées', {
+            'fields': ('created_at', 'last_used'),
+            'classes': ('collapse',)
+        })
+    )
+    
+    def get_fieldsets(self, request, obj=None):
+        """Personnalise les fieldsets selon le contexte"""
+        if obj:  # Modification
+            return self.fieldsets
+        else:  # Création
+            return (
+                ('Informations générales', {
+                    'fields': ('name', 'user')
+                }),
+                ('Permissions', {
+                    'fields': ('can_upload', 'can_read', 'projects'),
+                    'description': 'Si aucun projet n\'est sélectionné, la clé aura accès à tous les projets.'
+                }),
+                ('État', {
+                    'fields': ('is_active', 'expires_at')
+                })
+            )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user').prefetch_related('projects')
+    
+    def save_model(self, request, obj, form, change):
+        """Gérer la création et régénération de clés"""
+        if not change:  # Nouveau modèle
+            obj.user = obj.user or request.user
+        
+        # Vérifier si une régénération est demandée
+        regenerate_requested = form.cleaned_data.get('regenerate_key', False)
+        
+        super().save_model(request, obj, form, change)
+        
+        # Messages informatifs
+        if not change:
+            messages.success(
+                request,
+                f'🎉 Clé API créée avec succès ! Voici la clé complète (notez-la, elle ne sera plus affichée) : {obj.key}'
+            )
+        elif regenerate_requested:
+            messages.warning(
+                request,
+                f'🔄 Clé API régénérée avec succès ! Nouvelle clé : {obj.key} (⚠️ L\'ancienne clé est maintenant invalidée)'
+            )
+    
+    def projects_count(self, obj):
+        """Affiche le nombre de projets autorisés"""
+        count = obj.projects.count()
+        if count == 0:
+            return format_html('<span style="color: #10b981;">Tous les projets</span>')
+        return format_html('<span title="Projets spécifiques">{} projet(s)</span>', count)
+    projects_count.short_description = 'Projets autorisés'
+    
+    def permissions_display(self, obj):
+        """Affiche les permissions de façon lisible"""
+        perms = []
+        if obj.can_read:
+            perms.append('📖 Lecture')
+        if obj.can_upload:
+            perms.append('📤 Upload')
+        
+        if not perms:
+            return format_html('<span style="color: #ef4444;">Aucune permission</span>')
+        
+        return format_html('<span title="{}">{}</span>', ', '.join(perms), ' + '.join(perms))
+    permissions_display.short_description = 'Permissions'
+    
+    def masked_key(self, obj):
+        """Affiche la clé masquée"""
+        if obj.key:
+            return format_html('<code style="font-family: monospace;">{}</code>', obj.masked_key)
+        return "-"
+    masked_key.short_description = 'Clé (masquée)'
+    
+    actions = ['deactivate_keys', 'extend_expiry']
+    
+    @admin.action(description='Désactiver les clés sélectionnées')
+    def deactivate_keys(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(
+            request,
+            f'{updated} clé(s) API désactivée(s).',
+            messages.SUCCESS
+        )
+    
+    @admin.action(description='Prolonger l\'expiration de 30 jours')
+    def extend_expiry(self, request, queryset):
+        from django.utils import timezone
+        new_expiry = timezone.now() + timedelta(days=30)
+        updated = queryset.update(expires_at=new_expiry)
+        self.message_user(
+            request,
+            f'Expiration prolongée pour {updated} clé(s) API (nouveau délai : {new_expiry.strftime("%d/%m/%Y")}).',
+            messages.SUCCESS
+        )
 
 
 # Personnalisation de l'admin pour injecter des données dans la page d'accueil
@@ -601,6 +1108,49 @@ class PWAnalystAdminSite(admin.AdminSite):
         })
         
         return super().index(request, extra_context)
+
+# Import des modèles core
+from .models import UserContext
+
+
+class UserContextAdmin(admin.ModelAdmin):
+    """Administration des contextes utilisateurs"""
+    list_display = ('user', 'get_user_groups', 'get_projects_count', 'created_at')
+    list_filter = ('created_at', 'user__groups')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name')
+    filter_horizontal = ('projects',)
+    
+    def get_user_groups(self, obj):
+        groups = obj.user.groups.all()
+        if groups:
+            return ', '.join([group.name for group in groups])
+        return 'Aucun groupe'
+    get_user_groups.short_description = 'Groupes'
+    
+    def get_projects_count(self, obj):
+        count = obj.get_projects_count()
+        if count == 0:
+            return "Tous les projets"
+        return f"{count} projet{'s' if count > 1 else ''}"
+    get_projects_count.short_description = 'Projets accessibles'
+    
+    def get_queryset(self, request):
+        """Optimiser les requêtes"""
+        return super().get_queryset(request).select_related('user').prefetch_related('user__groups', 'projects')
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Filtrer les utilisateurs selon leurs groupes"""
+        if db_field.name == "user":
+            # Seuls les utilisateurs Manager et Viewer peuvent avoir un contexte
+            kwargs["queryset"] = User.objects.filter(
+                groups__name__in=['Manager', 'Viewer']
+            ).distinct()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+# Enregistrer le modèle
+admin.site.register(UserContext, UserContextAdmin)
+
 
 # Remplacer le site admin par défaut si nécessaire
 # Mais gardons admin.site pour la compatibilité

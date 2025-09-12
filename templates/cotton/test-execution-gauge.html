@@ -4,12 +4,10 @@
 <div class="mb-3">
   <div class="text-xs text-gray-600 mb-2 flex items-center">
     <span>Dernières exécutions:</span>
-    <span class="text-xs text-gray-500 px-4"
-      >{{ test.get_success_rate|floatformat:0 }}% réussite</span
-    >
   </div>
 
-  {% with recent_results=test.results.all|slice:":10" %} {% if recent_results %}
+  {% with recent_results=test.results.all|slice:"-10:" %} {% if recent_results
+  %}
   <div class="flex gap-1 items-center">
     {% for result in recent_results %}
     <div

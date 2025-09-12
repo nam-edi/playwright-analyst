@@ -1,0 +1,143 @@
+{% extends "base.html" %} {% load static %} {% block title %}Modifier
+Utilisateur - {{ user.username }}{% endblock %} {% block content %}
+<div class="container mx-auto px-6 py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      Modifier les groupes de {{ user.username }}
+    </h1>
+    <p class="mt-2 text-gray-600">
+      Gérez les permissions de l'utilisateur en modifiant ses groupes.
+    </p>
+  </div>
+
+  {% if messages %} {% for message in messages %}
+  <div
+    class="mb-4 p-4 rounded-md {% if message.tags == 'success' %}bg-green-50 text-green-700{% elif message.tags == 'error' %}bg-red-50 text-red-700{% else %}bg-blue-50 text-blue-700{% endif %}"
+  >
+    {{ message }}
+  </div>
+  {% endfor %} {% endif %}
+
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">
+        Informations utilisateur
+      </h3>
+    </div>
+    <div class="px-6 py-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <p class="text-sm font-medium text-gray-500">Nom d'utilisateur</p>
+          <p class="mt-1 text-sm text-gray-900">{{ user.username }}</p>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-500">Email</p>
+          <p class="mt-1 text-sm text-gray-900">
+            {{ user.email|default:"Non renseigné" }}
+          </p>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-500">Nom complet</p>
+          <p class="mt-1 text-sm text-gray-900">
+            {% if user.first_name or user.last_name %} {{ user.first_name }} {{
+            user.last_name }} {% else %} Non renseigné {% endif %}
+          </p>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-500">Statut</p>
+          <p class="mt-1">
+            {% if user.is_superuser %}
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+            >
+              Superutilisateur
+            </span>
+            {% endif %} {% if user.is_staff %}
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+            >
+              Staff
+            </span>
+            {% endif %} {% if user.is_active %}
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+            >
+              Actif
+            </span>
+            {% else %}
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+            >
+              Inactif
+            </span>
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form method="post" class="mt-8">
+    {% csrf_token %}
+    <div class="bg-white shadow rounded-lg">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">
+          Groupes de permissions
+        </h3>
+        <p class="mt-1 text-sm text-gray-500">
+          Sélectionnez les groupes auxquels cet utilisateur appartient.
+        </p>
+      </div>
+      <div class="px-6 py-4">
+        <div class="space-y-4">
+          {% for group in all_groups %}
+          <label class="flex items-start">
+            <input
+              type="checkbox"
+              name="groups"
+              value="{{ group.name }}"
+              {%
+              if
+              group
+              in
+              user_groups
+              %}checked{%
+              endif
+              %}
+              class="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <div class="ml-3">
+              <p class="text-sm font-medium text-gray-900">{{ group.name }}</p>
+              <p class="text-sm text-gray-500">
+                {% if group.name == "Admin" %} Accès complet à toutes les
+                fonctionnalités, y compris l'administration Django {% elif
+                group.name == "Manager" %} Gestion des tests, exécutions et
+                tags. Lecture seule des projets (pas d'accès admin) {% elif
+                group.name == "Viewer" %} Accès en lecture seule uniquement, ne
+                peut pas modifier les données {% else %} {{
+                group.permissions.count }} permissions assignées {% endif %}
+              </p>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 flex justify-end space-x-3">
+      <a
+        href="{% url 'users_list' %}"
+        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+      >
+        Annuler
+      </a>
+      <button
+        type="submit"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Sauvegarder les modifications
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
