@@ -64,9 +64,9 @@ class GitLabConfigurationForm(forms.ModelForm):
             # Utiliser le widget personnalisé qui force le champ vide
             self.fields["access_token"].widget = EmptyTokenWidget()
             self.fields["access_token"].required = False
-            self.fields[
-                "access_token"
-            ].help_text = "Laissez vide pour conserver le token actuel, ou saisissez un nouveau token pour le remplacer."
+            self.fields["access_token"].help_text = (
+                "Laissez vide pour conserver le token actuel, ou saisissez un nouveau token pour le remplacer."
+            )
             self.fields["access_token"].label = "Nouveau token d'accès (optionnel)"
 
     def save(self, commit=True):
@@ -125,9 +125,9 @@ class GitHubConfigurationForm(forms.ModelForm):
             # Utiliser le widget personnalisé qui force le champ vide
             self.fields["access_token"].widget = EmptyTokenWidget()
             self.fields["access_token"].required = False
-            self.fields[
-                "access_token"
-            ].help_text = "Laissez vide pour conserver le token actuel, ou saisissez un nouveau token pour le remplacer."
+            self.fields["access_token"].help_text = (
+                "Laissez vide pour conserver le token actuel, ou saisissez un nouveau token pour le remplacer."
+            )
             self.fields["access_token"].label = "Nouveau token d'accès (optionnel)"
 
     def save(self, commit=True):
