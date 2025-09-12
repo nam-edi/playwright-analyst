@@ -2,6 +2,7 @@
 Tests pour l'application core
 """
 
+from datetime import datetime
 from unittest.mock import patch
 
 from django.contrib.auth.models import Group, User
@@ -213,3 +214,144 @@ class CoreViewsTest(TestCase):
         self.client.login(username="testuser", password="testpass")
         response = self.client.get(reverse("documentation"))
         self.assertEqual(response.status_code, 200)
+
+    def test_tests_list_view(self):
+        """Test la vue liste des tests"""
+        self.client.login(username="testuser", password="testpass")
+
+        # Créer un test pour tester l'affichage
+        from testing.models import Test
+
+        test = Test.objects.create(
+            title="Test Sample", file_path="tests/sample.spec.js", line=10, column=5, project=self.project
+        )
+
+        response = self.client.get(reverse("tests_list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Test Sample")
+
+    def test_executions_list_view(self):
+        """Test la vue liste des exécutions"""
+        from datetime import datetime
+
+        from testing.models import TestExecution
+
+        self.client.login(username="testuser", password="testpass")
+
+        # Ajouter le projet sélectionné à la session
+        session = self.client.session
+        session["selected_project_id"] = self.project.id
+        session.save()
+
+        TestExecution.objects.create(
+            project=self.project, start_time=datetime.now(), duration=1500.0, raw_json={"test": "data"}
+        )
+
+        response = self.client.get(reverse("executions_list"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_test_detail_view(self):
+        """Test la vue détail d'un test"""
+        self.client.login(username="testuser", password="testpass")
+
+        from testing.models import Test
+
+        test = Test.objects.create(
+            title="Test Detail Sample", file_path="tests/detail.spec.js", line=15, column=3, project=self.project
+        )
+
+        response = self.client.get(reverse("test_detail", kwargs={"test_id": test.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Test Detail Sample")
+
+    def test_execution_detail_view(self):
+        """Test la vue détail d'une exécution"""
+        self.client.login(username="testuser", password="testpass")
+
+        from datetime import datetime
+
+        from testing.models import TestExecution
+
+        execution = TestExecution.objects.create(
+            project=self.project, start_time=datetime.now(), duration=2000.0, raw_json={"execution": "detail_test"}
+        )
+
+        response = self.client.get(reverse("execution_detail", kwargs={"execution_id": execution.id}))
+        self.assertEqual(response.status_code, 200)
+
+    # def test_project_dashboard_view(self):
+    #     """Test la vue tableau de bord de projet"""
+    #     self.client.login(username="testuser", password="testpass")
+    #
+    #     # Sélectionner le projet dans la session
+    #     session = self.client.session
+    #     session['selected_project_id'] = self.project.id
+    #     session.save()
+    #
+    #     response = self.client.get(reverse("project_dashboard", kwargs={"project_id": self.project.id}))
+    #     self.assertEqual(response.status_code, 200)
+
+    # def test_import_data_view_get(self):
+    #     """Test la vue d'import de données (GET)"""
+    #     self.client.login(username="testuser", password="testpass")
+    #
+    #     response = self.client.get(reverse("import_data"))
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertContains(response, "Import")
+
+    # def test_help_view(self):
+    #     """Test la vue d'aide"""
+    #     self.client.login(username="testuser", password="testpass")
+    #
+    #     response = self.client.get(reverse("help"))
+    #     self.assertEqual(response.status_code, 200)
+
+
+class CoreWidgetsTest(TestCase):
+    """Tests pour les widgets personnalisés"""
+
+    def test_color_picker_widget_render(self):
+        """Test le rendu du widget ColorPickerWidget"""
+        from core.widgets import ColorPickerWidget
+
+        widget = ColorPickerWidget()
+        html = widget.render("color", "#FF0000")
+
+        # Vérifier que le HTML contient les éléments attendus
+        self.assertIn('type="color"', html)
+        self.assertIn('value="#FF0000"', html)
+        self.assertIn("color-picker", html)  # Correction du nom de classe
+
+    def test_color_picker_widget_preset_colors(self):
+        """Test que les couleurs prédéfinies sont incluses"""
+        from core.widgets import ColorPickerWidget
+
+        widget = ColorPickerWidget()
+        html = widget.render("color", "#000000")
+
+        # Vérifier que certaines couleurs prédéfinies sont présentes
+        self.assertIn("#1e3a8a", html)  # Bleu
+        self.assertIn("#14532d", html)  # Vert
+        self.assertIn("#7f1d1d", html)  # Rouge
+
+    def test_color_picker_widget_media(self):
+        """Test que le widget inclut les fichiers CSS/JS nécessaires"""
+        from core.widgets import ColorPickerWidget
+
+        widget = ColorPickerWidget()
+        media = widget.media
+
+        # Vérifier que les fichiers CSS/JS sont inclus (adaptés au nom réel)
+        self.assertIn("color_picker.css", str(media))
+
+    def test_widget_basic_functionality(self):
+        """Test basique des widgets disponibles"""
+        from core.widgets import ColorPickerWidget
+
+        # Test simple du widget existant
+        widget = ColorPickerWidget()
+        self.assertIsNotNone(widget)
+
+        # Vérifier que les couleurs prédéfinies sont présentes
+        self.assertTrue(hasattr(widget, "PRESET_COLORS"))
+        self.assertIsInstance(widget.PRESET_COLORS, dict)

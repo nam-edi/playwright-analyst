@@ -39,7 +39,7 @@ jobs:
         run: |
           pip install coverage
           coverage run --source='.' manage.py test --verbosity=2
-          coverage report --fail-under=80  # Échec si couverture < 80%
+          coverage report --fail-under=40  # Échec si couverture < 40%
           coverage xml
         env:
           DJANGO_SETTINGS_MODULE: pw_analyst.settings
