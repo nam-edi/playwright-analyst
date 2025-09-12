@@ -33,21 +33,143 @@
     {% if available_tags %}
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
-      <div class="flex flex-wrap gap-2">
-        {% for tag in available_tags|slice:":15" %}
-        <label class="inline-flex items-center">
-          <input type="checkbox" name="tags" value="{{ tag.id }}" {% if
-          tag.id|stringformat:"s" in tag_filter %}checked{% endif %}
-          class="rounded border-gray-300 text-blue-600 mr-2">
-          <c-tag name="{{ tag.name }}" color="{{ tag.color }}" />
-        </label>
-        {% endfor %} {% if available_tags|length > 15 %}
-        <span class="text-xs text-gray-500 self-center"
-          >+{{ available_tags|length|add:"-15" }} autres tags...</span
+
+      <!-- Recherche de tags -->
+      <div class="mb-3">
+        <input
+          type="text"
+          id="tag-search"
+          placeholder="Rechercher un tag..."
+          class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+          onkeyup="filterTags()"
+        />
+      </div>
+
+      <!-- Container des tags -->
+      <div id="tags-container">
+        <div id="visible-tags" class="flex flex-wrap gap-2 mb-2">
+          {% for tag in available_tags|slice:":10" %}
+          <label
+            class="inline-flex items-center tag-item"
+            data-tag-name="{{ tag.name|lower }}"
+          >
+            <input type="checkbox" name="tags" value="{{ tag.id }}" {% if
+            tag.id|stringformat:"s" in tag_filter %}checked{% endif %}
+            class="rounded border-gray-300 text-blue-600 mr-2">
+            <c-tag name="{{ tag.name }}" color="{{ tag.color }}" />
+          </label>
+          {% endfor %}
+        </div>
+
+        {% if available_tags|length > 10 %}
+        <div
+          id="hidden-tags"
+          class="flex flex-wrap gap-2 mb-2"
+          style="display: none"
         >
+          {% for tag in available_tags|slice:"10:" %}
+          <label
+            class="inline-flex items-center tag-item"
+            data-tag-name="{{ tag.name|lower }}"
+          >
+            <input type="checkbox" name="tags" value="{{ tag.id }}" {% if
+            tag.id|stringformat:"s" in tag_filter %}checked{% endif %}
+            class="rounded border-gray-300 text-blue-600 mr-2">
+            <c-tag name="{{ tag.name }}" color="{{ tag.color }}" />
+          </label>
+          {% endfor %}
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            id="toggle-tags"
+            class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 rounded-md transition-colors duration-150"
+            onclick="toggleAllTags()"
+          >
+            Voir tous les tags ({{ available_tags|length|add:"-10" }} de plus)
+          </button>
+          <span
+            id="no-tags-found"
+            class="text-xs text-gray-500"
+            style="display: none"
+          >
+            Aucun tag trouvé
+          </span>
+        </div>
         {% endif %}
       </div>
     </div>
+
+    <script>
+      let allTagsVisible = false;
+
+      function toggleAllTags() {
+        const hiddenTags = document.getElementById("hidden-tags");
+        const toggleButton = document.getElementById("toggle-tags");
+
+        allTagsVisible = !allTagsVisible;
+
+        if (allTagsVisible) {
+          hiddenTags.style.display = "flex";
+          toggleButton.textContent = "Réduire";
+        } else {
+          hiddenTags.style.display = "none";
+          toggleButton.textContent =
+            'Voir tous les tags ({{ available_tags|length|add:"-10" }} de plus)';
+        }
+      }
+
+      function filterTags() {
+        const searchInput = document.getElementById("tag-search");
+        const filter = searchInput.value.toLowerCase();
+        const tagItems = document.querySelectorAll(".tag-item");
+        const noTagsFound = document.getElementById("no-tags-found");
+        const toggleButton = document.getElementById("toggle-tags");
+        const hiddenTags = document.getElementById("hidden-tags");
+        let visibleCount = 0;
+
+        tagItems.forEach(function (tagItem) {
+          const tagName = tagItem.getAttribute("data-tag-name");
+          if (tagName.includes(filter)) {
+            tagItem.style.display = "flex";
+            visibleCount++;
+          } else {
+            tagItem.style.display = "none";
+          }
+        });
+
+        // Afficher/masquer le message "Aucun tag trouvé"
+        if (visibleCount === 0 && filter !== "") {
+          noTagsFound.style.display = "block";
+        } else {
+          noTagsFound.style.display = "none";
+        }
+
+        // Gestion de l'affichage pendant la recherche
+        if (filter !== "") {
+          // Pendant la recherche : afficher tous les tags et masquer le bouton
+          if (hiddenTags) {
+            hiddenTags.style.display = "flex";
+          }
+          if (toggleButton) {
+            toggleButton.style.display = "none";
+          }
+        } else {
+          // Quand on efface la recherche : revenir à l'état précédent
+          if (toggleButton) {
+            toggleButton.style.display = "block";
+          }
+          if (hiddenTags) {
+            if (allTagsVisible) {
+              hiddenTags.style.display = "flex";
+            } else {
+              hiddenTags.style.display = "none";
+            }
+          }
+        }
+      }
+    </script>
     {% endif %}
 
     <div class="flex justify-between items-center pt-2">

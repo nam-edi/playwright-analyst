@@ -1,0 +1,168 @@
+{% extends "base.html" %} {% block title %}Documentation - Playwright Analyst{%
+endblock %} {% block content %}
+<div class="flex min-h-screen bg-gray-50">
+  <!-- Sidebar de navigation -->
+  <div class="w-48 bg-white shadow-lg border-r border-gray-200">
+    <!-- Include Navigation Sidebar -->
+    {% include "documentations/sections/navigation.html" %}
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="flex-1 flex flex-col">
+    <!-- Zone de contenu -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <!-- Section Groupe et permissions -->
+      <div id="section-help" class="documentation-section">
+        {% include "documentations/sections/help.html" %}
+      </div>
+
+      <!-- Section API -->
+      <div id="section-api" class="documentation-section hidden">
+        {% include "documentations/sections/api.html" %}
+      </div>
+
+      <!-- Section Installation -->
+      <div id="section-installation" class="documentation-section hidden">
+        {% include "documentations/sections/installation.html" %}
+      </div>
+
+      <!-- Section Configuration -->
+      <div id="section-configuration" class="documentation-section hidden">
+        {% include "documentations/sections/configuration.html" %}
+      </div>
+
+      <!-- Section Fonctionnalités -->
+      <div id="section-features" class="documentation-section hidden">
+        {% include "documentations/sections/features.html" %}
+      </div>
+
+      <!-- Section FAQ -->
+      <div id="section-faq" class="documentation-section hidden">
+        {% include "documentations/sections/faq.html" %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript pour la navigation entre sections -->
+<script>
+  // Fonction pour naviguer vers une section avec mise à jour de l'URL
+  function navigateToSection(sectionId) {
+    console.log("Navigating to section:", sectionId);
+
+    // Mettre à jour l'URL sans recharger la page
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.set("section", sectionId);
+    window.history.pushState({}, "", newUrl);
+
+    // Afficher la section
+    showSection(sectionId);
+  }
+
+  // Fonction pour afficher une section spécifique
+  function showSection(sectionId) {
+    console.log("Showing section:", sectionId);
+
+    // Cacher toutes les sections
+    const sections = document.querySelectorAll(".documentation-section");
+    console.log("Found sections:", sections.length);
+    sections.forEach((section) => section.classList.add("hidden"));
+
+    // Désactiver tous les liens de navigation
+    const navItems = document.querySelectorAll(".nav-item");
+    navItems.forEach((item) => {
+      item.classList.remove("bg-blue-50", "text-blue-700", "border-blue-500");
+      item.classList.add("text-gray-700");
+      const icon = item.querySelector(".nav-icon");
+      if (icon) {
+        icon.classList.remove("text-blue-500");
+        icon.classList.add("text-gray-400");
+      }
+    });
+
+    // Afficher la section demandée
+    const targetSection = document.getElementById(`section-${sectionId}`);
+    console.log("Target section:", targetSection);
+    if (targetSection) {
+      targetSection.classList.remove("hidden");
+      console.log("Section displayed:", sectionId);
+    } else {
+      console.log("Section not found:", `section-${sectionId}`);
+    }
+
+    // Activer le lien de navigation correspondant
+    const activeNav = document.getElementById(`nav-${sectionId}`);
+    if (activeNav) {
+      activeNav.classList.remove("text-gray-700");
+      activeNav.classList.add("bg-blue-50", "text-blue-700", "border-blue-500");
+      const icon = activeNav.querySelector(".nav-icon");
+      if (icon) {
+        icon.classList.remove("text-gray-400");
+        icon.classList.add("text-blue-500");
+      }
+    }
+
+    // Mettre à jour le titre de la page
+    const titles = {
+      help: "Groupes & Permissions",
+      api: "API REST",
+      installation: "Installation",
+      configuration: "Configuration",
+      features: "Fonctionnalités",
+      faq: "Questions Fréquentes",
+    };
+
+    const pageTitle = document.getElementById("page-title");
+    if (pageTitle && titles[sectionId]) {
+      pageTitle.textContent = titles[sectionId];
+    }
+  }
+
+  // Initialisation au chargement de la page
+  document.addEventListener("DOMContentLoaded", function () {
+    // Vérifier s'il y a un paramètre section dans l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const section = urlParams.get("section") || "help";
+    showSection(section);
+  });
+
+  // Gestion des changements d'URL
+  window.addEventListener("popstate", function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const section = urlParams.get("section") || "help";
+    showSection(section);
+  });
+</script>
+
+<!-- Styles CSS supplémentaires -->
+<style>
+  .documentation-section {
+    animation: fadeIn 0.3s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .nav-item {
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+  }
+
+  .nav-item:hover {
+    background-color: #f9fafb;
+    border-left-color: #e5e7eb;
+  }
+
+  .nav-item.bg-blue-50 {
+    border-left-color: #3b82f6;
+  }
+</style>
+{% endblock %}

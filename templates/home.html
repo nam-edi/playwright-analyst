@@ -1,82 +1,35 @@
-{% extends 'base.html' %} {% block title %} Playwright Analyst{% if
-selected_project %} - {{ selected_project.name }}{% endif %} {% endblock %} {%
-block content %}
+{% extends 'base.html' %} {% block title %} Playwright Analyst {% if
+selected_project %} - {{ selected_project.name }} {% endif %} {% endblock %} {%
+load group_users %} {%block content %}
 
-<!-- Messages Django -->
-{% if messages %} {% for message in messages %}
-<div
-  id="welcome-message-{{ forloop.counter }}"
-  class="bg-{% if message.tags == 'success' %}blue{% elif message.tags == 'error' %}red{% else %}gray{% endif %}-50 border border-{% if message.tags == 'success' %}blue{% elif message.tags == 'error' %}red{% else %}gray{% endif %}-200 rounded-lg p-4 mb-6 transition-all duration-500 ease-in-out"
->
-  <div class="flex items-center">
-    <div class="flex-shrink-0">
-      {% if message.tags == 'success' %}
-      <svg
-        class="h-5 w-5 text-blue-400"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-      >
-        <path
-          fill-rule="evenodd"
-          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-          clip-rule="evenodd"
-        ></path>
-      </svg>
-      {% elif message.tags == 'error' %}
-      <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-        <path
-          fill-rule="evenodd"
-          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-          clip-rule="evenodd"
-        ></path>
-      </svg>
-      {% else %}
-      <svg
-        class="h-5 w-5 text-gray-400"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-      >
-        <path
-          fill-rule="evenodd"
-          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-          clip-rule="evenodd"
-        ></path>
-      </svg>
-      {% endif %}
-    </div>
-    <div class="ml-3">
-      <div
-        class="text-sm {% if message.tags == 'success' %}text-blue-800{% elif message.tags == 'error' %}text-red-800{% else %}text-gray-800{% endif %}"
-      >
-        {{ message }}
-      </div>
-    </div>
-  </div>
-</div>
-{% endfor %} {% endif %}
-
-<div id="main-content">
-  {% if selected_project %}
+<div id="main-content" class="relative">
+  {% if user|has_group:"Admin" or user|has_group:"Manager" %}
+  <!-- Bouton Import -->
+  <a
+    href="/upload/"
+    class="absolute top-0 right-0 mt-4 mr-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors z-10"
+  >
+    <svg
+      class="w-4 h-4 mr-2"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"
+      />
+    </svg>
+    Import
+  </a>
+  {% endif %} {% if selected_project %}
   <div
     class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center"
   >
-    <div class="mb-4">
-      <svg
-        class="mx-auto h-16 w-16 text-green-500"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-        ></path>
-      </svg>
-    </div>
     <h2 class="text-2xl font-bold text-gray-900 mb-2">
-      Projet "{{ selected_project.name }}" sélectionné
+      {{ selected_project.name }}
     </h2>
     <p class="text-gray-600 mb-6">
       {{ selected_project.description|default:"Aucune description disponible."
@@ -862,32 +815,1082 @@ block content %}
       }
   });
 </script>
-{% endif %}
+{% endif %} {% if selected_project and tags_map_data %}
+<div class="mt-8">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-gray-900">
+        Cartographie des Tests par Tags
+      </h3>
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-4 text-sm text-gray-600">
+          <div class="flex items-center">
+            <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+            <span>Taille = Nombre de tests</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-8 h-0.5 bg-gray-400 mr-2"></div>
+            <span>Liens = Tests partagés</span>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button
+            id="zoom-in-btn"
+            class="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors duration-200"
+            title="Zoom avant"
+          >
+            <svg
+              class="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              ></path>
+            </svg>
+          </button>
+          <button
+            id="zoom-out-btn"
+            class="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors duration-200"
+            title="Zoom arrière"
+          >
+            <svg
+              class="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M18 12H6"
+              ></path>
+            </svg>
+          </button>
+          <button
+            id="fullscreen-btn"
+            class="px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-200 flex items-center"
+            title="Afficher en plein écran"
+          >
+            <svg
+              class="w-3 h-3 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+              ></path>
+            </svg>
+            Plein écran
+          </button>
+          <button
+            id="reset-view-btn"
+            class="hidden px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 flex items-center"
+            title="Revenir à la vue d'origine"
+          >
+            <svg
+              class="w-3 h-3 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              ></path>
+            </svg>
+            Reset View
+          </button>
+        </div>
+      </div>
+    </div>
 
-<!-- Script pour faire disparaître les messages -->
+    <!-- Conteneur pour le graphique D3.js -->
+    <div id="tags-network-chart" class="w-full" style="height: 500px"></div>
+
+    <!-- Modal plein écran -->
+    <div
+      id="fullscreen-modal"
+      class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center"
+    >
+      <div
+        class="bg-white rounded-lg shadow-2xl w-full h-full m-2 flex flex-col"
+      >
+        <!-- En-tête de la modal -->
+        <div
+          class="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0"
+        >
+          <h3 class="text-lg font-semibold text-gray-900">
+            Cartographie des Tests par Tags - Vue étendue
+          </h3>
+          <div class="flex items-center space-x-2">
+            <!-- Boutons de contrôle pour la modal -->
+            <button
+              id="modal-zoom-in-btn"
+              class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 flex items-center"
+              title="Zoom +"
+            >
+              <svg
+                class="w-3 h-3 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                ></path>
+              </svg>
+            </button>
+            <button
+              id="modal-zoom-out-btn"
+              class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 flex items-center"
+              title="Zoom -"
+            >
+              <svg
+                class="w-3 h-3 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M18 12H6"
+                ></path>
+              </svg>
+            </button>
+            <button
+              id="modal-reset-view-btn"
+              class="hidden px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 flex items-center"
+              title="Revenir à la vue d'origine"
+            >
+              <svg
+                class="w-3 h-3 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                ></path>
+              </svg>
+              Reset
+            </button>
+            <!-- Bouton de fermeture -->
+            <button
+              id="close-modal-btn"
+              class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center"
+              title="Fermer"
+            >
+              <svg
+                class="w-3 h-3 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
+              </svg>
+              Fermer
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenu de la modal -->
+        <div class="flex-1 p-4">
+          <div
+            id="tags-network-chart-modal"
+            class="w-full h-full border border-gray-200 rounded"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Légende -->
+    <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+      <h4 class="font-semibold text-gray-900 mb-3">Statistiques détaillées</h4>
+      <div
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+        id="tags-legend"
+      >
+        <!-- Sera rempli dynamiquement par JavaScript -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Sélectionner tous les messages de bienvenue
-    const welcomeMessages = document.querySelectorAll(
-      '[id^="welcome-message-"]'
-    );
+  document.addEventListener('DOMContentLoaded', function() {
+      const tagsData = {{ tags_map_data|safe }};
+      const linksData = {{ tags_links_data|safe }};
 
-    welcomeMessages.forEach(function (welcomeMessage) {
-      if (welcomeMessage) {
-        // Faire disparaître le message au bout de 5 secondes
-        setTimeout(function () {
-          // Animation de disparition
-          welcomeMessage.style.opacity = "0";
-          welcomeMessage.style.transform = "translateY(-20px)";
-
-          // Supprimer complètement l'élément après l'animation
-          setTimeout(function () {
-            welcomeMessage.style.display = "none";
-          }, 500); // Délai pour que l'animation se termine
-        }, 5000); // 5 secondes
+      if (tagsData.length === 0) {
+          document.getElementById('tags-network-chart').innerHTML = `
+              <div class="flex flex-col items-center justify-center h-full text-gray-500">
+                  <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z">
+                      </path>
+                  </svg>
+                  <p class="text-lg">Aucun tag trouvé pour ce projet.</p>
+                  <p class="text-sm mt-1">Les tags sont automatiquement créés lors de l'importation des résultats de tests.</p>
+              </div>
+          `;
+          return;
       }
-    });
-  });
-</script>
 
-{% endblock %}
+      // Configuration du graphique
+      const container = document.getElementById('tags-network-chart');
+      const width = container.clientWidth;
+      const height = 500;
+
+      // Nettoyer le conteneur
+      d3.select('#tags-network-chart').selectAll('*').remove();
+
+      // Créer le SVG
+      const svg = d3.select('#tags-network-chart')
+          .append('svg')
+          .attr('width', width)
+          .attr('height', height);
+
+      // Créer un groupe pour le zoom
+      const g = svg.append('g');
+
+      // Configuration des couleurs et échelles
+      const maxTests = d3.max(tagsData, d => d.total_tests);
+      const radiusScale = d3.scaleSqrt()
+          .domain([1, maxTests])
+          .range([20, 80]);
+
+      const linkStrengthScale = d3.scaleLinear()
+          .domain([1, d3.max(linksData, d => d.value) || 1])
+          .range([0.1, 1]);
+
+      // Analyser la connectivité pour optimiser le placement
+      const nodeConnectivity = new Map();
+      tagsData.forEach(node => {
+          const connections = linksData.filter(link =>
+              link.source === node.id || link.target === node.id
+          );
+          nodeConnectivity.set(node.id, {
+              count: connections.length,
+              totalWeight: connections.reduce((sum, link) => sum + link.value, 0)
+          });
+      });
+
+      // Trier les nœuds par importance (connectivité + poids)
+      const sortedNodes = [...tagsData].sort((a, b) => {
+          const aConnectivity = nodeConnectivity.get(a.id);
+          const bConnectivity = nodeConnectivity.get(b.id);
+          const aScore = aConnectivity.count * 2 + aConnectivity.totalWeight + a.total_tests;
+          const bScore = bConnectivity.count * 2 + bConnectivity.totalWeight + b.total_tests;
+          return bScore - aScore;
+      });
+
+      // Préparer les données pour D3 avec positionnement optimisé
+      const nodes = sortedNodes.map((d, i) => {
+          let x, y;
+
+          // Algorithme de placement en cercles concentriques pour réduire les croisements
+          const connectivity = nodeConnectivity.get(d.id);
+          const totalNodes = sortedNodes.length;
+
+          if (i === 0) {
+              // Le nœud le plus connecté au centre
+              x = width / 2;
+              y = height / 2;
+          } else if (i <= 3 && totalNodes > 4) {
+              // Les 3 suivants en cercle proche du centre
+              const angle = ((i - 1) / 3) * 2 * Math.PI;
+              const radius = Math.min(width, height) / 8;
+              x = width / 2 + Math.cos(angle) * radius;
+              y = height / 2 + Math.sin(angle) * radius;
+          } else {
+              // Les autres en cercles concentriques selon leur connectivité
+              const remainingNodes = totalNodes - 4;
+              const nodeIndex = i - 4;
+              const connectivityRatio = connectivity.count / Math.max(...Array.from(nodeConnectivity.values()).map(c => c.count));
+
+              // Rayon basé sur la connectivité (moins connecté = plus loin)
+              const baseRadius = Math.min(width, height) / 6;
+              const maxRadius = Math.min(width, height) / 3;
+              const radius = baseRadius + (maxRadius - baseRadius) * (1 - connectivityRatio);
+
+              // Angle distribué pour éviter les superpositions
+              const angle = (nodeIndex / Math.max(remainingNodes, 1)) * 2 * Math.PI;
+
+              // Ajouter une petite variation aléatoire pour éviter l'alignement parfait
+              const angleVariation = (Math.random() - 0.5) * 0.3;
+              const radiusVariation = (Math.random() - 0.5) * 20;
+
+              x = width / 2 + Math.cos(angle + angleVariation) * (radius + radiusVariation);
+              y = height / 2 + Math.sin(angle + angleVariation) * (radius + radiusVariation);
+          }
+
+          return {
+              id: d.id,
+              name: d.name,
+              color: d.color,
+              total_tests: d.total_tests,
+              passed_count: d.passed_count,
+              failed_count: d.failed_count,
+              skipped_count: d.skipped_count,
+              flaky_count: d.flaky_count,
+              success_rate: d.success_rate,
+              radius: radiusScale(d.total_tests),
+              x: x,
+              y: y,
+              connectivity: connectivity.count,
+              importance: connectivity.count * 2 + connectivity.totalWeight + d.total_tests
+          };
+      });
+
+      const links = linksData.map(d => ({
+          source: d.source,
+          target: d.target,
+          value: d.value,
+          strength: linkStrengthScale(d.value)
+      }));
+
+      // Créer la simulation de force optimisée pour réduire les croisements
+      const simulation = d3.forceSimulation(nodes)
+          .force('link', d3.forceLink(links).id(d => d.id)
+              .strength(d => {
+                  // Force de lien adaptée : plus forte pour les liens importants
+                  const baseStrength = d.strength;
+                  const sourceNode = nodes.find(n => n.id === d.source.id || n.id === d.source);
+                  const targetNode = nodes.find(n => n.id === d.target.id || n.id === d.target);
+                  if (sourceNode && targetNode) {
+                      // Liens entre nœuds très connectés = force plus faible pour éviter la compression
+                      const connectivityFactor = 1 - (sourceNode.connectivity + targetNode.connectivity) / 20;
+                      return baseStrength * Math.max(connectivityFactor, 0.1);
+                  }
+                  return baseStrength;
+              })
+              .distance(d => {
+                  // Distance adaptée selon l'importance des nœuds
+                  const sourceNode = nodes.find(n => n.id === d.source.id || n.id === d.source);
+                  const targetNode = nodes.find(n => n.id === d.target.id || n.id === d.target);
+                  if (sourceNode && targetNode) {
+                      const avgRadius = (sourceNode.radius + targetNode.radius) / 2;
+                      const connectivityBonus = (sourceNode.connectivity + targetNode.connectivity) * 5;
+                      return avgRadius * 3 + connectivityBonus + 30;
+                  }
+                  return 50;
+              })
+          )
+          .force('charge', d3.forceManyBody()
+              .strength(d => {
+                  // Force de répulsion adaptée à l'importance du nœud
+                  const baseStrength = -800;
+                  const connectivityMultiplier = 1 + d.connectivity * 0.1;
+                  const sizeMultiplier = 1 + d.radius / 50;
+                  return baseStrength * connectivityMultiplier * sizeMultiplier;
+              })
+          )
+          .force('center', d3.forceCenter(width / 2, height / 2).strength(0.1)) // Force de centrage réduite
+          .force('collision', d3.forceCollide()
+              .radius(d => d.radius + 15 + d.connectivity * 2) // Espace proportionnel à la connectivité
+              .strength(0.8)
+          )
+          // Force radiale pour maintenir la structure en cercles concentriques
+          .force('radial', d3.forceRadial()
+              .radius(d => {
+                  // Rayon basé sur l'importance : nœuds importants au centre
+                  const maxImportance = Math.max(...nodes.map(n => n.importance));
+                  const importanceRatio = d.importance / maxImportance;
+                  const minRadius = Math.min(width, height) / 8;
+                  const maxRadius = Math.min(width, height) / 3;
+                  return minRadius + (maxRadius - minRadius) * (1 - importanceRatio);
+              })
+              .x(width / 2)
+              .y(height / 2)
+              .strength(0.2)
+          );
+
+      // Sauvegarder les positions initiales
+      let initialPositionsSaved = false;
+      const initialPositions = new Map();
+
+      // Fonction pour sauvegarder les positions initiales
+      function saveInitialPositions() {
+          if (!initialPositionsSaved) {
+              nodes.forEach(node => {
+                  initialPositions.set(node.id, { x: node.x, y: node.y });
+              });
+              initialPositionsSaved = true;
+              console.log('Positions initiales sauvegardées:', initialPositions);
+          }
+      }
+
+      // Dessiner les liens
+      const link = g.append('g')
+          .selectAll('line')
+          .data(links)
+          .enter()
+          .append('line')
+          .attr('stroke', '#999')
+          .attr('stroke-opacity', 0.6)
+          .attr('stroke-width', d => Math.sqrt(d.value) + 1);
+
+      // Créer les groupes pour les nœuds
+      const node = g.append('g')
+          .selectAll('g')
+          .data(nodes)
+          .enter()
+          .append('g')
+          .attr('class', 'node')
+          .style('cursor', 'pointer')
+          .call(d3.drag()
+              .on('start', dragstarted)
+              .on('drag', dragged)
+              .on('end', dragended));
+
+      // Dessiner les cercles principaux
+      const circles = node.append('circle')
+          .attr('r', d => d.radius)
+          .attr('fill', d => d.color)
+          .attr('stroke', '#fff')
+          .attr('stroke-width', 3)
+          .style('filter', 'drop-shadow(2px 2px 4px rgba(0,0,0,0.1))');
+
+      // Ajouter les labels
+      const labels = node.append('text')
+          .attr('text-anchor', 'middle')
+          .attr('dy', '0.35em')
+          .style('font-size', d => Math.min(d.radius / 3, 14) + 'px')
+          .style('font-weight', 'bold')
+          .style('fill', '#fff')
+          .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.7)')
+          .text(d => d.name.length > 10 ? d.name.substring(0, 10) + '...' : d.name);
+
+      // Ajouter les tooltips
+      const tooltip = d3.select('body').append('div')
+          .attr('class', 'tooltip')
+          .style('position', 'absolute')
+          .style('visibility', 'hidden')
+          .style('background-color', 'rgba(0, 0, 0, 0.8)')
+          .style('color', 'white')
+          .style('padding', '10px')
+          .style('border-radius', '5px')
+          .style('font-size', '12px')
+          .style('z-index', '1000');
+
+      node.on('mouseover', function(event, d) {
+          tooltip.style('visibility', 'visible')
+              .html(`
+                  <strong>${d.name}</strong><br>
+                  Tests: ${d.total_tests}<br>
+                  Taux de réussite: ${d.success_rate}%<br>
+                  <div style="margin-top: 5px;">
+                      <span style="color: #10b981;">✓ ${d.passed_count}</span> |
+                      <span style="color: #ef4444;">✗ ${d.failed_count}</span> |
+                      <span style="color: #f59e0b;">⊝ ${d.skipped_count}</span> |
+                      <span style="color: #f97316;">⚠ ${d.flaky_count}</span>
+                  </div>
+              `);
+
+          // Mettre en évidence le nœud
+          d3.select(this).select('circle').style('stroke-width', 5);
+      })
+      .on('mousemove', function(event) {
+          tooltip.style('top', (event.pageY - 10) + 'px')
+              .style('left', (event.pageX + 10) + 'px');
+      })
+      .on('mouseout', function() {
+          tooltip.style('visibility', 'hidden');
+          d3.select(this).select('circle').style('stroke-width', 3);
+      })
+      .on('click', function(event, d) {
+          window.location.href = `/tests/?tags=${d.id}`;
+      });
+
+      // Mettre à jour les positions à chaque tick avec arrêt automatique
+      let tickCount = 0;
+      simulation.on('tick', () => {
+          link
+              .attr('x1', d => d.source.x)
+              .attr('y1', d => d.source.y)
+              .attr('x2', d => d.target.x)
+              .attr('y2', d => d.target.y);
+
+          node.attr('transform', d => `translate(${d.x},${d.y})`);
+
+          // Arrêter la simulation après quelques ticks pour éviter l'animation visible
+          tickCount++;
+          if (tickCount === 30) { // Réduit à 30 ticks pour un calcul rapide
+              simulation.stop(); // Arrêter la simulation
+              saveInitialPositions();
+          }
+      });
+
+      // Fonction pour ajuster le zoom automatiquement
+      function fitToViewport() {
+          // Calculer les limites des nœuds
+          const padding = 50; // Marge autour du graphique
+          let minX = d3.min(nodes, d => d.x - d.radius);
+          let maxX = d3.max(nodes, d => d.x + d.radius);
+          let minY = d3.min(nodes, d => d.y - d.radius);
+          let maxY = d3.max(nodes, d => d.y + d.radius);
+
+          // Calculer les dimensions nécessaires
+          const contentWidth = maxX - minX + 2 * padding;
+          const contentHeight = maxY - minY + 2 * padding;
+
+          // Calculer le facteur de zoom pour tout afficher
+          const scaleX = width / contentWidth;
+          const scaleY = height / contentHeight;
+          const scale = Math.min(scaleX, scaleY, 1); // Ne pas zoomer au-delà de 100%
+
+          // Calculer la translation pour centrer
+          const centerX = (minX + maxX) / 2;
+          const centerY = (minY + maxY) / 2;
+          const translateX = width / 2 - centerX * scale;
+          const translateY = height / 2 - centerY * scale;
+
+          // Appliquer la transformation avec animation
+          svg.transition()
+              .duration(1000)
+              .call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(scale));
+      }
+
+      // Variables pour la modal
+      let modalSvg, modalG, modalZoom, modalSimulation;
+      let modalNodes, modalLinks;
+
+      // Fonction pour ouvrir la modal plein écran
+      function openFullscreenModal() {
+          const modal = document.getElementById('fullscreen-modal');
+          modal.classList.remove('hidden');
+
+          // Attendre que la modal soit affichée pour calculer les bonnes dimensions
+          setTimeout(() => {
+              const modalContainer = document.getElementById('tags-network-chart-modal');
+
+              // Calculer les dimensions de la modal après affichage
+              const modalWidth = modalContainer.clientWidth;
+              const modalHeight = modalContainer.clientHeight;
+
+              // Nettoyer le conteneur modal
+              d3.select('#tags-network-chart-modal').selectAll('*').remove();
+
+              // Créer le SVG pour la modal
+              modalSvg = d3.select('#tags-network-chart-modal')
+                  .append('svg')
+                  .attr('width', modalWidth)
+                  .attr('height', modalHeight);
+
+              // Créer un groupe pour le zoom
+              modalG = modalSvg.append('g');
+
+              // Copier les données avec le même algorithme optimisé pour la modal
+              modalNodes = sortedNodes.map((d, i) => {
+                  let x, y;
+
+                  // Même algorithme de placement optimisé, adapté aux dimensions de la modal
+                  const connectivity = nodeConnectivity.get(d.id);
+                  const totalNodes = sortedNodes.length;
+
+                  if (i === 0) {
+                      // Le nœud le plus connecté au centre
+                      x = modalWidth / 2;
+                      y = modalHeight / 2;
+                  } else if (i <= 3 && totalNodes > 4) {
+                      // Les 3 suivants en cercle proche du centre
+                      const angle = ((i - 1) / 3) * 2 * Math.PI;
+                      const radius = Math.min(modalWidth, modalHeight) / 10;
+                      x = modalWidth / 2 + Math.cos(angle) * radius;
+                      y = modalHeight / 2 + Math.sin(angle) * radius;
+                  } else {
+                      // Les autres en cercles concentriques selon leur connectivité
+                      const remainingNodes = totalNodes - 4;
+                      const nodeIndex = i - 4;
+                      const connectivityRatio = connectivity.count / Math.max(...Array.from(nodeConnectivity.values()).map(c => c.count));
+
+                      // Rayon basé sur la connectivité (moins connecté = plus loin)
+                      const baseRadius = Math.min(modalWidth, modalHeight) / 8;
+                      const maxRadius = Math.min(modalWidth, modalHeight) / 4;
+                      const radius = baseRadius + (maxRadius - baseRadius) * (1 - connectivityRatio);
+
+                      // Angle distribué pour éviter les superpositions
+                      const angle = (nodeIndex / Math.max(remainingNodes, 1)) * 2 * Math.PI;
+
+                      // Ajouter une petite variation aléatoire pour éviter l'alignement parfait
+                      const angleVariation = (Math.random() - 0.5) * 0.3;
+                      const radiusVariation = (Math.random() - 0.5) * 30;
+
+                      x = modalWidth / 2 + Math.cos(angle + angleVariation) * (radius + radiusVariation);
+                      y = modalHeight / 2 + Math.sin(angle + angleVariation) * (radius + radiusVariation);
+                  }
+
+                  return {
+                      id: d.id,
+                      name: d.name,
+                      color: d.color,
+                      total_tests: d.total_tests,
+                      passed_count: d.passed_count,
+                      failed_count: d.failed_count,
+                      skipped_count: d.skipped_count,
+                      flaky_count: d.flaky_count,
+                      success_rate: d.success_rate,
+                      radius: radiusScale(d.total_tests) * 1.5, // Plus gros dans la modal
+                      x: x,
+                      y: y,
+                      connectivity: connectivity.count,
+                      importance: connectivity.count * 2 + connectivity.totalWeight + d.total_tests
+                  };
+              });
+
+              modalLinks = linksData.map(d => ({
+                  source: d.source,
+                  target: d.target,
+                  value: d.value,
+                  strength: linkStrengthScale(d.value)
+              }));
+
+              // Créer la simulation optimisée pour la modal
+              modalSimulation = d3.forceSimulation(modalNodes)
+                  .force('link', d3.forceLink(modalLinks).id(d => d.id)
+                      .strength(d => {
+                          // Même logique optimisée pour la modal
+                          const baseStrength = d.strength;
+                          const sourceNode = modalNodes.find(n => n.id === d.source.id || n.id === d.source);
+                          const targetNode = modalNodes.find(n => n.id === d.target.id || n.id === d.target);
+                          if (sourceNode && targetNode) {
+                              const connectivityFactor = 1 - (sourceNode.connectivity + targetNode.connectivity) / 20;
+                              return baseStrength * Math.max(connectivityFactor, 0.1);
+                          }
+                          return baseStrength;
+                      })
+                      .distance(d => {
+                          const sourceNode = modalNodes.find(n => n.id === d.source.id || n.id === d.source);
+                          const targetNode = modalNodes.find(n => n.id === d.target.id || n.id === d.target);
+                          if (sourceNode && targetNode) {
+                              const avgRadius = (sourceNode.radius + targetNode.radius) / 2;
+                              const connectivityBonus = (sourceNode.connectivity + targetNode.connectivity) * 8;
+                              return avgRadius * 3 + connectivityBonus + 50;
+                          }
+                          return 80;
+                      })
+                  )
+                  .force('charge', d3.forceManyBody()
+                      .strength(d => {
+                          const baseStrength = -1200;
+                          const connectivityMultiplier = 1 + d.connectivity * 0.1;
+                          const sizeMultiplier = 1 + d.radius / 80;
+                          return baseStrength * connectivityMultiplier * sizeMultiplier;
+                      })
+                  )
+                  .force('center', d3.forceCenter(modalWidth / 2, modalHeight / 2).strength(0.1))
+                  .force('collision', d3.forceCollide()
+                      .radius(d => d.radius + 25 + d.connectivity * 3)
+                      .strength(0.8)
+                  )
+                  .force('radial', d3.forceRadial()
+                      .radius(d => {
+                          const maxImportance = Math.max(...modalNodes.map(n => n.importance));
+                          const importanceRatio = d.importance / maxImportance;
+                          const minRadius = Math.min(modalWidth, modalHeight) / 10;
+                          const maxRadius = Math.min(modalWidth, modalHeight) / 4;
+                          return minRadius + (maxRadius - minRadius) * (1 - importanceRatio);
+                      })
+                      .x(modalWidth / 2)
+                      .y(modalHeight / 2)
+                      .strength(0.2)
+                  );
+
+              // Dessiner les liens pour la modal
+              const modalLink = modalG.append('g')
+                  .selectAll('line')
+                  .data(modalLinks)
+                  .enter()
+                  .append('line')
+                  .attr('stroke', '#999')
+                  .attr('stroke-opacity', 0.6)
+                  .attr('stroke-width', d => Math.sqrt(d.value) + 2);
+
+              // Créer les groupes pour les nœuds de la modal
+              const modalNode = modalG.append('g')
+                  .selectAll('g')
+                  .data(modalNodes)
+                  .enter()
+                  .append('g')
+                  .attr('class', 'node')
+                  .style('cursor', 'pointer')
+                  .call(d3.drag()
+                      .on('start', modalDragstarted)
+                      .on('drag', modalDragged)
+                      .on('end', modalDragended));
+
+              // Dessiner les cercles pour la modal
+              modalNode.append('circle')
+                  .attr('r', d => d.radius)
+                  .attr('fill', d => d.color)
+                  .attr('stroke', '#fff')
+                  .attr('stroke-width', 4)
+                  .style('filter', 'drop-shadow(3px 3px 6px rgba(0,0,0,0.2))');
+
+              // Ajouter les labels pour la modal
+              modalNode.append('text')
+                  .attr('text-anchor', 'middle')
+                  .attr('dy', '0.35em')
+                  .style('font-size', d => Math.min(d.radius / 3, 16) + 'px')
+                  .style('font-weight', 'bold')
+                  .style('fill', '#fff')
+                  .style('text-shadow', '2px 2px 4px rgba(0,0,0,0.8)')
+                  .text(d => d.name.length > 15 ? d.name.substring(0, 15) + '...' : d.name);
+
+              // Ajouter les interactions pour la modal
+              modalNode.on('mouseover', function(event, d) {
+                  tooltip.style('visibility', 'visible')
+                      .html(`
+                          <strong>${d.name}</strong><br>
+                          Tests: ${d.total_tests}<br>
+                          Taux de réussite: ${d.success_rate}%<br>
+                          <div style="margin-top: 5px;">
+                              <span style="color: #10b981;">✓ ${d.passed_count}</span> |
+                              <span style="color: #ef4444;">✗ ${d.failed_count}</span> |
+                              <span style="color: #f59e0b;">⊝ ${d.skipped_count}</span> |
+                              <span style="color: #f97316;">⚠ ${d.flaky_count}</span>
+                          </div>
+                      `);
+                  d3.select(this).select('circle').style('stroke-width', 6);
+              })
+              .on('mousemove', function(event) {
+                  tooltip.style('top', (event.pageY - 10) + 'px')
+                      .style('left', (event.pageX + 10) + 'px');
+              })
+              .on('mouseout', function() {
+                  tooltip.style('visibility', 'hidden');
+                  d3.select(this).select('circle').style('stroke-width', 4);
+              })
+              .on('click', function(event, d) {
+                  window.location.href = `/tests/?tags=${d.id}`;
+              });
+
+              // Mettre à jour les positions dans la modal avec arrêt automatique
+              let modalTickCount = 0;
+              modalSimulation.on('tick', () => {
+                  modalLink
+                      .attr('x1', d => d.source.x)
+                      .attr('y1', d => d.source.y)
+                      .attr('x2', d => d.target.x)
+                      .attr('y2', d => d.target.y);
+
+                  modalNode.attr('transform', d => `translate(${d.x},${d.y})`);
+
+                  // Arrêter la simulation de la modal après quelques ticks
+                  modalTickCount++;
+                  if (modalTickCount === 30) {
+                      modalSimulation.stop();
+                  }
+              });
+
+              // Ajouter le zoom pour la modal
+              modalZoom = d3.zoom()
+                  .scaleExtent([0.3, 4])
+                  .on('zoom', function(event) {
+                      modalG.attr('transform', event.transform);
+                      const resetBtn = document.getElementById('modal-reset-view-btn');
+                      if (event.transform.k !== 1 || event.transform.x !== 0 || event.transform.y !== 0) {
+                          resetBtn.classList.remove('hidden');
+                      } else {
+                          resetBtn.classList.add('hidden');
+                      }
+                  });
+
+              modalSvg.call(modalZoom);
+
+              // Gérer les boutons de contrôle de la modal
+              setupModalControls();
+
+          }, 100); // Attendre 100ms pour que la modal soit complètement affichée
+      }
+
+      // Fonctions de drag pour la modal - déplacement sans affecter les autres bulles
+      function modalDragstarted(event, d) {
+          // Ne pas redémarrer la simulation pour éviter de bouger les autres bulles
+          d.fx = d.x;
+          d.fy = d.y;
+      }
+
+      function modalDragged(event, d) {
+          // Mettre à jour seulement la position de la bulle déplacée
+          d.fx = event.x;
+          d.fy = event.y;
+          d.x = event.x;
+          d.y = event.y;
+
+          // Mettre à jour visuellement seulement cette bulle
+          d3.select(event.sourceEvent.target.parentNode).attr('transform', `translate(${d.x},${d.y})`);
+
+          // Mettre à jour les liens connectés à cette bulle dans la modal
+          const modalLink = modalG.selectAll('line');
+          modalLink.filter(l => l.source.id === d.id || l.target.id === d.id)
+              .attr('x1', l => l.source.x)
+              .attr('y1', l => l.source.y)
+              .attr('x2', l => l.target.x)
+              .attr('y2', l => l.target.y);
+      }
+
+      function modalDragended(event, d) {
+          // Libérer la position fixe mais sans redémarrer la simulation globale
+          d.fx = null;
+          d.fy = null;
+      }
+
+      // Configuration des contrôles de la modal
+      let modalControlsSetup = false;
+      function setupModalControls() {
+          if (modalControlsSetup) return; // Éviter la double initialisation
+          modalControlsSetup = true;
+
+          document.getElementById('modal-zoom-in-btn').addEventListener('click', function() {
+              if (modalSvg && modalZoom) {
+                  modalSvg.transition()
+                      .duration(300)
+                      .call(modalZoom.scaleBy, 1.5);
+              }
+          });
+
+          document.getElementById('modal-zoom-out-btn').addEventListener('click', function() {
+              if (modalSvg && modalZoom) {
+                  modalSvg.transition()
+                      .duration(300)
+                      .call(modalZoom.scaleBy, 1 / 1.5);
+              }
+          });
+
+          document.getElementById('modal-reset-view-btn').addEventListener('click', function() {
+              if (modalSvg && modalZoom) {
+                  modalSvg.transition()
+                      .duration(750)
+                      .call(modalZoom.transform, d3.zoomIdentity);
+                  this.classList.add('hidden');
+              }
+          });
+
+          document.getElementById('close-modal-btn').addEventListener('click', function() {
+              closeFullscreenModal();
+          });
+
+          // Gérer la fermeture avec Échap (une seule fois)
+          document.addEventListener('keydown', handleEscapeKey);
+      }
+
+      function handleEscapeKey(event) {
+          if (event.key === 'Escape') {
+              const modal = document.getElementById('fullscreen-modal');
+              if (!modal.classList.contains('hidden')) {
+                  closeFullscreenModal();
+              }
+          }
+      }
+
+      // Fonction pour fermer la modal
+      function closeFullscreenModal() {
+          const modal = document.getElementById('fullscreen-modal');
+          modal.classList.add('hidden');
+
+          // Nettoyer les ressources
+          if (modalSimulation) {
+              modalSimulation.stop();
+              modalSimulation = null;
+          }
+
+          // Nettoyer les variables
+          modalSvg = null;
+          modalG = null;
+          modalZoom = null;
+          modalNodes = null;
+          modalLinks = null;
+
+          // Nettoyer le DOM
+          d3.select('#tags-network-chart-modal').selectAll('*').remove();
+
+          // Cacher le bouton reset si visible
+          document.getElementById('modal-reset-view-btn').classList.add('hidden');
+      }
+
+      // Fonctions de drag - déplacement sans affecter les autres bulles
+      function dragstarted(event, d) {
+          // Ne pas redémarrer la simulation pour éviter de bouger les autres bulles
+          // Fixer uniquement la position du nœud en cours de déplacement
+          d.fx = d.x;
+          d.fy = d.y;
+          d.startX = d.x; // Sauvegarder la position initiale
+          d.startY = d.y;
+      }
+
+      function dragged(event, d) {
+          // Mettre à jour seulement la position de la bulle déplacée
+          d.fx = event.x;
+          d.fy = event.y;
+          d.x = event.x;
+          d.y = event.y;
+
+          // Mettre à jour visuellement seulement cette bulle
+          d3.select(event.sourceEvent.target.parentNode).attr('transform', `translate(${d.x},${d.y})`);
+
+          // Mettre à jour les liens connectés à cette bulle
+          link.filter(l => l.source.id === d.id || l.target.id === d.id)
+              .attr('x1', l => l.source.x)
+              .attr('y1', l => l.source.y)
+              .attr('x2', l => l.target.x)
+              .attr('y2', l => l.target.y);
+      }
+
+      function dragended(event, d) {
+          // Libérer la position fixe mais sans redémarrer la simulation globale
+          d.fx = null;
+          d.fy = null;
+
+          // Vérifier si des nœuds ont été déplacés significativement
+          const threshold = 50; // pixels
+          let nodesMoved = false;
+          nodes.forEach(node => {
+              if (node.startX !== undefined && node.startY !== undefined) {
+                  const distance = Math.sqrt(
+                      Math.pow(node.x - node.startX, 2) +
+                      Math.pow(node.y - node.startY, 2)
+                  );
+                  if (distance > threshold) {
+                      nodesMoved = true;
+                  }
+              }
+          });
+
+          // Afficher le bouton de reset si des nœuds ont été déplacés
+          if (nodesMoved) {
+              document.getElementById('reset-view-btn').classList.remove('hidden');
+          }
+      }
+
+      // Ajouter le zoom
+      const zoom = d3.zoom()
+          .scaleExtent([0.5, 3])
+          .on('zoom', function(event) {
+              g.attr('transform', event.transform);
+              // Afficher le bouton de reset si on n'est pas à la position initiale
+              const resetBtn = document.getElementById('reset-view-btn');
+              if (event.transform.k !== 1 || event.transform.x !== 0 || event.transform.y !== 0) {
+                  resetBtn.classList.remove('hidden');
+              } else {
+                  resetBtn.classList.add('hidden');
+              }
+          });
+
+      svg.call(zoom);
+
+      // Gérer les boutons de contrôle
+      document.getElementById('zoom-in-btn').addEventListener('click', function() {
+          svg.transition()
+              .duration(300)
+              .call(zoom.scaleBy, 1.5);
+      });
+
+      document.getElementById('zoom-out-btn').addEventListener('click', function() {
+          svg.transition()
+              .duration(300)
+              .call(zoom.scaleBy, 1 / 1.5);
+      });
+
+      document.getElementById('fullscreen-btn').addEventListener('click', function() {
+          openFullscreenModal();
+      });
+
+      document.getElementById('reset-view-btn').addEventListener('click', function() {
+          // Remettre le zoom à zéro
+          svg.transition()
+              .duration(750)
+              .call(zoom.transform, d3.zoomIdentity);
+
+          // Restaurer les positions initiales des nœuds
+          if (initialPositions.size > 0) {
+              nodes.forEach(node => {
+                  const initialPos = initialPositions.get(node.id);
+                  if (initialPos) {
+                      node.fx = initialPos.x;
+                      node.fy = initialPos.y;
+                      node.x = initialPos.x;
+                      node.y = initialPos.y;
+                  }
+                  delete node.startX;
+                  delete node.startY;
+              });
+
+              // Redémarrer la simulation avec une alpha faible pour converger rapidement
+              simulation
+                  .alpha(0.1)
+                  .alphaTarget(0)
+                  .restart();
+
+              // Après stabilisation, libérer les positions fixes
+              setTimeout(() => {
+                  nodes.forEach(node => {
+                      node.fx = null;
+                      node.fy = null;
+                  });
+              }, 500);
+          } else {
+              // Si pas de positions initiales sauvegardées, redémarrer normalement
+              nodes.forEach(node => {
+                  node.fx = null;
+                  node.fy = null;
+                  delete node.startX;
+                  delete node.startY;
+              });
+
+              simulation
+                  .alpha(1)
+                  .alphaTarget(0)
+                  .restart();
+          }
+
+          // Cacher le bouton
+          this.classList.add('hidden');
+      });
+
+      // Remplir la légende
+      const legend = document.getElementById('tags-legend');
+      tagsData.forEach(tag => {
+          const legendItem = document.createElement('div');
+          legendItem.className = 'flex items-center justify-between p-2 bg-white rounded border';
+          legendItem.innerHTML = `
+              <div class="flex items-center">
+                  <div class="w-3 h-3 rounded-full mr-2" style="background-color: ${tag.color};"></div>
+                  <span class="font-medium text-sm">${tag.name}</span>
+              </div>
+              <div class="text-xs text-gray-600">
+                  ${tag.total_tests} test${tag.total_tests > 1 ? 's' : ''} (${tag.success_rate}%)
+              </div>
+          `;
+          legend.appendChild(legendItem);
+      });
+
+  }); // Fermeture de la fonction document.addEventListener
+</script>
+{% endif %} {% endblock %}

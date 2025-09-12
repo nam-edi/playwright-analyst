@@ -25,263 +25,214 @@ title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock
     </div>
   </div>
 
-  <!-- Actions rapides -->
-  <div class="quick-actions">
-    <h2>🚀 Actions rapides</h2>
-    <div class="actions-grid">
-      <a href="{% url 'admin:core_test_add' %}" class="action-card add">
-        <div class="action-icon">➕</div>
-        <div class="action-content">
-          <h3>Nouveau test</h3>
-          <p>Ajouter un test manuellement</p>
-        </div>
-      </a>
-
-      <a
-        href="{% url 'admin:core_testexecution_add' %}"
-        class="action-card execute"
-      >
-        <div class="action-icon">▶️</div>
-        <div class="action-content">
-          <h3>Nouvelle exécution</h3>
-          <p>Lancer une exécution de tests</p>
-        </div>
-      </a>
-
-      <a href="/upload_json/" class="action-card upload">
-        <div class="action-icon">📤</div>
-        <div class="action-content">
-          <h3>Importer JSON</h3>
-          <p>Uploader résultats Playwright</p>
-        </div>
-      </a>
-
-      <a href="/fetch_from_ci/" class="action-card sync">
-        <div class="action-icon">🔄</div>
-        <div class="action-content">
-          <h3>Sync CI/CD</h3>
-          <p>Récupérer depuis CI</p>
-        </div>
-      </a>
-    </div>
-  </div>
-
-  <!-- Gestion des données -->
-  <div class="data-management">
-    <h2>📊 Gestion des données</h2>
-    <div class="management-grid">
-      <a
-        href="{% url 'admin:core_test_changelist' %}"
-        class="management-card tests"
-      >
-        <div class="card-header">
-          <div class="card-icon">🧪</div>
-          <h3>Tests</h3>
-        </div>
-        <p>Gérer tous les tests et leurs configurations</p>
-        <div class="card-action">Voir tous les tests →</div>
-      </a>
-
-      <a
-        href="{% url 'admin:core_testexecution_changelist' %}"
-        class="management-card executions"
-      >
-        <div class="card-header">
-          <div class="card-icon">▶️</div>
-          <h3>Exécutions</h3>
-        </div>
-        <p>Historique et détails des exécutions</p>
-        <div class="card-action">Voir les exécutions →</div>
-      </a>
-
-      <a
-        href="{% url 'admin:core_testresult_changelist' %}"
-        class="management-card results"
-      >
-        <div class="card-header">
-          <div class="card-icon">📋</div>
-          <h3>Résultats</h3>
-        </div>
-        <p>Résultats détaillés des tests</p>
-        <div class="card-action">Voir les résultats →</div>
-      </a>
-
-      <a
-        href="{% url 'admin:core_project_changelist' %}"
-        class="management-card projects"
-      >
-        <div class="card-header">
-          <div class="card-icon">🏗️</div>
-          <h3>Projets</h3>
-        </div>
-        <p>Organisation par projets</p>
-        <div class="card-action">Gérer les projets →</div>
-      </a>
-    </div>
-  </div>
-
-  <!-- Outils d'analyse -->
-  <div class="analysis-tools">
-    <h2>📈 Outils d'analyse</h2>
-    <div class="tools-grid">
-      <a
-        href="{% url 'admin:core_testresult_changelist' %}?status__exact=failed"
-        class="tool-card failed"
-      >
-        <div class="tool-icon">❌</div>
-        <div class="tool-content">
-          <h3>Tests en échec</h3>
-          <p>Analyser les échecs récents</p>
-        </div>
-      </a>
-
-      <a
-        href="{% url 'admin:core_testresult_changelist' %}?status__exact=flaky"
-        class="tool-card flaky"
-      >
-        <div class="tool-icon">⚡</div>
-        <div class="tool-content">
-          <h3>Tests instables</h3>
-          <p>Identifier les tests problématiques</p>
-        </div>
-      </a>
-
-      <a
-        href="{% url 'admin:core_testexecution_changelist' %}"
-        class="tool-card trends"
-      >
-        <div class="tool-icon">📊</div>
-        <div class="tool-content">
-          <h3>Tableau de bord</h3>
-          <p>Vue d'ensemble détaillée</p>
-        </div>
-      </a>
-    </div>
-  </div>
-
-  <!-- Configuration système -->
-  <div class="system-config">
-    <h2>⚙️ Configuration</h2>
-    <div class="config-grid">
-      <a
-        href="{% url 'admin:core_ciconfiguration_changelist' %}"
-        class="config-card ci"
-      >
-        <div class="config-icon">🔧</div>
-        <div class="config-content">
-          <h3>CI/CD</h3>
-          <p>Configuration des intégrations continues</p>
-        </div>
-      </a>
-
-      <a href="/admin/auth/user/" class="config-card users">
-        <div class="config-icon">👥</div>
-        <div class="config-content">
-          <h3>Utilisateurs</h3>
-          <p>Gestion des accès et permissions</p>
-        </div>
-      </a>
-
-      <a href="/admin/auth/group/" class="config-card groups">
-        <div class="config-icon">👨‍👩‍👧‍👦</div>
-        <div class="config-content">
-          <h3>Groupes</h3>
-          <p>Organisation des équipes</p>
-        </div>
-      </a>
-    </div>
-  </div>
-
-  <!-- Informations utiles -->
-  <div class="useful-info">
-    <div class="info-grid">
-      <div class="info-card tips">
-        <h3>💡 Conseils d'utilisation</h3>
-        <ul>
-          <li>
-            Importez vos résultats JSON directement depuis votre pipeline CI/CD
-          </li>
-          <li>Utilisez les filtres pour analyser les tendances par projet</li>
-          <li>Configurez les alertes pour être notifié des échecs</li>
-          <li>
-            Consultez régulièrement les tests instables pour maintenir la
-            qualité
-          </li>
-        </ul>
+  <!-- Métriques rapides -->
+  <div class="quick-metrics">
+    <div class="metric-card primary">
+      <div class="metric-icon">🏗️</div>
+      <div class="metric-content">
+        <h3 id="projects-count">{{ projects_count }}</h3>
+        <p>Projet{{ projects_count|pluralize }}</p>
       </div>
+    </div>
 
-      <div class="info-card links">
-        <h3>🔗 Liens utiles</h3>
-        <div class="useful-links">
-          <a
-            href="https://playwright.dev/docs/test-reporters"
-            target="_blank"
-            class="external-link"
-          >
-            📖 Documentation Playwright
-          </a>
-          <a
-            href="https://playwright.dev/docs/test-configuration"
-            target="_blank"
-            class="external-link"
-          >
-            ⚙️ Configuration des tests
-          </a>
-          <a
-            href="https://playwright.dev/docs/ci"
-            target="_blank"
-            class="external-link"
-          >
-            🔄 Intégration CI/CD
-          </a>
+    <div class="metric-card success">
+      <div class="metric-icon">▶️</div>
+      <div class="metric-content">
+        <h3 id="executions-count">{{ executions_count }}</h3>
+        <p>
+          Exécution{{ executions_count|pluralize }} totale{{
+          executions_count|pluralize }}
+        </p>
+      </div>
+    </div>
+
+    <div class="metric-card info">
+      <div class="metric-icon">👥</div>
+      <div class="metric-content">
+        <h3 id="users-count">{{ users_count }}</h3>
+        <p>Utilisateur{{ users_count|pluralize }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graphique d'évolution -->
+  {% if projects_data %}
+  <div class="chart-section">
+    <h2>📈 Évolution du Taux de Réussite par Projet</h2>
+    <div class="chart-container">
+      <div class="relative h-64">
+        <canvas id="successRateChart" class="w-full h-full"></canvas>
+      </div>
+      <div class="chart-info">
+        <p>
+          10 dernières exécutions par projet ({{ projects_data|length }}
+          projet{{ projects_data|length|pluralize }})
+        </p>
+        <div class="chart-legend">
+          {% for project in projects_data %}
+          <div class="legend-item">
+            <span
+              class="legend-color"
+              style="background-color: {{ project.color }};"
+            ></span>
+            <span class="legend-label">{{ project.name }}</span>
+          </div>
+          {% endfor %}
         </div>
       </div>
     </div>
   </div>
+  {% endif %}
 </div>
 
-<!-- JavaScript pour charger les métriques -->
+{% if projects_data %}
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Fonction pour charger les métriques via une requête AJAX ou utiliser les données du contexte
-    function loadMetrics() {
-      // Utiliser les données injectées par le contexte Django s'il y en a
-      const totalTests = '{{ total_tests|default:"0" }}';
-      const successRate = '{{ success_rate|default:"0" }}';
-      const failedTests = '{{ failed_tests|default:"0" }}';
-      const activeProjects = '{{ active_projects|default:"0" }}';
+  document.addEventListener('DOMContentLoaded', function() {
+      const successCanvas = document.getElementById('successRateChart');
+      if (successCanvas) {
+          const rect = successCanvas.getBoundingClientRect();
+          successCanvas.width = rect.width;
+          successCanvas.height = rect.height;
 
-      // Mettre à jour les éléments
-      const totalTestsEl = document.getElementById("total-tests");
-      const successRateEl = document.getElementById("success-rate");
-      const failedTestsEl = document.getElementById("failed-tests");
-      const activeProjectsEl = document.getElementById("active-projects");
+          const successCtx = successCanvas.getContext('2d');
 
-      if (totalTestsEl) totalTestsEl.textContent = totalTests;
-      if (successRateEl) successRateEl.textContent = successRate + "%";
-      if (failedTestsEl) failedTestsEl.textContent = failedTests;
-      if (activeProjectsEl) activeProjectsEl.textContent = activeProjects;
+          const projectsData = {{ projects_data|safe }};
 
-      // Ajouter des animations si les données sont disponibles
-      if (totalTests !== "0") {
-        document.querySelectorAll(".metric-card").forEach((card) => {
-          card.style.opacity = "0";
-          card.style.transform = "translateY(20px)";
-          setTimeout(() => {
-            card.style.transition = "all 0.6s ease";
-            card.style.opacity = "1";
-            card.style.transform = "translateY(0)";
-          }, Math.random() * 300);
-        });
+          if (projectsData.length > 0) {
+              const padding = 40;
+              const chartWidth = successCanvas.width - 2 * padding;
+              const chartHeight = successCanvas.height - 2 * padding;
+
+              // Trouver le nombre maximum de points pour l'axe X
+              const maxPoints = Math.max(...projectsData.map(p => p.data.length));
+
+              // Dessiner la grille
+              successCtx.strokeStyle = '#e5e7eb';
+              successCtx.lineWidth = 1;
+
+              for (let i = 0; i <= 10; i++) {
+                  const y = padding + (chartHeight * i / 10);
+                  successCtx.beginPath();
+                  successCtx.moveTo(padding, y);
+                  successCtx.lineTo(padding + chartWidth, y);
+                  successCtx.stroke();
+
+                  successCtx.fillStyle = '#6b7280';
+                  successCtx.font = '10px system-ui';
+                  successCtx.textAlign = 'right';
+                  successCtx.fillText((100 - i * 10) + '%', padding - 5, y + 3);
+              }
+
+              // Ligne de base
+              successCtx.beginPath();
+              successCtx.moveTo(padding, padding + chartHeight);
+              successCtx.lineTo(padding + chartWidth, padding + chartHeight);
+              successCtx.stroke();
+
+              // Dessiner les lignes pour chaque projet
+              const allPoints = [];
+
+              projectsData.forEach((project, projectIndex) => {
+                  const projectPoints = [];
+
+                  successCtx.strokeStyle = project.color;
+                  successCtx.fillStyle = project.color;
+                  successCtx.lineWidth = 2;
+                  successCtx.beginPath();
+
+                  for (let i = 0; i < project.data.length; i++) {
+                      const x = padding + (chartWidth * i / (maxPoints - 1));
+                      const y = padding + chartHeight - (chartHeight * project.data[i] / 100);
+
+                      projectPoints.push({
+                          x: x,
+                          y: y,
+                          value: project.data[i],
+                          execution: i + 1,
+                          project: project.name,
+                          color: project.color
+                      });
+
+                      if (i === 0) {
+                          successCtx.moveTo(x, y);
+                      } else {
+                          successCtx.lineTo(x, y);
+                      }
+                  }
+                  successCtx.stroke();
+
+                  // Dessiner les points
+                  projectPoints.forEach(point => {
+                      successCtx.beginPath();
+                      successCtx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+                      successCtx.fill();
+                  });
+
+                  allPoints.push(...projectPoints);
+              });
+
+              // Tooltip
+              const successTooltip = document.createElement('div');
+              successTooltip.style.cssText = `
+                  position: absolute;
+                  background: rgba(0,0,0,0.8);
+                  color: white;
+                  padding: 8px 12px;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  pointer-events: none;
+                  z-index: 1000;
+                  opacity: 0;
+                  transition: opacity 0.2s;
+              `;
+              document.body.appendChild(successTooltip);
+
+              successCanvas.addEventListener('mousemove', function(e) {
+                  const rect = successCanvas.getBoundingClientRect();
+                  const mouseX = e.clientX - rect.left;
+                  const mouseY = e.clientY - rect.top;
+
+                  let closestPoint = null;
+                  let minDistance = Infinity;
+
+                  allPoints.forEach(point => {
+                      const distance = Math.sqrt(Math.pow(mouseX - point.x, 2) + Math.pow(mouseY - point.y, 2));
+                      if (distance < 15 && distance < minDistance) {
+                          minDistance = distance;
+                          closestPoint = point;
+                      }
+                  });
+
+                  if (closestPoint) {
+                      successCanvas.style.cursor = 'pointer';
+                      successTooltip.innerHTML = `
+                          <strong>${closestPoint.project}</strong><br>
+                          Exécution #${closestPoint.execution}<br>
+                          Taux de réussite: ${closestPoint.value}%
+                      `;
+                      successTooltip.style.left = (e.pageX + 5) + 'px';
+                      successTooltip.style.top = (e.pageY - 30) + 'px';
+                      successTooltip.style.opacity = '1';
+                  } else {
+                      successCanvas.style.cursor = 'default';
+                      successTooltip.style.opacity = '0';
+                  }
+              });
+
+              successCanvas.addEventListener('mouseleave', function() {
+                  successCanvas.style.cursor = 'default';
+                  successTooltip.style.opacity = '0';
+              });
+          } else {
+              successCtx.fillStyle = '#6b7280';
+              successCtx.font = '14px system-ui';
+              successCtx.textAlign = 'center';
+              successCtx.fillText('Aucune donnée disponible', successCanvas.width / 2, successCanvas.height / 2);
+          }
       }
-    }
-
-    loadMetrics();
-
-    // Optionnel : actualiser les données périodiquement
-    // setInterval(loadMetrics, 30000); // Toutes les 30 secondes
   });
 </script>
+{% endif %}
 
 <style>
   /* Branding personnalisé */
@@ -420,256 +371,79 @@ title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock
     font-size: 0.9rem;
   }
 
-  /* Sections */
-  .admin-dashboard > div {
+  /* Section graphique */
+  .chart-section {
     margin-bottom: 3rem;
   }
 
-  .admin-dashboard h2 {
+  .chart-section h2 {
     color: #c2b828ff;
     margin-bottom: 1.5rem;
     font-size: 1.5rem;
     font-weight: 600;
   }
 
-  /* Grilles */
-  .actions-grid,
-  .management-grid,
-  .tools-grid,
-  .config-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-  }
-
-  /* Cartes d'action */
-  .action-card,
-  .management-card,
-  .tool-card,
-  .config-card {
-    display: block;
-    padding: 1.5rem;
+  .chart-container {
     background: white;
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    text-decoration: none;
-    color: inherit;
-    transition: all 0.2s ease;
-    border-left: 4px solid;
-  }
-
-  .action-card:hover,
-  .management-card:hover,
-  .tool-card:hover,
-  .config-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    text-decoration: none;
-  }
-
-  .action-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .action-card.add {
-    border-left-color: #10b981;
-  }
-  .action-card.execute {
-    border-left-color: #3b82f6;
-  }
-  .action-card.upload {
-    border-left-color: #f59e0b;
-  }
-  .action-card.sync {
-    border-left-color: #8b5cf6;
-  }
-
-  .action-icon {
-    font-size: 2rem;
-    opacity: 0.8;
-  }
-
-  .action-content h3 {
-    margin: 0 0 0.25rem 0;
-    color: #374151;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-
-  .action-content p {
-    margin: 0;
-    color: #6b7280;
-    font-size: 0.9rem;
-  }
-
-  /* Cartes de gestion */
-  .management-card.tests {
-    border-left-color: #10b981;
-  }
-  .management-card.executions {
-    border-left-color: #3b82f6;
-  }
-  .management-card.results {
-    border-left-color: #f59e0b;
-  }
-  .management-card.projects {
-    border-left-color: #8b5cf6;
-  }
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-
-  .card-icon {
-    font-size: 1.5rem;
-  }
-
-  .card-header h3 {
-    margin: 0;
-    color: #374151;
-    font-size: 1.2rem;
-    font-weight: 600;
-  }
-
-  .management-card p {
-    margin: 0 0 1rem 0;
-    color: #6b7280;
-    line-height: 1.5;
-  }
-
-  .card-action {
-    color: #3b82f6;
-    font-weight: 500;
-    font-size: 0.9rem;
-  }
-
-  /* Cartes d'outils */
-  .tool-card.failed {
-    border-left-color: #ef4444;
-  }
-  .tool-card.flaky {
-    border-left-color: #f59e0b;
-  }
-  .tool-card.trends {
-    border-left-color: #06b6d4;
-  }
-
-  .tool-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .tool-icon {
-    font-size: 2rem;
-    opacity: 0.8;
-  }
-
-  .tool-content h3 {
-    margin: 0 0 0.25rem 0;
-    color: #374151;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-
-  .tool-content p {
-    margin: 0;
-    color: #6b7280;
-    font-size: 0.9rem;
-  }
-
-  /* Cartes de configuration */
-  .config-card.ci {
-    border-left-color: #3b82f6;
-  }
-  .config-card.users {
-    border-left-color: #10b981;
-  }
-  .config-card.groups {
-    border-left-color: #8b5cf6;
-  }
-
-  .config-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .config-icon {
-    font-size: 2rem;
-    opacity: 0.8;
-  }
-
-  .config-content h3 {
-    margin: 0 0 0.25rem 0;
-    color: #374151;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-
-  .config-content p {
-    margin: 0;
-    color: #6b7280;
-    font-size: 0.9rem;
-  }
-
-  /* Informations utiles */
-  .info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .info-card {
     padding: 1.5rem;
-    background: white;
-    border-radius: 12px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
 
-  .info-card h3 {
-    margin: 0 0 1rem 0;
-    color: #374151;
-    font-size: 1.1rem;
-    font-weight: 600;
+  .chart-info {
+    margin-top: 1rem;
+    text-align: center;
   }
 
-  .info-card ul {
-    margin: 0;
-    padding-left: 1.5rem;
-  }
-
-  .info-card li {
-    margin-bottom: 0.5rem;
+  .chart-info p {
     color: #6b7280;
-    line-height: 1.5;
+    font-size: 0.9rem;
+    margin: 0 0 1rem 0;
   }
 
-  .useful-links {
+  /* Légende du graphique */
+  .chart-legend {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 0.5rem;
   }
 
-  .external-link {
-    display: inline-flex;
+  .legend-item {
+    display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem;
-    color: #3b82f6;
-    text-decoration: none;
-    border-radius: 6px;
-    transition: background-color 0.2s;
+    font-size: 0.8rem;
   }
 
-  .external-link:hover {
-    background: #f3f4f6;
-    text-decoration: none;
+  .legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  .legend-label {
+    color: #374151;
+    font-weight: 500;
+  }
+
+  /* Classe helper pour la hauteur */
+  .h-64 {
+    height: 16rem;
+  }
+
+  .relative {
+    position: relative;
+  }
+
+  .w-full {
+    width: 100%;
+  }
+
+  .h-full {
+    height: 100%;
   }
 
   /* Design responsive */
@@ -693,34 +467,11 @@ title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock
       grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
     }
-
-    .actions-grid,
-    .management-grid,
-    .tools-grid,
-    .config-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .info-grid {
-      grid-template-columns: 1fr;
-    }
   }
 
   @media (max-width: 480px) {
     .quick-metrics {
       grid-template-columns: 1fr;
-    }
-
-    .action-card,
-    .tool-card,
-    .config-card {
-      flex-direction: column;
-      text-align: center;
-      gap: 0.75rem;
-    }
-
-    .card-header {
-      justify-content: center;
     }
   }
 </style>

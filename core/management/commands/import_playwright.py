@@ -216,11 +216,12 @@ class Command(BaseCommand):
             if tag_name:  # Éviter les tags vides
                 tag, created = Tag.objects.get_or_create(
                     name=tag_name,
-                    defaults={'color': '#3b82f6'}
+                    project=execution.project,
+                    defaults={'color': Tag.get_next_available_color(execution.project)}
                 )
                 test.tags.add(tag)
                 if created:
-                    self.stdout.write(f'Nouveau tag créé: {tag_name}')
+                    self.stdout.write(f'Nouveau tag créé: {tag_name} avec couleur {tag.color}')
 
         test_count = 1
         result_count = 0

@@ -1,0 +1,85 @@
+[tool.black]
+line-length = 127
+target-version = ['py311', 'py312', 'py313']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | migrations
+  | staticfiles
+  | static/admin
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 127
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+skip = [
+    "migrations",
+    ".venv",
+    "venv", 
+    "env",
+    "staticfiles",
+    "static/admin"
+]
+
+# Configuration Django
+known_django = "django"
+known_first_party = ["core", "api", "projects", "testing", "integrations"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "DJANGO", "FIRSTPARTY", "LOCALFOLDER"]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/migrations/*",
+    "*/venv/*",
+    "*/env/*",
+    "*/.venv/*",
+    "manage.py",
+    "*/settings/*",
+    "*/staticfiles/*",
+    "*/static/admin/*",
+    "*/__pycache__/*",
+    "*/tests.py",
+    "*/test_*.py"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.bandit]
+exclude_dirs = [
+    "tests", 
+    "*/migrations/*",
+    "*/static/*",
+    "*/staticfiles/*"
+]
+skips = ["B101", "B601"]  # Skip assert_used_in_tests et shell_injection_in_subprocess (pour Django management commands)

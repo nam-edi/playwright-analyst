@@ -125,6 +125,22 @@ project.name }}{% endblock %} {% block content %}
                   <strong>Quand désactivé :</strong> Aucune information
                   d'évolution affichée, comparaisons désactivées.
                 </div>
+                {% elif feature_key == 'tags_mapping' %}
+                <p class="text-gray-500">
+                  Affiche un graphique interactif de cartographie des tags sur
+                  la page d'accueil. Visualise les tags sous forme de cercles
+                  connectés, avec la taille proportionnelle au nombre de tests
+                  et les liens représentant les tests partagés entre tags.
+                </p>
+                <div class="mt-2 text-xs text-gray-400">
+                  <strong>Quand activé :</strong> Section "Cartographie des
+                  Tests par Tags" visible sur la page d'accueil avec graphique
+                  D3.js interactif, zoom, drag, reset.
+                  <br />
+                  <strong>Quand désactivé :</strong> Aucun graphique de
+                  cartographie des tags affiché, calculs des relations entre
+                  tags désactivés.
+                </div>
                 {% endif %}
 
                 <!-- Indicateur de valeur par défaut -->
@@ -164,7 +180,7 @@ project.name }}{% endblock %} {% block content %}
             </a>
             <button
               type="submit"
-              class="bg-primary-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              class="bg-blue-600 hover:bg-blue-700 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               Sauvegarder
             </button>
@@ -204,6 +220,12 @@ project.name }}{% endblock %} {% block content %}
                 <strong>Évolution par rapport à la dernière exécution :</strong>
                 Compare automatiquement les résultats avec la précédente
                 exécution pour identifier les améliorations et régressions.
+              </li>
+              <li>
+                <strong>Cartographie des tags :</strong>
+                Affiche un graphique interactif sur la page d'accueil pour
+                visualiser les relations entre tags et le nombre de tests
+                associés.
               </li>
               <li>
                 D'autres features seront ajoutées au fur et à mesure des

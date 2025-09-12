@@ -1,0 +1,466 @@
+<!-- Section Installation -->
+<div class="space-y-6">
+  <!-- Prérequis -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Prérequis Système</h3>
+    </div>
+    <div class="px-6 py-4">
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="text-center">
+          <div
+            class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <svg
+              class="w-8 h-8 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+              ></path>
+            </svg>
+          </div>
+          <h4 class="text-sm font-medium text-gray-900 mb-2">Python</h4>
+          <p class="text-xs text-gray-600">Version 3.9+ requis</p>
+          <div class="mt-2">
+            <code class="text-xs bg-gray-100 px-2 py-1 rounded"
+              >python --version</code
+            >
+          </div>
+        </div>
+
+        <div class="text-center">
+          <div
+            class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <svg
+              class="w-8 h-8 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
+              ></path>
+            </svg>
+          </div>
+          <h4 class="text-sm font-medium text-gray-900 mb-2">
+            Base de données
+          </h4>
+          <p class="text-xs text-gray-600">PostgreSQL recommandé</p>
+          <div class="mt-2">
+            <code class="text-xs bg-gray-100 px-2 py-1 rounded"
+              >SQLite pour dev</code
+            >
+          </div>
+        </div>
+
+        <div class="text-center">
+          <div
+            class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <svg
+              class="w-8 h-8 text-purple-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9V3"
+              ></path>
+            </svg>
+          </div>
+          <h4 class="text-sm font-medium text-gray-900 mb-2">Serveur Web</h4>
+          <p class="text-xs text-gray-600">Nginx/Apache + Gunicorn</p>
+          <div class="mt-2">
+            <code class="text-xs bg-gray-100 px-2 py-1 rounded"
+              >Runserver pour dev</code
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Installation étape par étape -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">
+        Installation Étape par Étape
+      </h3>
+    </div>
+    <div class="px-6 py-4">
+      <div class="space-y-6">
+        <!-- Étape 1 -->
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <span
+              class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+              >1</span
+            >
+          </div>
+          <div class="ml-4 flex-1">
+            <h4 class="text-base font-medium text-gray-900">
+              Cloner le projet
+            </h4>
+            <p class="text-sm text-gray-600 mt-1">
+              Récupérez le code source depuis le dépôt Git
+            </p>
+            <div class="mt-3 bg-gray-900 rounded-md p-3 overflow-x-auto">
+              <pre
+                class="text-sm text-gray-100"
+              ><code>git clone https://github.com/votre-org/pw-analyst.git
+cd pw-analyst</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Étape 2 -->
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <span
+              class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+              >2</span
+            >
+          </div>
+          <div class="ml-4 flex-1">
+            <h4 class="text-base font-medium text-gray-900">
+              Créer un environnement virtuel
+            </h4>
+            <p class="text-sm text-gray-600 mt-1">
+              Isoler les dépendances Python du projet
+            </p>
+            <div class="mt-3 bg-gray-900 rounded-md p-3 overflow-x-auto">
+              <pre class="text-sm text-gray-100"><code># Avec venv
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate    # Windows
+
+# Ou avec conda
+conda create -n pw-analyst python=3.11
+conda activate pw-analyst</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Étape 3 -->
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <span
+              class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+              >3</span
+            >
+          </div>
+          <div class="ml-4 flex-1">
+            <h4 class="text-base font-medium text-gray-900">
+              Installer les dépendances
+            </h4>
+            <p class="text-sm text-gray-600 mt-1">
+              Installation des packages Python requis
+            </p>
+            <div class="mt-3 bg-gray-900 rounded-md p-3 overflow-x-auto">
+              <pre
+                class="text-sm text-gray-100"
+              ><code># Installation des dépendances principales
+pip install -r requirements.txt
+
+# Pour le développement (optionnel)
+pip install -r requirements-dev.txt</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Étape 4 -->
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <span
+              class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+              >4</span
+            >
+          </div>
+          <div class="ml-4 flex-1">
+            <h4 class="text-base font-medium text-gray-900">
+              Configuration de la base de données
+            </h4>
+            <p class="text-sm text-gray-600 mt-1">
+              Créer et configurer la base de données
+            </p>
+            <div class="mt-3 bg-gray-900 rounded-md p-3 overflow-x-auto">
+              <pre
+                class="text-sm text-gray-100"
+              ><code># Copier le fichier de configuration
+cp .env.example .env
+
+# Éditer la configuration (optionnel pour SQLite)
+# DATABASE_URL=sqlite:///db.sqlite3
+
+# Appliquer les migrations
+python manage.py migrate</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Étape 5 -->
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <span
+              class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+              >5</span
+            >
+          </div>
+          <div class="ml-4 flex-1">
+            <h4 class="text-base font-medium text-gray-900">
+              Créer un super utilisateur
+            </h4>
+            <p class="text-sm text-gray-600 mt-1">
+              Compte administrateur initial
+            </p>
+            <div class="mt-3 bg-gray-900 rounded-md p-3 overflow-x-auto">
+              <pre class="text-sm text-gray-100"><code># Créer le superuser
+python manage.py createsuperuser
+
+# Configurer les groupes de base
+python manage.py setup_groups</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Étape 6 -->
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <span
+              class="flex items-center justify-center w-8 h-8 bg-green-100 text-green-800 rounded-full text-sm font-medium"
+              >6</span
+            >
+          </div>
+          <div class="ml-4 flex-1">
+            <h4 class="text-base font-medium text-gray-900">
+              Démarrer le serveur
+            </h4>
+            <p class="text-sm text-gray-600 mt-1">
+              Lancement en mode développement
+            </p>
+            <div class="mt-3 bg-gray-900 rounded-md p-3 overflow-x-auto">
+              <pre
+                class="text-sm text-gray-100"
+              ><code># Démarrer le serveur de développement
+python manage.py runserver
+
+# L'application sera accessible sur
+# http://127.0.0.1:8000</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configuration avancée -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Configuration Avancée</h3>
+    </div>
+    <div class="px-6 py-4">
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">
+            Variables d'environnement
+          </h4>
+          <div class="bg-gray-100 rounded-md p-3 text-xs">
+            <pre><code># Base de données
+DATABASE_URL=postgresql://user:pass@localhost/pw_analyst
+
+# Sécurité
+SECRET_KEY=votre-cle-secrete-tres-longue
+DEBUG=False
+ALLOWED_HOSTS=votre-domaine.com,localhost
+
+# Email (optionnel)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=votre-email@gmail.com
+EMAIL_HOST_PASSWORD=votre-mot-de-passe
+
+# Cache Redis (optionnel)
+REDIS_URL=redis://localhost:6379/0</code></pre>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">
+            Configuration PostgreSQL
+          </h4>
+          <div class="bg-gray-900 rounded-md p-3 text-xs overflow-x-auto">
+            <pre
+              class="text-gray-100"
+            ><code># Installation PostgreSQL (Ubuntu/Debian)
+sudo apt-get install postgresql postgresql-contrib
+
+# Créer la base de données
+sudo -u postgres createdb pw_analyst
+sudo -u postgres createuser pw_analyst_user
+sudo -u postgres psql -c "ALTER USER pw_analyst_user PASSWORD 'motdepasse';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE pw_analyst TO pw_analyst_user;"</code></pre>
+          </div>
+
+          <h4 class="text-sm font-medium text-gray-900 mb-3 mt-4">
+            Configuration Nginx
+          </h4>
+          <div class="bg-gray-900 rounded-md p-3 text-xs overflow-x-auto">
+            <pre
+              class="text-gray-100"
+            ><code># /etc/nginx/sites-available/pw-analyst
+server {
+    listen 80;
+    server_name votre-domaine.com;
+
+    location /static/ {
+        alias /path/to/pw-analyst/staticfiles/;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Déploiement en production -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">
+        Déploiement en Production
+      </h3>
+    </div>
+    <div class="px-6 py-4">
+      <div class="space-y-4">
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg
+                class="h-5 w-5 text-yellow-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"
+                ></path>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-yellow-700">
+                <strong>Points importants pour la production :</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="text-sm font-medium text-gray-900 mb-3">Sécurité</h4>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li class="flex items-start">
+                <span
+                  class="flex-shrink-0 h-1.5 w-1.5 bg-gray-400 rounded-full mt-2 mr-3"
+                ></span>
+                <span>Définir <code>DEBUG=False</code></span>
+              </li>
+              <li class="flex items-start">
+                <span
+                  class="flex-shrink-0 h-1.5 w-1.5 bg-gray-400 rounded-full mt-2 mr-3"
+                ></span>
+                <span>Générer une <code>SECRET_KEY</code> unique</span>
+              </li>
+              <li class="flex items-start">
+                <span
+                  class="flex-shrink-0 h-1.5 w-1.5 bg-gray-400 rounded-full mt-2 mr-3"
+                ></span>
+                <span>Configurer <code>ALLOWED_HOSTS</code></span>
+              </li>
+              <li class="flex items-start">
+                <span
+                  class="flex-shrink-0 h-1.5 w-1.5 bg-gray-400 rounded-full mt-2 mr-3"
+                ></span>
+                <span>Activer HTTPS</span>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="text-sm font-medium text-gray-900 mb-3">Performance</h4>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li class="flex items-start">
+                <span
+                  class="flex-shrink-0 h-1.5 w-1.5 bg-gray-400 rounded-full mt-2 mr-3"
+                ></span>
+                <span>Utiliser PostgreSQL ou MySQL</span>
+              </li>
+              <li class="flex items-start">
+                <span
+                  class="flex-shrink-0 h-1.5 w-1.5 bg-gray-400 rounded-full mt-2 mr-3"
+                ></span>
+                <span>Configurer un cache Redis</span>
+              </li>
+              <li class="flex items-start">
+                <span
+                  class="flex-shrink-0 h-1.5 w-1.5 bg-gray-400 rounded-full mt-2 mr-3"
+                ></span>
+                <span>Servir les fichiers statiques via Nginx</span>
+              </li>
+              <li class="flex items-start">
+                <span
+                  class="flex-shrink-0 h-1.5 w-1.5 bg-gray-400 rounded-full mt-2 mr-3"
+                ></span>
+                <span>Utiliser Gunicorn + supervisord</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <h4 class="text-sm font-medium text-gray-900 mb-3">
+            Commandes de déploiement
+          </h4>
+          <div class="bg-gray-900 rounded-md p-3 overflow-x-auto">
+            <pre
+              class="text-sm text-gray-100"
+            ><code># Collecte des fichiers statiques
+python manage.py collectstatic --noinput
+
+# Migrations en production
+python manage.py migrate
+
+# Redémarrer les services
+sudo systemctl restart gunicorn
+sudo systemctl restart nginx
+
+# Vérifier les logs
+tail -f /var/log/gunicorn/access.log
+tail -f /var/log/nginx/error.log</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

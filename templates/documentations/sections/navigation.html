@@ -1,0 +1,146 @@
+<!-- Navigation du sidebar -->
+<nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+  <!-- Aide Groupes & Permissions -->
+  <a
+    href="?section=help"
+    id="nav-help"
+    onclick="navigateToSection('help'); return false;"
+    class="nav-item group flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+  >
+    <svg
+      class="nav-icon mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+      ></path>
+    </svg>
+    Groupes & Permissions
+  </a>
+
+  <!-- API Documentation -->
+  <a
+    href="?section=api"
+    id="nav-api"
+    onclick="navigateToSection('api'); return false;"
+    class="nav-item group flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+  >
+    <svg
+      class="nav-icon mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+      ></path>
+    </svg>
+    API Documentation
+  </a>
+
+  <!-- Installation -->
+  <a
+    href="?section=installation"
+    id="nav-installation"
+    onclick="navigateToSection('installation'); return false;"
+    class="nav-item group flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+  >
+    <svg
+      class="nav-icon mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+      ></path>
+    </svg>
+    Installation
+  </a>
+
+  <!-- Configuration -->
+  <a
+    href="?section=configuration"
+    id="nav-configuration"
+    onclick="navigateToSection('configuration'); return false;"
+    class="nav-item group flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+  >
+    <svg
+      class="nav-icon mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+      ></path>
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+      ></path>
+    </svg>
+    Configuration
+  </a>
+
+  <!-- Features -->
+  <a
+    href="?section=features"
+    id="nav-features"
+    onclick="navigateToSection('features'); return false;"
+    class="nav-item group flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+  >
+    <svg
+      class="nav-icon mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+      ></path>
+    </svg>
+    Fonctionnalités
+  </a>
+
+  <!-- FAQ -->
+  <a
+    href="?section=faq"
+    id="nav-faq"
+    onclick="navigateToSection('faq'); return false;"
+    class="nav-item group flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+  >
+    <svg
+      class="nav-icon mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      ></path>
+    </svg>
+    FAQ
+  </a>
+</nav>

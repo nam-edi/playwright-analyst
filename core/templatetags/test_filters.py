@@ -139,3 +139,18 @@ def linebreaks_simple(value):
     # Gère \r\n (Windows), \n (Unix/Linux/Mac), \r (Mac classique)
     value = re.sub(r'\r\n|\r|\n', '<br>', str(value))
     return value
+
+@register.filter
+def gte(value, arg):
+    """Greater than or equal comparison filter"""
+    try:
+        return float(value) >= float(arg)
+    except (ValueError, TypeError):
+        return False
+
+@register.filter
+def is_success_rate_90_or_more(pass_count, total_count):
+    """Check if success rate is 90% or more"""
+    if not total_count or total_count == 0:
+        return False
+    return (pass_count * 10) >= (total_count * 9)

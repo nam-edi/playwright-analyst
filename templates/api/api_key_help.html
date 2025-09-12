@@ -1,0 +1,380 @@
+{% extends "base.html" %} {% load test_filters %} {% block title %}Gestion des
+clés API - PW Analyst{% endblock %} {% block content %}
+<div class="container mx-auto px-4 py-8">
+  <!-- Breadcrumb -->
+  <nav class="mb-6 text-sm text-gray-600">
+    <a href="{% url 'upload_json' %}" class="hover:text-blue-600">Import</a>
+    <span class="mx-2">›</span>
+    <span>Clés API</span>
+  </nav>
+
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">
+      🔑 Gestion des clés API
+    </h1>
+
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+      <div class="flex items-start">
+        <div class="flex-shrink-0">
+          <svg
+            class="h-6 w-6 text-blue-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-lg font-medium text-blue-900">
+            Où trouver ma clé API ?
+          </h3>
+          <div class="mt-2 text-blue-700">
+            <p>
+              Les clés API sont gérées dans l'interface d'administration Django.
+              Suivez ces étapes :
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Étapes pour accéder aux clés API -->
+    <div class="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+      <!-- Étape 1 : Administration -->
+      <div class="bg-white border border-gray-200 rounded-lg p-6">
+        <div class="flex items-center mb-4">
+          <div
+            class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold"
+          >
+            1
+          </div>
+          <h3 class="ml-3 text-lg font-semibold text-gray-900">
+            Accéder à l'administration
+          </h3>
+        </div>
+        <p class="text-gray-600 mb-4">
+          Connectez-vous à l'interface d'administration Django :
+        </p>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <a
+            href="/admin/"
+            target="_blank"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2M14 4h6v6M20 4l-8 8"
+              />
+            </svg>
+            Ouvrir l'admin Django
+          </a>
+        </div>
+        <p class="text-sm text-gray-500 mt-3">
+          <strong>Note :</strong> Vous devez avoir les permissions
+          d'administration pour accéder à cette section.
+        </p>
+      </div>
+
+      <!-- Étape 2 : Navigation -->
+      <div class="bg-white border border-gray-200 rounded-lg p-6">
+        <div class="flex items-center mb-4">
+          <div
+            class="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold"
+          >
+            2
+          </div>
+          <h3 class="ml-3 text-lg font-semibold text-gray-900">
+            Section "Clés API"
+          </h3>
+        </div>
+        <p class="text-gray-600 mb-4">
+          Dans l'interface d'administration, cherchez la section
+          <strong>"Core"</strong> puis cliquez sur <strong>"Clés API"</strong>.
+        </p>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="flex items-center text-sm text-gray-700">
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded"
+              >Core</span
+            >
+            <span class="mx-2">→</span>
+            <span class="bg-green-100 text-green-800 px-2 py-1 rounded"
+              >Clés API</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 3 : Création -->
+      <div class="bg-white border border-gray-200 rounded-lg p-6">
+        <div class="flex items-center mb-4">
+          <div
+            class="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold"
+          >
+            3
+          </div>
+          <h3 class="ml-3 text-lg font-semibold text-gray-900">
+            Créer une clé API
+          </h3>
+        </div>
+        <p class="text-gray-600 mb-4">
+          Cliquez sur <strong>"Ajouter une clé API"</strong> pour créer une
+          nouvelle clé.
+        </p>
+        <div class="space-y-3">
+          <div class="bg-gray-50 rounded-lg p-3">
+            <div class="flex items-center text-sm">
+              <span class="text-gray-700 font-medium mr-2">Nom :</span>
+              <span class="text-gray-600"
+                >Donnez un nom descriptif (ex: "CI Pipeline")</span
+              >
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3">
+            <div class="flex items-center text-sm">
+              <span class="text-gray-700 font-medium mr-2">Utilisateur :</span>
+              <span class="text-gray-600"
+                >Sélectionnez votre compte utilisateur</span
+              >
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3">
+            <div class="flex items-center text-sm">
+              <span class="text-gray-700 font-medium mr-2">Projets :</span>
+              <span class="text-gray-600"
+                >Laisser vide pour tous les projets</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 4 : Utilisation -->
+      <div class="bg-white border border-gray-200 rounded-lg p-6">
+        <div class="flex items-center mb-4">
+          <div
+            class="flex-shrink-0 w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center text-sm font-bold"
+          >
+            4
+          </div>
+          <h3 class="ml-3 text-lg font-semibold text-gray-900">
+            Récupérer la clé
+          </h3>
+        </div>
+        <p class="text-gray-600 mb-4">
+          Une fois sauvegardée, la clé complète sera affichée une seule fois.
+          Copiez-la et stockez-la en sécurité.
+        </p>
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div class="flex items-start">
+            <svg
+              class="h-5 w-5 text-yellow-600 mt-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
+            <div class="ml-2">
+              <p class="text-sm text-yellow-800">
+                <strong>Important :</strong> La clé complète ne sera affichée
+                qu'une seule fois. Par la suite, seule une version masquée sera
+                visible dans l'interface.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exemple d'utilisation -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6 mt-8">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        📋 Exemple d'utilisation
+      </h3>
+      <p class="text-gray-600 mb-4">
+        Une fois votre clé API créée, vous pouvez l'utiliser pour uploader des
+        résultats depuis votre CI :
+      </p>
+
+      <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+        <pre class="text-green-400 text-sm"><code># Avec curl
+curl -X POST "{{ request.build_absolute_uri }}api/projects/1/upload/" \
+  -H "X-API-Key: votre_cle_api_ici" \
+  -H "Content-Type: application/json" \
+  -d @results.json
+
+# Avec le script Python
+python upload_results.py \
+  --url "{{ request.build_absolute_uri }}api/projects/1/upload/" \
+  --api-key "votre_cle_api_ici" \
+  --file results.json</code></pre>
+      </div>
+    </div>
+
+    <!-- Permissions et sécurité -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6 mt-8">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        🔒 Permissions et sécurité
+      </h3>
+      <div class="grid gap-4 md:grid-cols-2">
+        <div>
+          <h4 class="font-medium text-gray-900 mb-2">
+            Permissions disponibles :
+          </h4>
+          <ul class="space-y-2 text-sm text-gray-600">
+            <li class="flex items-center">
+              <svg
+                class="w-4 h-4 mr-2 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              <strong>Peut uploader :</strong> Autorise l'upload de résultats
+            </li>
+            <li class="flex items-center">
+              <svg
+                class="w-4 h-4 mr-2 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              <strong>Peut lire :</strong> Autorise la lecture des données
+              (futur)
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium text-gray-900 mb-2">Bonnes pratiques :</h4>
+          <ul class="space-y-2 text-sm text-gray-600">
+            <li class="flex items-center">
+              <svg
+                class="w-4 h-4 mr-2 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Créez une clé par environnement/usage
+            </li>
+            <li class="flex items-center">
+              <svg
+                class="w-4 h-4 mr-2 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Stockez la clé dans les secrets de votre CI
+            </li>
+            <li class="flex items-center">
+              <svg
+                class="w-4 h-4 mr-2 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Définissez une date d'expiration si nécessaire
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="mt-8 flex gap-4">
+      <a
+        href="{% url 'upload_json' %}"
+        class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+      >
+        <svg
+          class="w-4 h-4 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          />
+        </svg>
+        Retour à l'import
+      </a>
+
+      <a
+        href="/admin/core/apikey/"
+        target="_blank"
+        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+      >
+        <svg
+          class="w-4 h-4 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-3.586l6.586-6.586A6 6 0 0119 9z"
+          />
+        </svg>
+        Gérer mes clés API
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

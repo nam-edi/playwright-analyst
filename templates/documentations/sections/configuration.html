@@ -1,0 +1,403 @@
+<!-- Section Configuration -->
+<div class="space-y-6">
+  <!-- Configuration principale -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">
+        Configuration Principale
+      </h3>
+      <p class="text-sm text-gray-600 mt-1">
+        Paramètres essentiels pour le fonctionnement de PW-Analyst
+      </p>
+    </div>
+    <div class="px-6 py-4">
+      <div class="space-y-6">
+        <!-- Fichier settings.py -->
+        <div>
+          <h4 class="text-base font-medium text-gray-900 mb-3">
+            Fichier settings.py
+          </h4>
+          <p class="text-sm text-gray-600 mb-3">
+            Le fichier <code>pw_analyst/settings.py</code> contient la
+            configuration principale de Django.
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-gray-50 rounded-md p-4">
+              <h5 class="text-sm font-medium text-gray-900 mb-2">
+                Base de données
+              </h5>
+              <div class="bg-gray-900 rounded p-2 text-xs overflow-x-auto">
+                <pre class="text-gray-100"><code>DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'pw_analyst',
+        'USER': 'pw_analyst_user',
+        'PASSWORD': 'votre_mot_de_passe',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}</code></pre>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-md p-4">
+              <h5 class="text-sm font-medium text-gray-900 mb-2">
+                Cache Redis
+              </h5>
+              <div class="bg-gray-900 rounded p-2 text-xs overflow-x-auto">
+                <pre class="text-gray-100"><code>CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Variables d'environnement -->
+        <div>
+          <h4 class="text-base font-medium text-gray-900 mb-3">
+            Variables d'Environnement (.env)
+          </h4>
+          <p class="text-sm text-gray-600 mb-3">
+            Créez un fichier <code>.env</code> à la racine du projet pour vos
+            paramètres sensibles.
+          </p>
+
+          <div class="bg-gray-900 rounded-md p-4 overflow-x-auto">
+            <pre class="text-sm text-gray-100"><code># Configuration générale
+DEBUG=True
+SECRET_KEY=votre-cle-secrete-django-tres-longue-et-aleatoire
+ALLOWED_HOSTS=localhost,127.0.0.1,votre-domaine.com
+
+# Base de données
+DATABASE_URL=postgresql://user:password@localhost:5432/pw_analyst
+
+# Email (optionnel)
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=votre-email@example.com
+EMAIL_HOST_PASSWORD=votre-mot-de-passe-app
+
+# Stockage des fichiers (optionnel)
+USE_S3=False
+AWS_ACCESS_KEY_ID=votre-access-key
+AWS_SECRET_ACCESS_KEY=votre-secret-key
+AWS_STORAGE_BUCKET_NAME=votre-bucket
+
+# Cache
+REDIS_URL=redis://localhost:6379/0
+
+# Monitoring (optionnel)
+SENTRY_DSN=https://votre-dsn@sentry.io/project-id</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configuration des permissions -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">
+        Configuration des Permissions
+      </h3>
+    </div>
+    <div class="px-6 py-4">
+      <div class="space-y-4">
+        <p class="text-sm text-gray-600">
+          Les groupes d'utilisateurs et leurs permissions sont configurés
+          automatiquement via la commande management.
+        </p>
+
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg
+                class="h-5 w-5 text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-blue-700">
+                <strong>Configuration automatique :</strong> Exécutez
+                <code>python manage.py setup_groups</code> après l'installation
+                pour créer les groupes Viewer, Manager et Admin avec leurs
+                permissions respectives.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="text-sm font-medium text-gray-900 mb-3">
+              Personnalisation des permissions
+            </h4>
+            <p class="text-sm text-gray-600 mb-3">
+              Modifiez le fichier
+              <code>core/management/commands/setup_groups.py</code> pour adapter
+              les permissions.
+            </p>
+            <div class="bg-gray-900 rounded-md p-3 text-xs overflow-x-auto">
+              <pre class="text-gray-100"><code># Exemple de personnalisation
+viewer_permissions = [
+    'view_project',
+    'view_test',
+    'view_execution',
+    # Ajoutez d'autres permissions
+]</code></pre>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-sm font-medium text-gray-900 mb-3">
+              Décorateurs personnalisés
+            </h4>
+            <p class="text-sm text-gray-600 mb-3">
+              Créez vos propres décorateurs dans
+              <code>core/permissions.py</code>.
+            </p>
+            <div class="bg-gray-900 rounded-md p-3 text-xs overflow-x-auto">
+              <pre class="text-gray-100"><code>def custom_permission(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.has_perm('app.permission'):
+            return redirect('login')
+        return view_func(request, *args, **kwargs)
+    return wrapper</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configuration des intégrations -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">
+        Configuration des Intégrations CI/CD
+      </h3>
+    </div>
+    <div class="px-6 py-4">
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- GitHub Actions -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+              />
+            </svg>
+            GitHub Actions
+          </h4>
+          <div class="bg-gray-900 rounded-md p-3 text-xs overflow-x-auto">
+            <pre class="text-gray-100"><code># .github/workflows/tests.yml
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - run: |
+          pip install -r requirements.txt
+          python -m pytest --junitxml=results.xml
+      - name: Upload results
+        run: |
+          curl -X POST "${{ secrets.PW_ANALYST_URL }}/api/results/import/" \
+            -H "Authorization: ApiKey ${{ secrets.API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d @results.json</code></pre>
+          </div>
+        </div>
+
+        <!-- Jenkins -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">Jenkins</h4>
+          <div class="bg-gray-900 rounded-md p-3 text-xs overflow-x-auto">
+            <pre class="text-gray-100"><code>// Jenkinsfile
+pipeline {
+    agent any
+    stages {
+        stage('Test') {
+            steps {
+                sh 'python -m pytest --junitxml=results.xml'
+            }
+        }
+        stage('Upload Results') {
+            steps {
+                script {
+                    sh """
+                        curl -X POST "${PW_ANALYST_URL}/api/results/import/" \\
+                        -H "Authorization: ApiKey ${API_KEY}" \\
+                        -H "Content-Type: application/json" \\
+                        -d @results.json
+                    """
+                }
+            }
+        }
+    }
+}</code></pre>
+          </div>
+        </div>
+
+        <!-- GitLab CI -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">GitLab CI</h4>
+          <div class="bg-gray-900 rounded-md p-3 text-xs overflow-x-auto">
+            <pre class="text-gray-100"><code># .gitlab-ci.yml
+test:
+  stage: test
+  script:
+    - pip install -r requirements.txt
+    - python -m pytest --junitxml=results.xml
+  after_script:
+    - |
+      curl -X POST "$PW_ANALYST_URL/api/results/import/" \
+        -H "Authorization: ApiKey $API_KEY" \
+        -H "Content-Type: application/json" \
+        -d @results.json
+  artifacts:
+    reports:
+      junit: results.xml</code></pre>
+          </div>
+        </div>
+
+        <!-- Configuration manuelle -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">
+            Configuration manuelle
+          </h4>
+          <div class="space-y-2 text-sm text-gray-600">
+            <p><strong>1. Créer une clé API :</strong></p>
+            <ul class="ml-4 space-y-1">
+              <li>• Connectez-vous en tant que Manager/Admin</li>
+              <li>• Profil → Gestion des clés API</li>
+              <li>• Générer nouvelle clé</li>
+            </ul>
+
+            <p><strong>2. Configurer les variables :</strong></p>
+            <div class="bg-gray-100 rounded p-2 text-xs">
+              <code>
+                PW_ANALYST_URL=https://votre-instance.com<br />
+                API_KEY=votre-cle-api
+              </code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configuration avancée -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Configuration Avancée</h3>
+    </div>
+    <div class="px-6 py-4">
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Logging -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">
+            Configuration des logs
+          </h4>
+          <div class="bg-gray-900 rounded-md p-3 text-xs overflow-x-auto">
+            <pre class="text-gray-100"><code>LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'pw_analyst.log',
+        },
+    },
+    'loggers': {
+        'pw_analyst': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}</code></pre>
+          </div>
+        </div>
+
+        <!-- Celery -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">
+            Tâches asynchrones (Celery)
+          </h4>
+          <div class="bg-gray-900 rounded-md p-3 text-xs overflow-x-auto">
+            <pre class="text-gray-100"><code># settings.py
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+
+# Démarrer Celery
+celery -A pw_analyst worker --loglevel=info
+
+# Tâches périodiques
+celery -A pw_analyst beat --loglevel=info</code></pre>
+          </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">
+            Monitoring (Sentry)
+          </h4>
+          <div class="bg-gray-900 rounded-md p-3 text-xs overflow-x-auto">
+            <pre class="text-gray-100"><code>import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn="https://votre-dsn@sentry.io/project",
+    integrations=[DjangoIntegration()],
+    traces_sample_rate=1.0,
+    send_default_pii=True
+)</code></pre>
+          </div>
+        </div>
+
+        <!-- Backup -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">
+            Sauvegarde automatique
+          </h4>
+          <div class="bg-gray-900 rounded-md p-3 text-xs overflow-x-auto">
+            <pre class="text-gray-100"><code># Script de sauvegarde (crontab)
+#!/bin/bash
+DATE=$(date +%Y%m%d_%H%M%S)
+pg_dump pw_analyst > backup_$DATE.sql
+aws s3 cp backup_$DATE.sql s3://votre-bucket/backups/
+
+# Crontab : sauvegarde quotidienne à 2h
+0 2 * * * /path/to/backup.sh</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

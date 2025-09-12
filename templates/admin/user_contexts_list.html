@@ -1,0 +1,424 @@
+{% extends "base.html" %} {% load static %} {% load group_users %} {% block
+title %}Administration - Contextes Utilisateurs{% endblock %} {% block content
+%}
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Header avec navigation -->
+    <div class="mb-6">
+      <nav class="flex" aria-label="Breadcrumb">
+        <ol role="list" class="flex items-center space-x-4">
+          <li>
+            <div>
+              <a
+                href="{% url 'administration_dashboard' %}"
+                class="text-gray-400 hover:text-gray-500"
+              >
+                <svg
+                  class="flex-shrink-0 h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"
+                  />
+                </svg>
+                <span class="sr-only">Administration</span>
+              </a>
+            </div>
+          </li>
+          <li>
+            <div class="flex items-center">
+              <svg
+                class="flex-shrink-0 h-5 w-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+              </svg>
+              <a
+                href="{% url 'contexts_info' %}"
+                class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"
+                >Contextes</a
+              >
+            </div>
+          </li>
+          <li>
+            <div class="flex items-center">
+              <svg
+                class="flex-shrink-0 h-5 w-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+              </svg>
+              <span class="ml-4 text-sm font-medium text-gray-500"
+                >Associations</span
+              >
+            </div>
+          </li>
+        </ol>
+      </nav>
+
+      <div class="mt-4">
+        <h1 class="text-3xl font-bold text-gray-900">
+          Contextes des Utilisateurs
+        </h1>
+        <p class="mt-2 text-sm text-gray-600">
+          Gérez les associations entre utilisateurs et contextes pour contrôler
+          l'accès aux projets.
+        </p>
+      </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="mb-6">
+      <div class="flex flex-wrap gap-4">
+        <a
+          href="/admin/core/usercontext/add/"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <svg
+            class="-ml-1 mr-2 h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          Associer un Utilisateur
+        </a>
+
+        <a
+          href="{% url 'contexts_info' %}"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <svg
+            class="-ml-1 mr-2 h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+            />
+          </svg>
+          Retour aux Contextes
+        </a>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Utilisateurs avec contexte -->
+      <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <div class="px-4 py-5 sm:px-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">
+            <span class="flex items-center">
+              <svg
+                class="mr-2 h-5 w-5 text-green-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Utilisateurs avec Contexte
+            </span>
+          </h3>
+          <p class="mt-1 max-w-2xl text-sm text-gray-500">
+            Utilisateurs ayant un contexte défini ({{ users_with_context.count
+            }})
+          </p>
+        </div>
+
+        {% if users_with_context %}
+        <ul class="divide-y divide-gray-200">
+          {% for user in users_with_context %}
+          <li class="px-4 py-4 sm:px-6">
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <div class="flex items-center">
+                  <p class="text-sm font-medium text-gray-900">
+                    {{ user.get_full_name|default:user.username }}
+                  </p>
+                  {% if user.username != user.get_full_name %}
+                  <span class="ml-2 text-sm text-gray-500"
+                    >({{ user.username }})</span
+                  >
+                  {% endif %}
+                </div>
+
+                <div class="mt-2 flex items-center text-sm text-gray-500">
+                  <!-- Groupes -->
+                  <div class="flex items-center">
+                    <svg
+                      class="mr-1.5 h-4 w-4 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    {% for group in user.groups.all %}
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {% if group.name == 'Admin' %}bg-red-100 text-red-800 {% elif group.name == 'Manager' %}bg-blue-100 text-blue-800 {% elif group.name == 'Viewer' %}bg-green-100 text-green-800 {% else %}bg-gray-100 text-gray-800{% endif %}"
+                    >
+                      {{ group.name }}
+                    </span>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <!-- Contexte -->
+                <div class="mt-2 flex items-center text-sm">
+                  <svg
+                    class="mr-1.5 h-4 w-4 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                    />
+                  </svg>
+                  {% if user.usercontext.context %}
+                  <span class="font-medium text-blue-600"
+                    >{{ user.usercontext.context.name }}</span
+                  >
+                  {% else %}
+                  <span class="text-gray-500 italic"
+                    >Accès à tous les projets</span
+                  >
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="flex items-center">
+                <a
+                  href="/admin/core/usercontext/{{ user.usercontext.id }}/change/"
+                  class="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                >
+                  Modifier
+                </a>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="px-4 py-5 sm:px-6">
+          <div class="text-center text-gray-500">
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+            <p class="mt-2">Aucun utilisateur avec contexte</p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Utilisateurs sans contexte -->
+      <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <div class="px-4 py-5 sm:px-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">
+            <span class="flex items-center">
+              <svg
+                class="mr-2 h-5 w-5 text-yellow-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+              Utilisateurs sans Contexte
+            </span>
+          </h3>
+          <p class="mt-1 max-w-2xl text-sm text-gray-500">
+            Manager/Viewer sans contexte - accèdent à tous les projets ({{
+            users_without_context.count }})
+          </p>
+        </div>
+
+        {% if users_without_context %}
+        <ul class="divide-y divide-gray-200">
+          {% for user in users_without_context %}
+          <li class="px-4 py-4 sm:px-6">
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <div class="flex items-center">
+                  <p class="text-sm font-medium text-gray-900">
+                    {{ user.get_full_name|default:user.username }}
+                  </p>
+                  {% if user.username != user.get_full_name %}
+                  <span class="ml-2 text-sm text-gray-500"
+                    >({{ user.username }})</span
+                  >
+                  {% endif %}
+                </div>
+
+                <div class="mt-2 flex items-center text-sm text-gray-500">
+                  <!-- Groupes -->
+                  <div class="flex items-center">
+                    <svg
+                      class="mr-1.5 h-4 w-4 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    {% for group in user.groups.all %}
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {% if group.name == 'Admin' %}bg-red-100 text-red-800 {% elif group.name == 'Manager' %}bg-blue-100 text-blue-800 {% elif group.name == 'Viewer' %}bg-green-100 text-green-800 {% else %}bg-gray-100 text-gray-800{% endif %}"
+                    >
+                      {{ group.name }}
+                    </span>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <!-- Statut d'accès -->
+                <div class="mt-2 flex items-center text-sm">
+                  <svg
+                    class="mr-1.5 h-4 w-4 text-green-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span class="text-green-600 font-medium"
+                    >Accès à tous les projets</span
+                  >
+                </div>
+              </div>
+
+              <div class="flex items-center">
+                <a
+                  href="/admin/core/usercontext/add/?user={{ user.id }}"
+                  class="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                >
+                  Associer un contexte
+                </a>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="px-4 py-5 sm:px-6">
+          <div class="text-center text-gray-500">
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p class="mt-2">
+              Tous les utilisateurs Manager/Viewer ont un contexte défini
+            </p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Info sur les contextes -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-md p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg
+            class="h-5 w-5 text-blue-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-blue-800">Règles de gestion</h3>
+          <div class="mt-2 text-sm text-blue-700">
+            <ul class="list-disc list-inside space-y-1">
+              <li>
+                Seuls les utilisateurs <strong>Manager</strong> et
+                <strong>Viewer</strong> peuvent avoir un contexte
+              </li>
+              <li>
+                Les utilisateurs <strong>Admin</strong> accèdent toujours à tous
+                les projets
+              </li>
+              <li>
+                Un utilisateur sans contexte accède à tous les projets
+                (comportement par défaut)
+              </li>
+              <li>
+                Un utilisateur avec contexte ne voit que les projets de ce
+                contexte
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

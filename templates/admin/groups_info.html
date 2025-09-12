@@ -1,0 +1,189 @@
+{% extends "base.html" %} {% load static %} {% block title %}Informations des
+Groupes{% endblock %} {% block content %}
+<div class="container mx-auto px-6 py-8">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Groupes et Permissions</h1>
+    <div class="flex space-x-3">
+      <a
+        href="{% url 'users_list' %}"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Gestion Utilisateurs
+      </a>
+      <a
+        href="{% url 'groups_list' %}"
+        class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Liste Groupes
+      </a>
+    </div>
+  </div>
+
+  {% if messages %} {% for message in messages %}
+  <div
+    class="mb-4 p-4 rounded-md {% if message.tags == 'success' %}bg-green-50 text-green-700{% elif message.tags == 'error' %}bg-red-50 text-red-700{% else %}bg-blue-50 text-blue-700{% endif %}"
+  >
+    {{ message }}
+  </div>
+  {% endfor %} {% endif %}
+
+  <div class="grid gap-6">
+    {% for group_info in groups_info %}
+    <div class="bg-white shadow rounded-lg">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-medium text-gray-900 flex items-center">
+            <span
+              class="inline-flex items-center justify-center h-8 w-8 rounded-full {% if group_info.group.name == 'Admin' %}bg-red-100 text-red-600 {% elif group_info.group.name == 'Manager' %}bg-yellow-100 text-yellow-600 {% elif group_info.group.name == 'Viewer' %}bg-green-100 text-green-600 {% else %}bg-gray-100 text-gray-600{% endif %} mr-3"
+            >
+              {% if group_info.group.name == 'Admin' %}A{% elif
+              group_info.group.name == 'Manager' %}M{% elif
+              group_info.group.name == 'Viewer' %}V{% else %}?{% endif %}
+            </span>
+            {{ group_info.group.name }}
+          </h3>
+          <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-500">
+              {{ group_info.users_count }} utilisateur{{
+              group_info.users_count|pluralize }}
+            </span>
+            <span class="text-sm text-gray-500">
+              {{ group_info.permissions_count }} permission{{
+              group_info.permissions_count|pluralize }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-4">
+        <p class="text-gray-700">{{ group_info.description }}</p>
+
+        {% if group_info.group.name == 'Admin' %}
+        <div class="mt-4 p-3 bg-red-50 rounded-md">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg
+                class="h-5 w-5 text-red-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">
+                Permissions administrateur
+              </h3>
+              <div class="mt-2 text-sm text-red-700">
+                <p>
+                  Les utilisateurs de ce groupe ont un accès complet à
+                  l'interface d'administration Django et peuvent gérer tous les
+                  aspects du système.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% elif group_info.group.name == 'Manager' %}
+        <div class="mt-4 p-3 bg-yellow-50 rounded-md">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg
+                class="h-5 w-5 text-yellow-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-yellow-800">
+                Permissions de gestion
+              </h3>
+              <div class="mt-2 text-sm text-yellow-700">
+                <p>
+                  Peut créer, modifier et supprimer des tests, exécutions, tags
+                  et configurations CI. Lecture seule des projets. N'a pas accès
+                  à l'interface d'administration Django.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% elif group_info.group.name == 'Viewer' %}
+        <div class="mt-4 p-3 bg-green-50 rounded-md">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg
+                class="h-5 w-5 text-green-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                <path
+                  fill-rule="evenodd"
+                  d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-green-800">
+                Permissions de lecture
+              </h3>
+              <div class="mt-2 text-sm text-green-700">
+                <p>
+                  Peut uniquement consulter les données. Ne peut pas modifier,
+                  créer ou supprimer d'éléments.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg
+          class="h-5 w-5 text-blue-400"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </div>
+      <div class="ml-3">
+        <h3 class="text-sm font-medium text-blue-800">
+          Information importante
+        </h3>
+        <div class="mt-2 text-sm text-blue-700">
+          <p>
+            • Les utilisateurs peuvent appartenir à plusieurs groupes à la
+            fois.<br />
+            • Les permissions sont cumulatives : si un utilisateur est dans
+            plusieurs groupes, il aura toutes les permissions de ces groupes.<br />
+            • Les superutilisateurs Django ont automatiquement toutes les
+            permissions, indépendamment de leurs groupes.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

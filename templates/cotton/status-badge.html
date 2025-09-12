@@ -1,11 +1,75 @@
-{% load test_filters %} {% with status_config=status|get_status_config %}
-<span
-  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-  style="background-color: {{ status_config.color }}20; color: {{ status_config.color }};"
->
-  <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-    {{ status_config.icon|safe }}
-  </svg>
-  {{ status_config.label }}
-</span>
-{% endwith %}
+<!-- Badge de statut avec fonctionnalité d'édition conditionnelle -->
+<div class="relative inline-block">
+  <span
+    id="status-badge-{{ result.id }}"
+    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if user_permissions.can_modify %}cursor-pointer hover:shadow-md transition-all duration-200{% endif %} {% if result.status == 'passed' %}bg-green-100 text-green-800 {% if user_permissions.can_modify %}hover:bg-green-200{% endif %}{% elif result.status == 'failed' or result.status == 'unexpected' %}bg-red-100 text-red-800 {% if user_permissions.can_modify %}hover:bg-red-200{% endif %}{% elif result.status == 'skipped' %}bg-yellow-100 text-yellow-800 {% if user_permissions.can_modify %}hover:bg-yellow-200{% endif %}{% elif result.status == 'flaky' %}bg-purple-100 text-purple-800 {% if user_permissions.can_modify %}hover:bg-purple-200{% endif %}{% endif %}"
+    {%
+    if
+    user_permissions.can_modify
+    %}
+    onclick="toggleStatusEditor({{ result.id }})"
+    title="Cliquez pour modifier le statut"
+    {%
+    else
+    %}
+    title="Statut en lecture seule"
+    {%
+    endif
+    %}
+  >
+    {% if result.status == 'passed' %} ✓ PASS {% elif result.status == 'failed'
+    or result.status == 'unexpected' %} ✗ FAIL {% elif result.status ==
+    'skipped' %} ⊘ SKIP {% elif result.status == 'flaky' %} ⚠ FLAKY {% endif %}
+  </span>
+
+  <!-- Éditeur de statut (caché par défaut) - Seulement si l'utilisateur peut modifier -->
+  {% if user_permissions.can_modify %}
+  <div
+    id="status-editor-{{ result.id }}"
+    class="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 p-2 min-w-max hidden"
+  >
+    <div class="flex flex-col space-y-1">
+      <button
+        type="button"
+        class="text-left px-3 py-1 text-xs rounded hover:bg-green-50 flex items-center"
+        onclick="updateStatus({{ result.id }}, 'passed')"
+      >
+        <span
+          class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2"
+          >✓ PASS</span
+        >
+      </button>
+      <button
+        type="button"
+        class="text-left px-3 py-1 text-xs rounded hover:bg-red-50 flex items-center"
+        onclick="updateStatus({{ result.id }}, 'failed')"
+      >
+        <span
+          class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mr-2"
+          >✗ FAIL</span
+        >
+      </button>
+      <button
+        type="button"
+        class="text-left px-3 py-1 text-xs rounded hover:bg-yellow-50 flex items-center"
+        onclick="updateStatus({{ result.id }}, 'skipped')"
+      >
+        <span
+          class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-2"
+          >⊘ SKIP</span
+        >
+      </button>
+      <button
+        type="button"
+        class="text-left px-3 py-1 text-xs rounded hover:bg-purple-50 flex items-center"
+        onclick="updateStatus({{ result.id }}, 'flaky')"
+      >
+        <span
+          class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2"
+          >⚠ FLAKY</span
+        >
+      </button>
+    </div>
+  </div>
+  {% endif %}
+</div>

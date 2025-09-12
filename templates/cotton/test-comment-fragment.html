@@ -2,6 +2,7 @@
 <div id="comment-section" class="mt-3">
   <div class="flex items-center justify-between mb-2">
     <div class="text-xs text-gray-600">Commentaire:</div>
+    {% if user_permissions.can_modify %}
     <button
       id="edit-comment-btn"
       class="text-xs text-blue-600 hover:text-blue-800 transition-colors"
@@ -9,6 +10,7 @@
     >
       {% if test.comment %}Modifier{% else %}Ajouter{% endif %}
     </button>
+    {% endif %}
   </div>
 
   <!-- Affichage du commentaire -->
