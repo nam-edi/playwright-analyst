@@ -49,14 +49,14 @@ repos:
     hooks:
       - id: django-check
         name: Django Check
-        entry: python manage.py check
+        entry: /Users/damienhoffmann/pw-analyst/.venv/bin/python manage.py check
         language: system
         pass_filenames: false
         files: \.(py)$
 
       - id: django-migrations-check
         name: Django Migrations Check
-        entry: python manage.py makemigrations --check --dry-run
+        entry: /Users/damienhoffmann/pw-analyst/.venv/bin/python manage.py makemigrations --check --dry-run
         language: system
         pass_filenames: false
         files: models\.py$
