@@ -44,10 +44,38 @@ class ProjectAdmin(admin.ModelAdmin):
     list_filter = ["created_at", "created_by", "ci_configuration__provider"]
     search_fields = ["name", "description"]
     readonly_fields = ["created_at", "updated_at"]
+    filter_horizontal = ["excluded_tags"]
     inlines = [TagInline, ProjectFeatureInline]
+
+    fieldsets = (
+        ("Informations générales", {"fields": ("name", "description", "created_by")}),
+        ("Configuration CI", {"fields": ("ci_configuration",), "classes": ["collapse"]}),
+        (
+            "Configuration d'affichage",
+            {
+                "fields": ("excluded_tags",),
+                "description": "Configurez les tags qui ne seront pas affichés dans le frontend mais resteront en base de données.",
+            },
+        ),
+        ("Métadonnées", {"fields": ("created_at", "updated_at"), "classes": ["collapse"]}),
+    )
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("tags")
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        """Filtrer les tags exclus pour afficher seulement ceux du projet courant"""
+        if db_field.name == "excluded_tags":
+            # Obtenir l'ID du projet en cours d'édition depuis l'URL
+            if request.resolver_match and request.resolver_match.kwargs.get("object_id"):
+                try:
+                    from testing.models import Tag
+
+                    project_id = request.resolver_match.kwargs["object_id"]
+                    kwargs["queryset"] = Tag.objects.filter(project_id=project_id)
+                except Exception:
+                    pass
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def execution_count(self, obj):
         return obj.executions.count()

@@ -39,6 +39,20 @@ class ContextService:
         return accessible_projects.filter(id=project.id).exists()
 
     @staticmethod
+    def user_has_access_to_project(user, project):
+        """
+        Alias pour can_user_access_project pour compatibilité avec les tests.
+
+        Args:
+            user (User): L'utilisateur
+            project (Project): Le projet à vérifier
+
+        Returns:
+            bool: True si l'utilisateur peut accéder au projet
+        """
+        return ContextService.can_user_access_project(user, project)
+
+    @staticmethod
     def get_user_context(user):
         """
         Récupère le contexte d'un utilisateur.

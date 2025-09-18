@@ -1,6 +1,6 @@
-{% extends 'base.html' %} {% block title %} Playwright Analyst {% if
-selected_project %} - {{ selected_project.name }} {% endif %} {% endblock %} {%
-load group_users %} {%block content %}
+{% extends 'base.html' %}{% load test_filters %} {% block title %} Playwright
+Analyst {% if selected_project %} - {{ selected_project.name }} {% endif %} {%
+endblock %} {% load group_users %} {%block content %}
 
 <div id="main-content" class="relative">
   {% if user|has_group:"Admin" or user|has_group:"Manager" %}
@@ -30,6 +30,7 @@ load group_users %} {%block content %}
   >
     <h2 class="text-2xl font-bold text-gray-900 mb-2">
       {{ selected_project.name }}
+      <span class="text-gray-500 text-sm">(id: {{ selected_project.id }})</span>
     </h2>
     <p class="text-gray-600 mb-6">
       {{ selected_project.description|default:"Aucune description disponible."
@@ -70,7 +71,17 @@ load group_users %} {%block content %}
     {% if latest_execution and latest_execution_stats %}
     <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-xl font-bold text-gray-900 mb-4">Dernière Exécution</h3>
+        <h3 class="text-xl font-bold text-gray-900 mb-4">
+          <a href="{% url 'execution_detail' latest_execution.id %}"
+             class="text-gray-900 hover:text-blue-600 transition-colors duration-200 flex items-center group">
+            Dernière Exécution
+            <svg class="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          </a>
+        </h3>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
@@ -84,7 +95,7 @@ load group_users %} {%block content %}
               <div class="flex items-center gap-2">
                 <span class="text-gray-600">Durée:</span>
                 <span class="font-medium"
-                  >{{ latest_execution.duration|floatformat:0 }}ms</span
+                  >{{ latest_execution.duration|duration_detailed }}</span
                 >
               </div>
               <div class="flex items-center gap-2">
@@ -121,19 +132,15 @@ load group_users %} {%block content %}
             <div class="grid grid-cols-2 gap-3 text-sm">
               <div class="flex items-center gap-2">
                 <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span>Passés: {{ latest_execution_stats.passed }}</span>
+                <span>PASS: {{ latest_execution_stats.passed }}</span>
               </div>
               <div class="flex items-center gap-2">
                 <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                <span>Échoués: {{ latest_execution_stats.failed }}</span>
+                <span>FAIL: {{ latest_execution_stats.failed }}</span>
               </div>
               <div class="flex items-center gap-2">
                 <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <span>Ignorés: {{ latest_execution_stats.skipped }}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
-                <span>Instables: {{ latest_execution_stats.flaky }}</span>
+                <span>SKIPPED: {{ latest_execution_stats.skipped }}</span>
               </div>
             </div>
           </div>
@@ -241,7 +248,7 @@ load group_users %} {%block content %}
           flaky: '#f97316'
       };
 
-      const total = data.passed + data.failed + data.skipped + data.flaky;
+      const total = data.passed + data.failed + data.skipped;
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const radius = Math.min(centerX, centerY) - 10;
@@ -282,7 +289,6 @@ load group_users %} {%block content %}
       drawSegment(data.passed, colors.passed, 'Passés');
       drawSegment(data.failed, colors.failed, 'Échoués');
       drawSegment(data.skipped, colors.skipped, 'Ignorés');
-      drawSegment(data.flaky, colors.flaky, 'Instables');
 
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius * 0.6, 0, 2 * Math.PI);
@@ -815,6 +821,302 @@ load group_users %} {%block content %}
       }
   });
 </script>
+{% endif %} {% if selected_project and latest_execution %}
+<div class="mt-8">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-gray-900">
+        <svg
+          class="w-5 h-5 text-amber-500 inline mr-2"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+        Tests Instables (<span id="flaky-tests-count">{{ flaky_tests|length }}</span>)
+      </h3>
+      <div class="flex items-center space-x-4">
+        <div class="text-sm text-gray-500">
+          Tests avec des tentatives répétées
+        </div>
+        <!-- Sélecteur d'exécution -->
+        <div class="relative">
+          <select
+            id="flaky-execution-selector"
+            class="appearance-none bg-white border border-gray-300 rounded-md px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onchange="updateFlakyTests(this.value)"
+          >
+            {% for execution in recent_executions %}
+            <option
+              value="{{ execution.id }}"
+              {% if execution.id == latest_execution.id %}selected{% endif %}
+            >
+              {% if execution.raw_json.config.metadata.name or execution.raw_json.config.metadata.environment %}
+                {% if execution.raw_json.config.metadata.name %}{{ execution.raw_json.config.metadata.name }}{% endif %}{% if execution.raw_json.config.metadata.name and execution.raw_json.config.metadata.environment %} - {% endif %}{% if execution.raw_json.config.metadata.environment %}{{ execution.raw_json.config.metadata.environment }}{% endif %} - {{ execution.start_time|date:"d/m/Y H:i" }}
+              {% else %}
+                {{ execution.start_time|date:"d/m/Y H:i" }}
+              {% endif %}
+              {% if execution.git_branch %} ({{ execution.git_branch }}){% endif %}
+            </option>
+            {% endfor %}
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conteneur pour les tests instables (sera mis à jour via AJAX) -->
+    <div id="flaky-tests-container">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for test in flaky_tests %}
+      <a
+        href="{% url 'tests_list' %}?search={{ test.title|urlencode }}"
+        class="block border border-amber-200 bg-amber-50 rounded-lg p-4 hover:bg-amber-100 hover:border-amber-300 transition-all cursor-pointer"
+      >
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex-1 min-w-0">
+            <h4
+              class="text-sm font-medium text-gray-900 truncate hover:text-amber-700"
+              title="{{ test.title }}"
+            >
+              {{ test.title|truncatechars:50 }}
+            </h4>
+            <p
+              class="text-xs text-gray-600 mt-1 truncate"
+              title="{{ test.file_path }}"
+            >
+              📁 {{ test.file_path|truncatechars:40 }}
+            </p>
+          </div>
+          <div class="flex items-center text-amber-600 ml-2">
+            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span class="text-sm font-medium">{{ test.retry_count }}</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs text-gray-500">
+          <div class="flex items-center">
+            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            {{ test.duration|duration_detailed }}
+          </div>
+          <div class="flex items-center">
+            {% if test.retry_count == 1 %}
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800"
+            >
+              1 retry
+            </span>
+            {% elif test.retry_count <= 3 %}
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800"
+            >
+              {{ test.retry_count }} retries
+            </span>
+            {% else %}
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
+            >
+              {{ test.retry_count }} retries
+            </span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if test.line %}
+        <div class="mt-2 text-xs text-gray-400">
+          Ligne {{ test.line }}{% if test.column %}, col {{ test.column }}{%
+          endif %}
+        </div>
+        {% endif %}
+      </a>
+      {% empty %}
+      <div class="col-span-full text-center py-8 text-gray-500">
+        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <p class="text-lg font-medium">Aucun test instable trouvé</p>
+        <p class="text-sm mt-1">Cette exécution ne contient aucun test ayant nécessité des tentatives répétées.</p>
+      </div>
+      {% endfor %}
+      </div>
+    </div>
+
+    <div
+      class="mt-4 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded p-3"
+    >
+      <div class="flex items-start">
+        <svg
+          class="w-4 h-4 text-amber-500 mr-2 mt-0.5 flex-shrink-0"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+        <div>
+          <strong>Tests instables :</strong> Ces tests ont échoué au moins une
+          fois avant de réussir. Ils peuvent indiquer des problèmes de timing,
+          de flakiness ou de synchronisation. Sélectionnez une exécution différente ci-dessus pour voir les tests instables d'autres exécutions.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Script pour la gestion du changement d'exécution -->
+<script>
+function updateFlakyTests(executionId) {
+    if (!executionId) return;
+
+    const container = document.getElementById('flaky-tests-container');
+    const countElement = document.getElementById('flaky-tests-count');
+    const originalContent = container.innerHTML;
+
+    // Afficher un loader
+    container.innerHTML = `
+        <div class="flex items-center justify-center py-8">
+            <div class="flex items-center space-x-2">
+                <svg class="animate-spin h-5 w-5 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-sm text-gray-600">Chargement des tests instables...</span>
+            </div>
+        </div>
+    `;
+
+    // Faire la requête AJAX
+    fetch(`/api/flaky-tests/${executionId}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erreur lors du chargement des données');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Mettre à jour le compteur
+            countElement.textContent = data.flaky_tests ? data.flaky_tests.length : 0;
+
+            // Construire le HTML des tests instables
+            if (data.flaky_tests && data.flaky_tests.length > 0) {
+                let html = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
+
+                data.flaky_tests.forEach(test => {
+                    let retryBadgeClass = 'bg-yellow-100 text-yellow-800';
+                    if (test.retry_count > 3) {
+                        retryBadgeClass = 'bg-red-100 text-red-800';
+                    } else if (test.retry_count > 1) {
+                        retryBadgeClass = 'bg-orange-100 text-orange-800';
+                    }
+
+                    let retryText = test.retry_count === 1 ? '1 retry' : `${test.retry_count} retries`;
+                    let locationText = '';
+                    if (test.line) {
+                        locationText = `<div class="mt-2 text-xs text-gray-400">Ligne ${test.line}`;
+                        if (test.column) {
+                            locationText += `, col ${test.column}`;
+                        }
+                        locationText += '</div>';
+                    }
+
+                    html += `
+                        <a href="/tests/?search=${encodeURIComponent(test.title)}"
+                           class="block border border-amber-200 bg-amber-50 rounded-lg p-4 hover:bg-amber-100 hover:border-amber-300 transition-all cursor-pointer">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-sm font-medium text-gray-900 truncate hover:text-amber-700"
+                                        title="${test.title}">
+                                        ${test.title.length > 50 ? test.title.substring(0, 50) + '...' : test.title}
+                                    </h4>
+                                    <p class="text-xs text-gray-600 mt-1 truncate"
+                                       title="${test.file_path}">
+                                        📁 ${test.file_path.length > 40 ? test.file_path.substring(0, 40) + '...' : test.file_path}
+                                    </p>
+                                </div>
+                                <div class="flex items-center text-amber-600 ml-2">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">${test.retry_count}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-xs text-gray-500">
+                                <div class="flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    ${formatDuration(test.duration)}
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${retryBadgeClass}">
+                                        ${retryText}
+                                    </span>
+                                </div>
+                            </div>
+                            ${locationText}
+                        </a>
+                    `;
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+            } else {
+                // Aucun test instable trouvé
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-lg font-medium">Aucun test instable trouvé</p>
+                        <p class="text-sm mt-1">Cette exécution ne contient aucun test ayant nécessité des tentatives répétées.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            // Restaurer le contenu original en cas d'erreur
+            container.innerHTML = originalContent;
+            alert('Erreur lors du chargement des tests instables. Veuillez réessayer.');
+        });
+}
+
+// Fonction utilitaire pour formater la durée
+function formatDuration(duration) {
+    if (duration < 1000) {
+        return duration + 'ms';
+    } else if (duration < 60000) {
+        return (duration / 1000).toFixed(1) + 's';
+    } else {
+        const minutes = Math.floor(duration / 60000);
+        const seconds = ((duration % 60000) / 1000).toFixed(1);
+        return minutes + 'm ' + seconds + 's';
+    }
+}
+</script>
 {% endif %} {% if selected_project and tags_map_data %}
 <div class="mt-8">
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -1308,8 +1610,7 @@ load group_users %} {%block content %}
                   <div style="margin-top: 5px;">
                       <span style="color: #10b981;">✓ ${d.passed_count}</span> |
                       <span style="color: #ef4444;">✗ ${d.failed_count}</span> |
-                      <span style="color: #f59e0b;">⊝ ${d.skipped_count}</span> |
-                      <span style="color: #f97316;">⚠ ${d.flaky_count}</span>
+                      <span style="color: #f59e0b;">⊝ ${d.skipped_count}</span>
                   </div>
               `);
 

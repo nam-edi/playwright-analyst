@@ -44,6 +44,12 @@ def update_test_result_status(request, result_id):
     return core_update_test_result_status(request, result_id)
 
 
+def execution_delete(request, execution_id):
+    from core.views import execution_delete as core_execution_delete
+
+    return core_execution_delete(request, execution_id)
+
+
 def upload_json(request):
     from core.views import upload_json as core_upload_json
 

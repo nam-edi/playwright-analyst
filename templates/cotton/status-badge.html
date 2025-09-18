@@ -19,7 +19,7 @@
   >
     {% if result.status == 'passed' %} ✓ PASS {% elif result.status == 'failed'
     or result.status == 'unexpected' %} ✗ FAIL {% elif result.status ==
-    'skipped' %} ⊘ SKIP {% elif result.status == 'flaky' %} ⚠ FLAKY {% endif %}
+    'skipped' %} ⊘ SKIP {% endif %}
   </span>
 
   <!-- Éditeur de statut (caché par défaut) - Seulement si l'utilisateur peut modifier -->
@@ -57,16 +57,6 @@
         <span
           class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-2"
           >⊘ SKIP</span
-        >
-      </button>
-      <button
-        type="button"
-        class="text-left px-3 py-1 text-xs rounded hover:bg-purple-50 flex items-center"
-        onclick="updateStatus({{ result.id }}, 'flaky')"
-      >
-        <span
-          class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2"
-          >⚠ FLAKY</span
         >
       </button>
     </div>

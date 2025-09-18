@@ -29,6 +29,15 @@ class Project(models.Model):
         help_text="Configuration CI pour récupérer automatiquement les résultats",
     )
 
+    # Tags exclus de l'affichage frontend
+    excluded_tags = models.ManyToManyField(
+        "testing.Tag",
+        blank=True,
+        verbose_name="Tags exclus",
+        help_text="Tags qui ne seront pas affichés dans le frontend mais restent en base de données",
+        related_name="excluded_from_projects",
+    )
+
     class Meta:
         verbose_name = "Projet"
         verbose_name_plural = "Projets"
@@ -65,6 +74,10 @@ class Project(models.Model):
 
         return Tag.objects.filter(test__project=self).distinct().count()
 
+    def get_visible_tags_count(self):
+        """Retourne le nombre de tags visibles (non exclus) utilisés dans ce projet"""
+        return self.get_visible_tags().count()
+
     def get_total_test_results_count(self):
         """Retourne le nombre total de résultats de tests pour ce projet"""
         from testing.models import TestResult
@@ -79,6 +92,18 @@ class Project(models.Model):
         except ProjectFeature.DoesNotExist:
             # Si la feature n'existe pas, retourner la valeur par défaut
             return ProjectFeature.get_default_value(feature_key)
+
+    def get_visible_tags(self):
+        """Retourne les tags du projet qui ne sont pas exclus de l'affichage"""
+        return self.tags.exclude(id__in=self.excluded_tags.values_list("id", flat=True))
+
+    def get_excluded_tags(self):
+        """Retourne les tags exclus de l'affichage pour ce projet"""
+        return self.excluded_tags.all()
+
+    def is_tag_excluded(self, tag):
+        """Vérifie si un tag spécifique est exclu de l'affichage"""
+        return self.excluded_tags.filter(id=tag.id).exists()
 
 
 class ProjectFeature(models.Model):

@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}Tags exclus - {{ project.name }} | Playwright Analyst{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <div class="px-4 sm:px-0">
+        <!-- Breadcrumb -->
+        <nav class="flex mb-6" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="{% url 'home' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"/>
+                        </svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <a href="{% url 'administration_dashboard' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2">Administration</a>
+                    </div>
+                </li>
+                <li aria-current="page">
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Tags exclus</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="flex-1 min-w-0">
+                <h1 class="text-3xl font-bold text-gray-900">Configuration des tags exclus</h1>
+                <p class="mt-2 text-lg text-gray-600">
+                    Projet : <span class="font-semibold">{{ project.name }}</span>
+                </p>
+                <p class="mt-1 text-sm text-gray-500">
+                    Les tags exclus ne seront pas affichés dans le frontend mais restent stockés en base de données.
+                </p>
+            </div>
+        </div>
+
+        <!-- Formulaire -->
+        <div class="bg-white shadow rounded-lg">
+            <form method="post" class="p-6">
+                {% csrf_token %}
+
+                {% if project_tags %}
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Sélectionnez les tags à exclure de l'affichage</h3>
+                            <p class="text-sm text-gray-600 mb-6">
+                                Cochez les tags que vous souhaitez masquer du frontend. Ces tags continueront d'être importés en base de données mais n'apparaîtront plus dans les vues, filtres, graphiques, etc.
+                            </p>
+                        </div>
+
+                        <!-- Liste des tags avec checkboxes -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {% for tag in project_tags %}
+                            <div class="relative">
+                                <label class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        name="excluded_tags"
+                                        value="{{ tag.id }}"
+                                        {% if tag.id in excluded_tag_ids %}checked{% endif %}
+                                        class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                    >
+                                    <div class="ml-3 flex items-center space-x-2">
+                                        <div
+                                            class="w-4 h-4 rounded-full border border-gray-300"
+                                            style="background-color: {{ tag.color }};"
+                                        ></div>
+                                        <span class="text-sm font-medium text-gray-900">{{ tag.name }}</span>
+                                    </div>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Boutons d'actions -->
+                    <div class="mt-8 flex justify-end space-x-3">
+                        <a
+                            href="{% url 'administration_dashboard' %}"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                        >
+                            Annuler
+                        </a>
+                        <button
+                            type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Sauvegarder
+                        </button>
+                    </div>
+                {% else %}
+                    <!-- État vide -->
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun tag disponible</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Ce projet ne contient encore aucun tag. Importez des résultats de tests pour voir apparaître les tags.
+                        </p>
+                        <div class="mt-6">
+                            <a
+                                href="{% url 'administration_dashboard' %}"
+                                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            >
+                                Retour à l'administration
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Information complémentaire -->
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-md p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">À savoir sur les tags exclus</h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Les tags exclus continuent d'être importés lors de l'import de nouveaux résultats</li>
+                            <li>Ils n'apparaissent plus dans les filtres, graphiques, listes de tests, détails d'exécution</li>
+                            <li>Cette configuration peut être modifiée à tout moment</li>
+                            <li>Les tags exclus restent accessibles dans l'interface d'administration Django</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

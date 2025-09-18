@@ -167,3 +167,14 @@ def is_success_rate_90_or_more(pass_count, total_count):
     if not total_count or total_count == 0:
         return False
     return (pass_count * 10) >= (total_count * 9)
+
+
+@register.filter
+def visible_tags(test):
+    """Get only the visible tags (not excluded) for a test"""
+    if not test or not hasattr(test, "project") or not test.project:
+        return test.tags.all() if test and hasattr(test, "tags") else []
+
+    # Filtrer les tags exclus du projet
+    excluded_tag_ids = test.project.excluded_tags.values_list("id", flat=True)
+    return test.tags.exclude(id__in=excluded_tag_ids)

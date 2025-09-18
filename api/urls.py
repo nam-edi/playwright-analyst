@@ -10,6 +10,7 @@ app_name = "api"
 
 urlpatterns = [
     path("projects/<int:project_id>/upload/", views.api_upload_results, name="upload_results"),
+    path("flaky-tests/<int:execution_id>/", views.get_flaky_tests, name="flaky_tests"),
     path("documentation/", views.api_documentation, name="documentation"),
     path("keys/help/", views.api_key_help, name="key_help"),
 ]

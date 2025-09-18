@@ -6,32 +6,50 @@ This work is licensed under CC BY-NC-SA 4.0
 https://creativecommons.org/licenses/by-nc-sa/4.0/
 """
 
+import calendar
 import json
 from datetime import datetime, timedelta
 
+import requests
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.paginator import Paginator
 from django.db.models import Count
-from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
+from django.db.models.functions import TruncDate
+from django.http import Http404, HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from api.models import APIKey
+from core.management.commands.import_playwright import Command
 from integrations.models import CIConfiguration, GitHubConfiguration, GitLabConfiguration
-
-# Import depuis les nouvelles applications
 from projects.models import Project, ProjectFeature
 from testing.models import Tag, Test, TestExecution, TestResult
 
 from .permissions import admin_access_required, can_manage_projects, can_modify_data, manager_required
+from .services.ci_services import CIServiceError, fetch_test_results_by_job_id, get_ci_service
 from .services.context_service import ContextService
+
+
+def filter_test_results_by_visible_tags(test_results, project):
+    """
+    Filtre les résultats de tests pour ne garder que ceux avec des tags visibles
+    (exclut les tests qui n'ont que des tags exclus)
+    """
+    filtered_results = []
+    for result in test_results:
+        # Récupérer les tags visibles du test (excluant les tags exclus du projet)
+        test_visible_tags = result.test.tags.exclude(id__in=project.excluded_tags.values_list("id", flat=True))
+        # Garder le test s'il a des tags visibles OU s'il n'a aucun tag
+        if test_visible_tags.exists() or not result.test.tags.exists():
+            filtered_results.append(result)
+    return filtered_results
 
 
 def get_selected_project_for_user(request):
@@ -131,7 +149,7 @@ def home(request):
     # Si l'utilisateur n'est pas connecté, rediriger vers la page de login
     if not request.user.is_authenticated:
         return redirect("login")
-    # ...existing code...
+
     latest_execution = None
     latest_execution_stats = None
     success_rate_data = []
@@ -150,8 +168,6 @@ def home(request):
     # Utiliser la session pour récupérer le projet sélectionné
     if "selected_project_id" in request.session:
         try:
-            from projects.models import Project
-
             selected_project = Project.objects.get(id=request.session["selected_project_id"])
             # Vérifier que l'utilisateur peut accéder à ce projet
             accessible_projects = ContextService.get_user_accessible_projects(request.user)
@@ -168,15 +184,40 @@ def home(request):
         latest_execution = selected_project.executions.order_by("-start_time").first()
 
         if latest_execution:
-            # Calculer les statistiques de la dernière exécution
-            # Exclure les tests dont le statut attendu est "skipped"
+            # Calculer les statistiques de la dernière exécution selon la nouvelle logique
+            # Filtrer pour exclure les tests qui n'ont que des tags exclus
+            all_results = latest_execution.test_results.exclude(expected_status="skipped")
+            filtered_results = filter_test_results_by_visible_tags(all_results, selected_project)
+
             latest_execution_stats = {
-                "passed": latest_execution.test_results.filter(status="passed").count(),
-                "failed": latest_execution.test_results.filter(status="failed").count(),
-                "skipped": latest_execution.test_results.filter(status="skipped").exclude(expected_status="skipped").count(),
-                "flaky": latest_execution.test_results.filter(status="flaky").count(),
-                "total": latest_execution.test_results.exclude(expected_status="skipped").count(),
+                "passed": len([r for r in filtered_results if r.status == "passed"]),
+                "failed": len([r for r in filtered_results if r.status in ["failed", "unexpected"]]),
+                "skipped": len([r for r in filtered_results if r.status == "skipped"]),
+                "flaky": len(
+                    [r for r in filtered_results if r.retry > 0 and r.status == "passed"]
+                ),  # Tests avec retries qui sont passés
+                "total": len(filtered_results),
             }
+
+            # Récupérer les tests instables (flaky) de la dernière exécution avec détails
+            flaky_tests = []
+            flaky_results = [r for r in filtered_results if r.retry > 0 and r.status == "passed"]
+            for result in flaky_results:
+                flaky_tests.append(
+                    {
+                        "test": result.test,
+                        "retry_count": result.retry,
+                        "duration": result.duration,
+                        "file_path": result.test.file_path,
+                        "title": result.test.title,
+                        "test_id": result.test.test_id,
+                    }
+                )
+
+            # Trier par nombre de retries décroissant
+            flaky_tests.sort(key=lambda x: x["retry_count"], reverse=True)
+        else:
+            flaky_tests = []
 
         # Données pour le graphique d'évolution du taux de réussite (20 dernières exécutions)
         recent_executions = selected_project.executions.order_by("-start_time")[:20]
@@ -191,13 +232,6 @@ def home(request):
             duration_data.append(execution.duration)
 
         # Données pour la heatmap (mois en cours)
-        import calendar
-        from datetime import datetime
-
-        from django.db.models import Count
-        from django.db.models.functions import TruncDate
-        from django.utils import timezone
-
         now = timezone.localtime(timezone.now())  # Convertir en heure locale
         current_year = now.year
         current_month = now.month
@@ -233,9 +267,10 @@ def home(request):
     tags_map_data = []
     tags_links_data = []
     if selected_project and selected_project.is_feature_enabled("tags_mapping"):
-        # Récupérer tous les tags du projet avec les statistiques des tests
+        # Récupérer tous les tags du projet avec les statistiques des tests (excluant les tags exclus)
         tags_stats = (
             Tag.objects.filter(test__project=selected_project)
+            .exclude(id__in=selected_project.excluded_tags.values_list("id", flat=True))
             .distinct()
             .annotate(total_tests=Count("test", distinct=True))
             .order_by("name")
@@ -300,6 +335,8 @@ def home(request):
     context = {
         "latest_execution": latest_execution,
         "latest_execution_stats": latest_execution_stats,
+        "flaky_tests": flaky_tests if selected_project and latest_execution else [],
+        "recent_executions": recent_executions if selected_project else [],
         "success_rate_data": success_rate_data,
         "duration_data": duration_data,
         "heatmap_data": heatmap_data,
@@ -379,8 +416,12 @@ def tests_list(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    # Tags disponibles pour les filtres (directement depuis les tests)
-    available_tags_qs = Tag.objects.filter(test__project=selected_project).distinct()
+    # Tags disponibles pour les filtres (directement depuis les tests, excluant les tags exclus)
+    available_tags_qs = (
+        Tag.objects.filter(test__project=selected_project)
+        .exclude(id__in=selected_project.excluded_tags.values_list("id", flat=True))
+        .distinct()
+    )
     available_tags = [{"id": tag.id, "name": tag.name, "color": tag.color} for tag in available_tags_qs]
 
     context = {
@@ -566,18 +607,19 @@ def executions_list(request):
     # Ajouter les statistiques pour chaque exécution
     executions_with_stats = []
     for execution in executions:
-        # Calculer les statistiques PASS, FAIL, SKIP (exclure les tests avec expected_status='skipped')
-        test_results = TestResult.objects.filter(execution=execution)
+        # Calculer les statistiques selon la nouvelle logique avec retries
+        # Filtrer pour exclure les tests qui n'ont que des tags exclus
+        all_test_results = TestResult.objects.filter(execution=execution).exclude(expected_status="skipped")
+        filtered_test_results = filter_test_results_by_visible_tags(all_test_results, selected_project)
 
-        pass_count = test_results.filter(status="passed").exclude(expected_status="skipped").count()
-        fail_count = test_results.filter(status__in=["failed", "unexpected"]).exclude(expected_status="skipped").count()
-        skip_count = test_results.filter(status="skipped").exclude(expected_status="skipped").count()
-
-        total_count = test_results.exclude(expected_status="skipped").count()
+        pass_count = len([r for r in filtered_test_results if r.status == "passed"])
+        fail_count = len([r for r in filtered_test_results if r.status in ["failed", "unexpected"]])
+        skip_count = len([r for r in filtered_test_results if r.status == "skipped"])
+        total_count = len(filtered_test_results)
 
         # Récupérer les tests avec commentaires pour cette exécution
         tests_with_comments = []
-        test_ids_in_execution = test_results.values_list("test_id", flat=True).distinct()
+        test_ids_in_execution = [r.test.id for r in filtered_test_results]
         for test in Test.objects.filter(id__in=test_ids_in_execution, comment__isnull=False).exclude(comment=""):
             tests_with_comments.append({"title": test.title, "comment": test.comment})
 
@@ -638,6 +680,23 @@ def execution_detail(request, execution_id):
     # Récupérer tous les résultats de tests pour cette exécution
     test_results = TestResult.objects.filter(execution=execution).select_related("test").prefetch_related("test__tags")
 
+    # Filtrer les résultats de tests qui n'ont que des tags exclus
+    excluded_tag_ids = set(execution.project.excluded_tags.values_list("id", flat=True))
+    filtered_test_results = []
+
+    for result in test_results:
+        test_tag_ids = set(result.test.tags.values_list("id", flat=True))
+
+        # Si le test n'a aucun tag, l'inclure
+        if not test_tag_ids:
+            filtered_test_results.append(result)
+        # Si le test a au moins un tag visible (non exclu), l'inclure
+        elif not test_tag_ids.issubset(excluded_tag_ids):
+            filtered_test_results.append(result)
+        # Sinon, le test n'a que des tags exclus, donc l'exclure
+
+    test_results = filtered_test_results
+
     # Ajouter l'information du statut de la dernière exécution pour chaque test
     # Seulement si la feature "evolution_tracking" est activée
     evolution_tracking_enabled = execution.project.is_feature_enabled("evolution_tracking")
@@ -688,8 +747,13 @@ def execution_detail(request, execution_id):
     evolution_filter = request.GET.get("evolution", "")
     sort_by = request.GET.get("sort", "test_title")  # Par défaut tri par titre du test
 
-    # Récupérer tous les tags disponibles pour cette exécution
-    available_tags = Tag.objects.filter(test__results__execution=execution).distinct().order_by("name")
+    # Récupérer tous les tags disponibles pour cette exécution (excluant les tags exclus)
+    available_tags = (
+        Tag.objects.filter(test__results__execution=execution)
+        .exclude(id__in=execution.project.excluded_tags.values_list("id", flat=True))
+        .distinct()
+        .order_by("name")
+    )
 
     # Appliquer le filtre de statut
     if status_filter:
@@ -726,14 +790,35 @@ def execution_detail(request, execution_id):
     else:  # test_title par défaut
         test_results = sorted(test_results, key=lambda x: x.test.title)
 
-    # Calculer les statistiques globales (exclure les tests avec expected_status='skipped')
-    all_results = TestResult.objects.filter(execution=execution)
+    # Calculer les statistiques globales en utilisant les résultats filtrés (sans tags exclus)
+    # Récupérer tous les résultats pour les statistiques, mais filtrés
+    all_results_query = TestResult.objects.filter(execution=execution).exclude(expected_status="skipped")
+    excluded_tag_ids = list(execution.project.excluded_tags.values_list("id", flat=True))
+
+    # Filtrer les résultats pour exclure ceux qui n'ont que des tags exclus
+    all_results_filtered = []
+    for result in all_results_query.select_related("test").prefetch_related("test__tags"):
+        test_tag_ids = set(result.test.tags.values_list("id", flat=True))
+        # Si le test n'a aucun tag, l'inclure
+        if not test_tag_ids:
+            all_results_filtered.append(result)
+        # Si le test a au moins un tag visible (non exclu), l'inclure
+        elif not test_tag_ids.issubset(excluded_tag_ids):
+            all_results_filtered.append(result)
+
+    # Calculer les statistiques à partir des résultats filtrés
+    flaky_count = len([r for r in all_results_filtered if r.retry > 0 and r.status == "passed"])
+    passed_count = len([r for r in all_results_filtered if r.status == "passed"])
+    failed_count = len([r for r in all_results_filtered if r.status in ["failed", "unexpected"]])
+    skipped_count = len([r for r in all_results_filtered if r.status == "skipped"])
+    total_count = len(all_results_filtered)
+
     stats = {
-        "total": all_results.exclude(expected_status="skipped").count(),
-        "passed": all_results.filter(status="passed").exclude(expected_status="skipped").count(),
-        "failed": all_results.filter(status__in=["failed", "unexpected"]).exclude(expected_status="skipped").count(),
-        "skipped": all_results.filter(status="skipped").exclude(expected_status="skipped").count(),
-        "flaky": all_results.filter(status="flaky").exclude(expected_status="skipped").count(),
+        "total": total_count,
+        "passed": passed_count,
+        "failed": failed_count,
+        "skipped": skipped_count,
+        "flaky": flaky_count,
     }
 
     # Calculer les statistiques d'évolution seulement si la feature est activée
@@ -749,14 +834,40 @@ def execution_detail(request, execution_id):
         }
 
     # Calculer la répartition des échecs par tag
+    # Récupérer les résultats échoués en excluant les tests qui n'ont que des tags exclus
+    failed_results_query = TestResult.objects.filter(execution=execution, status__in=["failed", "unexpected"]).exclude(
+        expected_status="skipped"
+    )
 
-    failed_results = all_results.filter(status__in=["failed", "unexpected"]).exclude(expected_status="skipped")
+    # Filtrer pour exclure les tests qui n'ont que des tags exclus
+    failed_results = []
+    for result in failed_results_query:
+        test_visible_tags = result.test.tags.exclude(id__in=execution.project.excluded_tags.values_list("id", flat=True))
+        if test_visible_tags.exists():
+            failed_results.append(result)
 
-    # Récupérer les tags des tests qui ont échoué avec leur nombre d'échecs
+    failed_results_ids = [r.id for r in failed_results]
+    failed_results_queryset = TestResult.objects.filter(id__in=failed_results_ids)
+
+    # Récupérer les tags des tests qui ont échoué avec leur nombre d'échecs (excluant les tags exclus)
     tag_failure_stats = []
-    for tag in Tag.objects.filter(test__results__in=failed_results).distinct():
-        failed_count = failed_results.filter(test__tags=tag).count()
-        total_count = all_results.filter(test__tags=tag).exclude(expected_status="skipped").count()
+    for tag in (
+        Tag.objects.filter(test__results__in=failed_results_queryset)
+        .exclude(id__in=execution.project.excluded_tags.values_list("id", flat=True))
+        .distinct()
+    ):
+        failed_count = failed_results_queryset.filter(test__tags=tag).count()
+        # Calculer le total en comptant tous les résultats de l'exécution pour ce tag (avec tags visibles)
+        total_results_for_tag = TestResult.objects.filter(execution=execution, test__tags=tag).exclude(
+            expected_status="skipped"
+        )
+        # Filtrer pour ne garder que ceux avec des tags visibles
+        total_count = 0
+        for result in total_results_for_tag:
+            test_visible_tags = result.test.tags.exclude(id__in=execution.project.excluded_tags.values_list("id", flat=True))
+            if test_visible_tags.exists():
+                total_count += 1
+
         failure_rate = (failed_count / total_count * 100) if total_count > 0 else 0
 
         tag_failure_stats.append(
@@ -790,6 +901,39 @@ def execution_detail(request, execution_id):
     }
 
     return render(request, "execution/execution_detail.html", context)
+
+
+@manager_required
+def execution_delete(request, execution_id):
+    """Vue pour supprimer une exécution (uniquement pour Admin et Manager)"""
+    execution = get_object_or_404(TestExecution, id=execution_id)
+
+    # Vérifier que l'utilisateur a accès au projet de cette exécution
+    selected_project = None
+    if "selected_project_id" in request.session:
+        try:
+            selected_project = Project.objects.get(id=request.session["selected_project_id"])
+            if execution.project != selected_project:
+                messages.error(request, "Cette exécution n'appartient pas au projet sélectionné.")
+                return redirect("executions_list")
+        except Project.DoesNotExist:
+            if "selected_project_id" in request.session:
+                del request.session["selected_project_id"]
+
+    if request.method == "POST":
+        project_name = execution.project.name
+        execution_date = execution.start_time.strftime("%d/%m/%Y à %H:%M")
+
+        # Supprimer l'exécution (les résultats de tests seront supprimés automatiquement via CASCADE)
+        execution.delete()
+
+        messages.success(
+            request, f"L'exécution du {execution_date} pour le projet '{project_name}' a été supprimée avec succès."
+        )
+        return redirect("executions_list")
+
+    # Si GET, rediriger vers la page de détail
+    return redirect("execution_detail", execution_id=execution_id)
 
 
 @can_modify_data
@@ -868,7 +1012,7 @@ def process_json_upload(request):
 
 
 def import_json_data(project, data):
-    """Fonction pour importer les données JSON (basée sur la commande Django)"""
+    """Fonction pour importer les données JSON - utilise exactement la même logique que la commande Django"""
 
     # Vérifier que les données sont bien un dictionnaire
     if not isinstance(data, dict):
@@ -878,360 +1022,27 @@ def import_json_data(project, data):
     if "suites" not in data:
         raise ValueError("Les données JSON doivent contenir un champ 'suites'")
 
-    # Pour les tests : créer simplement une exécution basique
-    # TODO: Implémenter l'import complet plus tard
-    from testing.models import TestExecution
+    # Créer une instance de la commande Django et utiliser sa logique
+    command = Command()
 
-    execution = TestExecution.objects.create(
-        project=project,
-        config_file="",
-        root_dir="",
-        playwright_version="1.0.0",
-        workers=1,
-        actual_workers=1,
-        git_commit_hash="",
-        git_commit_short_hash="",
-        git_branch="",
-        git_commit_subject="",
-        git_author_name="",
-        git_author_email="",
-        ci_build_href="",
-        ci_commit_href="",
-        start_time=timezone.now(),
-        duration=0,
-        expected_tests=0,
-        skipped_tests=0,
-        unexpected_tests=0,
-        flaky_tests=0,
-        raw_json=data,
-    )
+    # Créer l'exécution de test
+    execution = command.create_test_execution(project, data)
+
+    # Traiter les suites et tests avec la logique existante qui fonctionne
+    test_count = 0
+    result_count = 0
+
+    for suite in data.get("suites", []):
+        test_count_suite, result_count_suite = command.process_suite(suite, execution)
+        test_count += test_count_suite
+        result_count += result_count_suite
 
     return execution
-
-
-def create_test_execution(project, data):
-    """Crée une exécution de test à partir des données JSON"""
-    config = data.get("config", {})
-    metadata = config.get("metadata", {})
-    git_commit = metadata.get("gitCommit", {})
-    ci_data = metadata.get("ci", {})
-    stats = data.get("stats", {})
-
-    # Vérifier que ci est bien un dictionnaire, sinon utiliser un dict vide
-    if not isinstance(ci_data, dict):
-        ci_data = {}
-
-    # Vérifier que git_commit est bien un dictionnaire
-    if not isinstance(git_commit, dict):
-        git_commit = {}
-
-    # Vérifier que author est bien un dictionnaire
-    author = git_commit.get("author", {})
-    if not isinstance(author, dict):
-        author = {}
-
-    # Convertir les timestamps
-    start_time = parse_datetime(stats.get("startTime"))
-    if not start_time:
-        start_time = timezone.now()
-
-    execution = TestExecution.objects.create(
-        project=project,
-        config_file=config.get("configFile", ""),
-        root_dir=config.get("rootDir", ""),
-        playwright_version=config.get("version", ""),
-        workers=config.get("workers", 1),
-        actual_workers=metadata.get("actualWorkers", 1),
-        git_commit_hash=git_commit.get("hash", ""),
-        git_commit_short_hash=git_commit.get("shortHash", ""),
-        git_branch=git_commit.get("branch", ""),
-        git_commit_subject=git_commit.get("subject", ""),
-        git_author_name=author.get("name", ""),
-        git_author_email=author.get("email", ""),
-        ci_build_href=ci_data.get("buildHref", ""),
-        ci_commit_href=ci_data.get("commitHref", ""),
-        start_time=start_time,
-        duration=stats.get("duration", 0),
-        expected_tests=stats.get("expected", 0),
-        skipped_tests=stats.get("skipped", 0),
-        unexpected_tests=stats.get("unexpected", 0),
-        flaky_tests=stats.get("flaky", 0),
-        raw_json=data,
-    )
-
-    return execution
-
-
-def process_suite(suite, execution, parent_tags=None):
-    """Traite une suite de tests"""
-    if parent_tags is None:
-        parent_tags = []
-
-    # Récupérer les tags de cette suite s'il y en a
-    suite_tags = parent_tags.copy()
-    if "tags" in suite:
-        suite_tags.extend(suite.get("tags", []))
-
-    # Traiter les specs de cette suite
-    for spec in suite.get("specs", []):
-        process_spec(spec, execution, suite.get("file", ""), suite_tags)
-
-    # Traiter les sous-suites
-    for sub_suite in suite.get("suites", []):
-        process_suite(sub_suite, execution, suite_tags)
-
-
-def process_spec(spec, execution, file_path, parent_tags=None):
-    """Traite un spec (test)"""
-    if parent_tags is None:
-        parent_tags = []
-
-    # Récupérer tous les tags (parent + spec)
-    all_tags = parent_tags.copy()
-    all_tags.extend(spec.get("tags", []))
-
-    # Créer ou récupérer le test
-    spec_test_id = spec.get("id", "")  # ID du spec
-    title = spec.get("title", "")
-    line = spec.get("line", 0)
-    column = spec.get("column", 0)
-
-    # Extraire le test_id des annotations des tests enfants
-    annotation_test_id = ""
-    story = ""
-
-    # Chercher dans les tests enfants pour récupérer les annotations
-    for test_data in spec.get("tests", []):
-        for annotation in test_data.get("annotations", []):
-            if annotation.get("type") == "id":
-                annotation_test_id = annotation.get("description", "")
-            elif annotation.get("type") == "story":
-                story = annotation.get("description", "")
-
-    # Priorité au test_id des annotations, sinon utiliser l'ID du spec
-    test_id = annotation_test_id or spec_test_id
-
-    test = None
-    created = False
-
-    try:
-        # Stratégie 1: Si test_id fourni, chercher d'abord par test_id
-        if test_id:
-            try:
-                test = Test.objects.get(project=execution.project, test_id=test_id)
-                # Test trouvé par test_id, mettre à jour les autres champs si nécessaire
-                updated = False
-                if test.title != title:
-                    test.title = title
-                    updated = True
-                if test.file_path != file_path:
-                    test.file_path = file_path
-                    updated = True
-                if test.line != line:
-                    test.line = line
-                    updated = True
-                if test.column != column:
-                    test.column = column
-                    updated = True
-                if story and test.story != story:
-                    test.story = story
-                    updated = True
-
-                if updated:
-                    test.save()
-
-            except Test.DoesNotExist:
-                # Pas trouvé par test_id, chercher par caractéristiques uniques
-                try:
-                    test = Test.objects.get(
-                        project=execution.project, title=title, file_path=file_path, line=line, column=column
-                    )
-                    # Test trouvé par caractéristiques, vérifier si on peut ajouter le test_id
-                    if not test.test_id:
-                        # Vérifier que ce test_id n'est pas déjà pris
-                        existing_test_with_id = Test.objects.filter(project=execution.project, test_id=test_id).first()
-
-                        if not existing_test_with_id:
-                            test.test_id = test_id
-                            if story:
-                                test.story = story
-                            test.save()
-                    else:
-                        # Le test a déjà un test_id différent, mettre à jour story si nécessaire
-                        if story and test.story != story:
-                            test.story = story
-                            test.save()
-
-                except Test.DoesNotExist:
-                    # Vérifier d'abord que ce test_id n'est pas déjà pris avant de créer
-                    existing_test_with_id = Test.objects.filter(project=execution.project, test_id=test_id).first()
-
-                    if existing_test_with_id:
-                        # test_id déjà pris, créer sans test_id pour éviter le conflit
-                        test = Test.objects.create(
-                            project=execution.project,
-                            title=title,
-                            file_path=file_path,
-                            line=line,
-                            column=column,
-                            test_id="",  # Laisser vide pour éviter le conflit
-                            story=story,
-                        )
-                    else:
-                        # test_id libre, créer avec
-                        test = Test.objects.create(
-                            project=execution.project,
-                            title=title,
-                            file_path=file_path,
-                            line=line,
-                            column=column,
-                            test_id=test_id,
-                            story=story,
-                        )
-                    created = True
-        else:
-            # Pas de test_id, utiliser get_or_create sur les caractéristiques uniques
-            test, created = Test.objects.get_or_create(
-                project=execution.project,
-                title=title,
-                file_path=file_path,
-                line=line,
-                column=column,
-                defaults={"test_id": "", "story": story},
-            )
-
-    except Exception as e:
-        # En cas d'erreur, essayer de récupérer par caractéristiques uniques
-        try:
-            test = Test.objects.get(project=execution.project, title=title, file_path=file_path, line=line, column=column)
-        except Test.DoesNotExist:
-            # Si vraiment rien ne fonctionne, créer sans test_id pour éviter les conflits
-            try:
-                test = Test.objects.create(
-                    project=execution.project,
-                    title=title,
-                    file_path=file_path,
-                    line=line,
-                    column=column,
-                    test_id="",  # Créer sans test_id pour éviter les conflits
-                    story=story,
-                )
-                created = True
-            except Exception:
-                # Dernière tentative: récupérer n'importe quel test correspondant
-                test = Test.objects.filter(
-                    project=execution.project, title=title, file_path=file_path, line=line, column=column
-                ).first()
-                if not test:
-                    raise e
-
-    # Ajouter tous les tags au test
-    for tag_name in all_tags:
-        if tag_name:  # Éviter les tags vides
-            tag, created = Tag.objects.get_or_create(
-                name=tag_name, project=execution.project, defaults={"color": Tag.get_next_available_color(execution.project)}
-            )
-            test.tags.add(tag)
-
-    for test_data in spec.get("tests", []):
-        process_test_result(test_data, test, execution)
-
-
-def process_test_result(test_data, test, execution):
-    """Traite un résultat de test avec gestion intelligente des retries"""
-    # Le test_id et story sont maintenant gérés dans process_spec
-    # Ici on ne fait que traiter les résultats
-
-    # Analyser tous les résultats pour déterminer la stratégie de retry
-    results = test_data.get("results", [])
-    if not results:
-        return
-
-    # Séparer les résultats par retry
-    results_by_retry = {}
-    final_status = None
-
-    for result in results:
-        retry_num = result.get("retry", 0)
-        status = result.get("status", "")
-
-        if retry_num not in results_by_retry:
-            results_by_retry[retry_num] = []
-        results_by_retry[retry_num].append(result)
-
-        # Le status final est celui du retry le plus élevé
-        if final_status is None or retry_num > max([r.get("retry", 0) for r in results if r != result]):
-            final_status = status
-
-    # Déterminer quel résultat garder selon la règle :
-    # - Si final PASS : garder le dernier retry (celui qui a réussi)
-    # - Si final FAIL : garder le premier retry (l'échec initial)
-
-    if final_status in ["passed", "expected"]:
-        # Test finalement passé : garder le dernier retry
-        max_retry = max(results_by_retry.keys())
-        selected_result = results_by_retry[max_retry][0]  # Premier résultat du retry max
-    else:
-        # Test finalement échoué : garder le premier retry
-        min_retry = min(results_by_retry.keys())
-        selected_result = results_by_retry[min_retry][0]  # Premier résultat du retry min
-
-    # Créer le TestResult avec le résultat sélectionné
-    start_time = parse_datetime(selected_result.get("startTime"))
-    if not start_time:
-        start_time = execution.start_time
-
-    # Vérifier si un résultat existe déjà pour ce test et cette exécution
-    existing_result = TestResult.objects.filter(execution=execution, test=test).first()
-
-    if existing_result:
-        # Mettre à jour le résultat existant
-        existing_result.project_id = test_data.get("projectId", "")
-        existing_result.project_name = test_data.get("projectName", "")
-        existing_result.timeout = test_data.get("timeout", 0)
-        existing_result.expected_status = test_data.get("expectedStatus", "")
-        existing_result.status = selected_result.get("status", "")
-        existing_result.worker_index = selected_result.get("workerIndex", 0)
-        existing_result.parallel_index = selected_result.get("parallelIndex", 0)
-        existing_result.duration = selected_result.get("duration", 0)
-        existing_result.retry = selected_result.get("retry", 0)
-        existing_result.start_time = start_time
-        existing_result.errors = selected_result.get("errors", [])
-        existing_result.stdout = selected_result.get("stdout", [])
-        existing_result.stderr = selected_result.get("stderr", [])
-        existing_result.steps = selected_result.get("steps", [])
-        existing_result.annotations = selected_result.get("annotations", [])
-        existing_result.attachments = selected_result.get("attachments", [])
-        existing_result.save()
-    else:
-        # Créer un nouveau résultat
-        TestResult.objects.create(
-            execution=execution,
-            test=test,
-            project_id=test_data.get("projectId", ""),
-            project_name=test_data.get("projectName", ""),
-            timeout=test_data.get("timeout", 0),
-            expected_status=test_data.get("expectedStatus", ""),
-            status=selected_result.get("status", ""),
-            worker_index=selected_result.get("workerIndex", 0),
-            parallel_index=selected_result.get("parallelIndex", 0),
-            duration=selected_result.get("duration", 0),
-            retry=selected_result.get("retry", 0),
-            start_time=start_time,
-            errors=selected_result.get("errors", []),
-            stdout=selected_result.get("stdout", []),
-            stderr=selected_result.get("stderr", []),
-            steps=selected_result.get("steps", []),
-            annotations=selected_result.get("annotations", []),
-            attachments=selected_result.get("attachments", []),
-        )
 
 
 @can_modify_data
 def fetch_from_ci(request, project_id):
     """Vue pour récupérer automatiquement les résultats depuis la CI"""
-    from .services.ci_services import CIServiceError, fetch_test_results_by_job_id
-
     project = get_object_or_404(Project, id=project_id)
 
     # Définir ce projet comme sélectionné dans la session
@@ -1367,8 +1178,6 @@ def project_create(request):
                 messages.error(request, f'Un projet avec le nom "{name}" existe déjà.')
             else:
                 # Créer le projet (pour l'instant sans utilisateur, on peut ajouter ça plus tard)
-                from django.contrib.auth.models import User
-
                 # Utiliser l'utilisateur actuel connecté ou un superuser
                 user = request.user
                 if not user.is_authenticated:
@@ -1574,8 +1383,6 @@ def project_delete(request, project_id):
 
 def ci_status_check(request, project_id):
     """Vue AJAX pour vérifier le statut de la configuration CI"""
-    from .services.ci_services import CIServiceError, get_ci_service
-
     project = get_object_or_404(Project, id=project_id)
 
     if not project.has_ci_configuration():
@@ -1591,13 +1398,11 @@ def ci_status_check(request, project_id):
         # Pour GitHub, on peut tester l'accès au repository
         if hasattr(ci_service, "base_url"):  # GitLab
             test_url = f"{ci_service.base_url}/api/v4/projects/{ci_service.project_id}"
-            import requests
 
             response = requests.get(test_url, headers=ci_service.headers, timeout=10)
             response.raise_for_status()
         else:  # GitHub
             test_url = f"https://api.github.com/repos/{ci_service.repository}"
-            import requests
 
             response = requests.get(test_url, headers=ci_service.headers, timeout=10)
             response.raise_for_status()
@@ -1737,8 +1542,6 @@ def help_groups_permissions(request):
 @login_required
 def administration_dashboard(request):
     """Page principale d'administration avec menu latéral"""
-    from .services.context_service import ContextService
-
     # Récupérer les projets accessibles par l'utilisateur selon son contexte
     accessible_projects = ContextService.get_user_accessible_projects(request.user)
 
@@ -1764,8 +1567,6 @@ def administration_dashboard(request):
     if selected_project:
         try:
             # Importer dynamiquement CIConfiguration pour éviter les imports circulaires
-            from integrations.models import CIConfiguration
-
             ci_config = CIConfiguration.objects.filter(project=selected_project).first()
             if ci_config:
                 has_ci_configuration = True
@@ -1774,8 +1575,8 @@ def administration_dashboard(request):
             pass
 
     # Récupérer tous les tags pour la section tags, filtrés par les projets accessibles
-    from testing.models import Tag
-
+    # Note: Dans l'interface d'administration des tags, on affiche TOUS les tags (même exclus)
+    # car il s'agit d'une interface d'administration où on doit pouvoir gérer tous les tags
     all_tags = Tag.objects.filter(project__in=accessible_projects).select_related("project").order_by("project__name", "name")
 
     context = {
@@ -1792,8 +1593,6 @@ def administration_dashboard(request):
 
 def documentation(request):
     """Page principale d'administration avec menu latéral"""
-    from .services.context_service import ContextService
-
     # Récupérer les projets accessibles par l'utilisateur selon son contexte
     accessible_projects = ContextService.get_user_accessible_projects(request.user)
 
@@ -1819,8 +1618,6 @@ def documentation(request):
     if selected_project:
         try:
             # Importer dynamiquement CIConfiguration pour éviter les imports circulaires
-            from integrations.models import CIConfiguration
-
             ci_config = CIConfiguration.objects.filter(project=selected_project).first()
             if ci_config:
                 has_ci_configuration = True
@@ -1837,3 +1634,138 @@ def documentation(request):
     }
 
     return render(request, "documentations/documentation.html", context)
+
+
+@login_required
+def setup_actions(request):
+    """
+    Page de setup contenant les actions à effectuer pour configurer l'application
+    """
+    # Vérifier si les groupes sont créés
+    groups_exist = Group.objects.filter(name__in=["Admin", "Manager", "Viewer"]).count() == 3
+
+    # Vérifier si le superuser est dans le groupe Admin
+    superuser_in_admin = False
+    if request.user.is_superuser and groups_exist:
+        superuser_in_admin = request.user.groups.filter(name="Admin").exists()
+
+    # Vérifier si au moins un projet existe
+    project_exists = Project.objects.exists()
+
+    context = {
+        "groups_exist": groups_exist,
+        "superuser_in_admin": superuser_in_admin,
+        "project_exists": project_exists,
+        "is_superuser": request.user.is_superuser,
+    }
+
+    return render(request, "core/setup_actions.html", context)
+
+
+@login_required
+def create_groups_and_assign_admin(request):
+    """
+    Créer les groupes Admin, Manager, Viewer et assigner le superuser au groupe Admin
+    """
+    if not request.user.is_superuser:
+        messages.error(request, "Action réservée au superutilisateur.")
+        return redirect("setup_actions")
+
+    if request.method == "POST":
+        try:
+            # Créer les groupes s'ils n'existent pas
+            admin_group, created = Group.objects.get_or_create(name="Admin")
+            manager_group, created = Group.objects.get_or_create(name="Manager")
+            viewer_group, created = Group.objects.get_or_create(name="Viewer")
+
+            # Assigner le superuser au groupe Admin
+            request.user.groups.add(admin_group)
+
+            messages.success(request, "Groupes créés avec succès et superutilisateur ajouté au groupe Admin.")
+
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la création des groupes : {str(e)}")
+
+    return redirect("setup_actions")
+
+
+@login_required
+def setup_status(request):
+    """
+    Vue de débogage pour vérifier l'état de la configuration
+    """
+    # Vérifier si les groupes sont créés
+    groups_exist = Group.objects.filter(name__in=["Admin", "Manager", "Viewer"]).count() == 3
+    groups_list = list(Group.objects.filter(name__in=["Admin", "Manager", "Viewer"]).values_list("name", flat=True))
+
+    # Vérifier si le superuser est dans le groupe Admin
+    superuser_in_admin = False
+    user_groups = []
+    if request.user.is_superuser and groups_exist:
+        superuser_in_admin = request.user.groups.filter(name="Admin").exists()
+        user_groups = list(request.user.groups.values_list("name", flat=True))
+
+    # Vérifier si au moins un projet existe
+    project_exists = Project.objects.exists()
+    project_count = Project.objects.count()
+
+    setup_complete = groups_exist and superuser_in_admin and project_exists
+
+    return JsonResponse(
+        {
+            "groups_exist": groups_exist,
+            "groups_list": groups_list,
+            "superuser_in_admin": superuser_in_admin,
+            "user_groups": user_groups,
+            "project_exists": project_exists,
+            "project_count": project_count,
+            "setup_complete": setup_complete,
+            "is_superuser": request.user.is_superuser,
+            "username": request.user.username,
+        }
+    )
+
+
+@login_required
+@can_manage_projects
+def project_excluded_tags(request, project_id):
+    """Vue pour gérer les tags exclus d'un projet"""
+    project = get_object_or_404(Project, id=project_id)
+
+    # Récupérer tous les tags du projet
+    project_tags = Tag.objects.filter(project=project).order_by("name")
+
+    # Récupérer les tags actuellement exclus
+    excluded_tags = project.excluded_tags.all()
+    excluded_tag_ids = list(excluded_tags.values_list("id", flat=True))
+
+    if request.method == "POST":
+        # Récupérer les IDs des tags à exclure depuis le formulaire
+        new_excluded_tag_ids = request.POST.getlist("excluded_tags")
+        new_excluded_tag_ids = [int(tag_id) for tag_id in new_excluded_tag_ids if tag_id.isdigit()]
+
+        # Mettre à jour les tags exclus
+        project.excluded_tags.set(new_excluded_tag_ids)
+
+        messages.success(request, f"Configuration des tags exclus mise à jour pour le projet '{project.name}'.")
+        return redirect("administration_dashboard")
+
+    # Récupérer les projets pour le header
+    selected_project, projects, auto_selected = get_selected_project_for_user(request)
+
+    context = {
+        "project": project,
+        "project_tags": project_tags,
+        "excluded_tag_ids": excluded_tag_ids,
+        "projects": projects,
+        "selected_project": selected_project,
+    }
+
+    return render(request, "project/project_excluded_tags.html", context)
+
+
+def test_404(request):
+    """
+    Vue de test pour déclencher une erreur 404 - utile pour tester la page d'erreur personnalisée
+    """
+    raise Http404("Page de test pour l'erreur 404")

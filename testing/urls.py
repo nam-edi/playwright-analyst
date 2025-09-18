@@ -12,6 +12,7 @@ urlpatterns = [
     path("tests/", views.tests_list, name="tests_list"),
     path("executions/", views.executions_list, name="executions_list"),
     path("execution/<int:execution_id>/", views.execution_detail, name="execution_detail"),
+    path("execution/<int:execution_id>/delete/", views.execution_delete, name="execution_delete"),
     path("test/<int:test_id>/", views.test_detail, name="test_detail"),
     path("test/<int:test_id>/comment/", views.update_test_comment, name="update_test_comment"),
     path("execution/<int:execution_id>/comment/", views.update_execution_comment, name="update_execution_comment"),

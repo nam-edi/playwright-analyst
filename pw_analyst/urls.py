@@ -38,3 +38,7 @@ urlpatterns = [
 # Serve static files during development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Gestionnaires d'erreurs personnalisés
+handler404 = "core.error_views.custom_404_view"
+handler500 = "core.error_views.custom_500_view"

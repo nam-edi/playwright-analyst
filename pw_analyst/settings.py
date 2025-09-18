@@ -31,7 +31,7 @@ SECRET_KEY = "django-insecure-p6h6j1&@!w4kjyd^)!q-#-&a)uj3j)o9rjn=(16rz**vssn22-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -62,6 +62,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.middleware.SetupMiddleware",
 ]
 
 ROOT_URLCONF = "pw_analyst.urls"
