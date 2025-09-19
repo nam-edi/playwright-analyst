@@ -1131,8 +1131,10 @@ function formatDuration(duration) {
             <span>Taille = Nombre de tests</span>
           </div>
           <div class="flex items-center">
-            <div class="w-8 h-0.5 bg-gray-400 mr-2"></div>
-            <span>Liens = Tests partagés</span>
+            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path>
+            </svg>
+            <span>Clic = Filtrer les tags liés</span>
           </div>
         </div>
         <div class="flex items-center space-x-2">
@@ -1477,60 +1479,66 @@ function formatDuration(duration) {
           strength: linkStrengthScale(d.value)
       }));
 
-      // Créer la simulation de force optimisée pour réduire les croisements
+      // Créer la simulation de force optimisée pour garder les bulles compactes
       const simulation = d3.forceSimulation(nodes)
           .force('link', d3.forceLink(links).id(d => d.id)
               .strength(d => {
-                  // Force de lien adaptée : plus forte pour les liens importants
-                  const baseStrength = d.strength;
+                  // Force de lien réduite pour éviter l'étalement
+                  const baseStrength = d.strength * 0.3; // Réduction de 70%
                   const sourceNode = nodes.find(n => n.id === d.source.id || n.id === d.source);
                   const targetNode = nodes.find(n => n.id === d.target.id || n.id === d.target);
                   if (sourceNode && targetNode) {
-                      // Liens entre nœuds très connectés = force plus faible pour éviter la compression
                       const connectivityFactor = 1 - (sourceNode.connectivity + targetNode.connectivity) / 20;
                       return baseStrength * Math.max(connectivityFactor, 0.1);
                   }
                   return baseStrength;
               })
               .distance(d => {
-                  // Distance adaptée selon l'importance des nœuds
+                  // Distance beaucoup plus courte
                   const sourceNode = nodes.find(n => n.id === d.source.id || n.id === d.source);
                   const targetNode = nodes.find(n => n.id === d.target.id || n.id === d.target);
                   if (sourceNode && targetNode) {
                       const avgRadius = (sourceNode.radius + targetNode.radius) / 2;
-                      const connectivityBonus = (sourceNode.connectivity + targetNode.connectivity) * 5;
-                      return avgRadius * 3 + connectivityBonus + 30;
+                      return avgRadius * 1.5 + 20; // Distance très réduite
                   }
-                  return 50;
+                  return 30;
               })
           )
           .force('charge', d3.forceManyBody()
               .strength(d => {
-                  // Force de répulsion adaptée à l'importance du nœud
-                  const baseStrength = -800;
-                  const connectivityMultiplier = 1 + d.connectivity * 0.1;
-                  const sizeMultiplier = 1 + d.radius / 50;
+                  // Force de répulsion réduite pour permettre plus de compacité
+                  const baseStrength = -300; // Réduction significative
+                  const connectivityMultiplier = 1 + d.connectivity * 0.05;
+                  const sizeMultiplier = 1 + d.radius / 80;
                   return baseStrength * connectivityMultiplier * sizeMultiplier;
               })
           )
-          .force('center', d3.forceCenter(width / 2, height / 2).strength(0.1)) // Force de centrage réduite
+          .force('center', d3.forceCenter(width / 2, height / 2).strength(0.3)) // Force de centrage renforcée
           .force('collision', d3.forceCollide()
-              .radius(d => d.radius + 15 + d.connectivity * 2) // Espace proportionnel à la connectivité
-              .strength(0.8)
+              .radius(d => d.radius + 8 + d.connectivity) // Espace réduit entre les bulles
+              .strength(0.9) // Force de collision renforcée
           )
-          // Force radiale pour maintenir la structure en cercles concentriques
+          // Force de confinement pour garder les nœuds dans les limites
+          .force('boundary', function() {
+              const padding = 60;
+              nodes.forEach(node => {
+                  node.x = Math.max(padding + node.radius, Math.min(width - padding - node.radius, node.x));
+                  node.y = Math.max(padding + node.radius, Math.min(height - padding - node.radius, node.y));
+              });
+          })
+          // Force radiale plus compacte
           .force('radial', d3.forceRadial()
               .radius(d => {
-                  // Rayon basé sur l'importance : nœuds importants au centre
+                  // Rayon beaucoup plus compact
                   const maxImportance = Math.max(...nodes.map(n => n.importance));
                   const importanceRatio = d.importance / maxImportance;
-                  const minRadius = Math.min(width, height) / 8;
-                  const maxRadius = Math.min(width, height) / 3;
+                  const minRadius = Math.min(width, height) / 12; // Plus petit rayon minimum
+                  const maxRadius = Math.min(width, height) / 5;  // Plus petit rayon maximum
                   return minRadius + (maxRadius - minRadius) * (1 - importanceRatio);
               })
               .x(width / 2)
               .y(height / 2)
-              .strength(0.2)
+              .strength(0.4) // Force radiale renforcée
           );
 
       // Sauvegarder les positions initiales
@@ -1548,15 +1556,18 @@ function formatDuration(duration) {
           }
       }
 
-      // Dessiner les liens
-      const link = g.append('g')
-          .selectAll('line')
-          .data(links)
-          .enter()
-          .append('line')
-          .attr('stroke', '#999')
-          .attr('stroke-opacity', 0.6)
-          .attr('stroke-width', d => Math.sqrt(d.value) + 1);
+      // Ne plus dessiner les liens visuellement
+      // const link = g.append('g')
+      //     .selectAll('line')
+      //     .data(links)
+      //     .enter()
+      //     .append('line')
+      //     .attr('stroke', '#999')
+      //     .attr('stroke-opacity', 0.6)
+      //     .attr('stroke-width', d => Math.sqrt(d.value) + 1);
+
+      // Créer une variable pour les liens sans les dessiner (nécessaire pour la logique)
+      const link = g.append('g').selectAll('line').data([]);
 
       // Créer les groupes pour les nœuds
       const node = g.append('g')
@@ -1601,6 +1612,68 @@ function formatDuration(duration) {
           .style('font-size', '12px')
           .style('z-index', '1000');
 
+      // Variables pour gérer l'état de filtrage
+      let selectedNodeId = null;
+      let originalOpacities = new Map();
+
+      // Fonction pour obtenir les nœuds connectés à un nœud donné
+      function getConnectedNodes(nodeId) {
+          const connected = new Set([nodeId]); // Inclure le nœud lui-même
+          links.forEach(link => {
+              const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+              const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+
+              if (sourceId === nodeId) {
+                  connected.add(targetId);
+              } else if (targetId === nodeId) {
+                  connected.add(sourceId);
+              }
+          });
+          return connected;
+      }
+
+      // Fonction pour appliquer le filtrage
+      function applyFiltering(clickedNodeId) {
+          if (selectedNodeId === clickedNodeId) {
+              // Reclique sur le même nœud : revenir à l'affichage normal
+              resetFiltering();
+              return;
+          }
+
+          selectedNodeId = clickedNodeId;
+          const connectedNodes = getConnectedNodes(clickedNodeId);
+
+          // Sauvegarder les opacités originales si ce n'est pas déjà fait
+          if (originalOpacities.size === 0) {
+              nodes.forEach(n => {
+                  originalOpacities.set(n.id, 1.0);
+              });
+          }
+
+          // Appliquer le filtrage visuel
+          node.style('opacity', d => {
+              return connectedNodes.has(d.id) ? 1.0 : 0.3;
+          });
+
+          circles.style('opacity', d => {
+              return connectedNodes.has(d.id) ? 1.0 : 0.3;
+          });
+
+          labels.style('opacity', d => {
+              return connectedNodes.has(d.id) ? 1.0 : 0.3;
+          });
+      }
+
+      // Fonction pour réinitialiser le filtrage
+      function resetFiltering() {
+          selectedNodeId = null;
+
+          // Restaurer l'opacité normale pour tous les nœuds
+          node.style('opacity', 1.0);
+          circles.style('opacity', 1.0);
+          labels.style('opacity', 1.0);
+      }
+
       node.on('mouseover', function(event, d) {
           tooltip.style('visibility', 'visible')
               .html(`
@@ -1626,17 +1699,22 @@ function formatDuration(duration) {
           d3.select(this).select('circle').style('stroke-width', 3);
       })
       .on('click', function(event, d) {
-          window.location.href = `/tests/?tags=${d.id}`;
+          event.preventDefault();
+          event.stopPropagation();
+
+          // Appliquer le filtrage au lieu de naviguer vers la page des tests
+          applyFiltering(d.id);
       });
 
       // Mettre à jour les positions à chaque tick avec arrêt automatique
       let tickCount = 0;
       simulation.on('tick', () => {
-          link
-              .attr('x1', d => d.source.x)
-              .attr('y1', d => d.source.y)
-              .attr('x2', d => d.target.x)
-              .attr('y2', d => d.target.y);
+          // Plus besoin de mettre à jour les liens puisqu'ils ne sont plus affichés
+          // link
+          //     .attr('x1', d => d.source.x)
+          //     .attr('y1', d => d.source.y)
+          //     .attr('x2', d => d.target.x)
+          //     .attr('y2', d => d.target.y);
 
           node.attr('transform', d => `translate(${d.x},${d.y})`);
 
@@ -1774,64 +1852,47 @@ function formatDuration(duration) {
 
               // Créer la simulation optimisée pour la modal
               modalSimulation = d3.forceSimulation(modalNodes)
-                  .force('link', d3.forceLink(modalLinks).id(d => d.id)
-                      .strength(d => {
-                          // Même logique optimisée pour la modal
-                          const baseStrength = d.strength;
-                          const sourceNode = modalNodes.find(n => n.id === d.source.id || n.id === d.source);
-                          const targetNode = modalNodes.find(n => n.id === d.target.id || n.id === d.target);
-                          if (sourceNode && targetNode) {
-                              const connectivityFactor = 1 - (sourceNode.connectivity + targetNode.connectivity) / 20;
-                              return baseStrength * Math.max(connectivityFactor, 0.1);
-                          }
-                          return baseStrength;
-                      })
-                      .distance(d => {
-                          const sourceNode = modalNodes.find(n => n.id === d.source.id || n.id === d.source);
-                          const targetNode = modalNodes.find(n => n.id === d.target.id || n.id === d.target);
-                          if (sourceNode && targetNode) {
-                              const avgRadius = (sourceNode.radius + targetNode.radius) / 2;
-                              const connectivityBonus = (sourceNode.connectivity + targetNode.connectivity) * 8;
-                              return avgRadius * 3 + connectivityBonus + 50;
-                          }
-                          return 80;
-                      })
-                  )
                   .force('charge', d3.forceManyBody()
                       .strength(d => {
-                          const baseStrength = -1200;
-                          const connectivityMultiplier = 1 + d.connectivity * 0.1;
-                          const sizeMultiplier = 1 + d.radius / 80;
-                          return baseStrength * connectivityMultiplier * sizeMultiplier;
+                          // Force de répulsion plus faible pour garder les bulles plus proches
+                          const baseStrength = -300;
+                          return baseStrength;
                       })
                   )
-                  .force('center', d3.forceCenter(modalWidth / 2, modalHeight / 2).strength(0.1))
+                  .force('center', d3.forceCenter(modalWidth / 2, modalHeight / 2).strength(0.3))
                   .force('collision', d3.forceCollide()
-                      .radius(d => d.radius + 25 + d.connectivity * 3)
-                      .strength(0.8)
+                      .radius(d => d.radius + 10) // Réduire l'espacement entre les bulles
+                      .strength(0.9)
                   )
+                  // Force de confinement pour garder les bulles dans la zone visible
+                  .force('x', d3.forceX(modalWidth / 2).strength(0.1))
+                  .force('y', d3.forceY(modalHeight / 2).strength(0.1))
+                  // Force radiale pour une distribution plus compacte
                   .force('radial', d3.forceRadial()
                       .radius(d => {
+                          // Rayon plus petit pour garder les bulles plus proches du centre
                           const maxImportance = Math.max(...modalNodes.map(n => n.importance));
                           const importanceRatio = d.importance / maxImportance;
-                          const minRadius = Math.min(modalWidth, modalHeight) / 10;
-                          const maxRadius = Math.min(modalWidth, modalHeight) / 4;
-                          return minRadius + (maxRadius - minRadius) * (1 - importanceRatio);
+                          const maxRadius = Math.min(modalWidth, modalHeight) / 3.5; // Plus petit que l'original
+                          return maxRadius * (1 - importanceRatio * 0.7); // Moins de variation
                       })
                       .x(modalWidth / 2)
                       .y(modalHeight / 2)
-                      .strength(0.2)
+                      .strength(0.15)
                   );
 
-              // Dessiner les liens pour la modal
-              const modalLink = modalG.append('g')
-                  .selectAll('line')
-                  .data(modalLinks)
-                  .enter()
-                  .append('line')
-                  .attr('stroke', '#999')
-                  .attr('stroke-opacity', 0.6)
-                  .attr('stroke-width', d => Math.sqrt(d.value) + 2);
+              // Ne plus dessiner les liens pour la modal
+              // const modalLink = modalG.append('g')
+              //     .selectAll('line')
+              //     .data(modalLinks)
+              //     .enter()
+              //     .append('line')
+              //     .attr('stroke', '#999')
+              //     .attr('stroke-opacity', 0.6)
+              //     .attr('stroke-width', d => Math.sqrt(d.value) + 2);
+
+              // Créer une variable pour les liens de la modal sans les dessiner
+              const modalLink = modalG.append('g').selectAll('line').data([]);
 
               // Créer les groupes pour les nœuds de la modal
               const modalNode = modalG.append('g')
@@ -1889,17 +1950,22 @@ function formatDuration(duration) {
                   d3.select(this).select('circle').style('stroke-width', 4);
               })
               .on('click', function(event, d) {
-                  window.location.href = `/tests/?tags=${d.id}`;
+                  event.preventDefault();
+                  event.stopPropagation();
+
+                  // Appliquer le filtrage dans la modal au lieu de naviguer
+                  applyModalFiltering(d.id);
               });
 
               // Mettre à jour les positions dans la modal avec arrêt automatique
               let modalTickCount = 0;
               modalSimulation.on('tick', () => {
-                  modalLink
-                      .attr('x1', d => d.source.x)
-                      .attr('y1', d => d.source.y)
-                      .attr('x2', d => d.target.x)
-                      .attr('y2', d => d.target.y);
+                  // Plus besoin de mettre à jour les liens de la modal
+                  // modalLink
+                  //     .attr('x1', d => d.source.x)
+                  //     .attr('y1', d => d.source.y)
+                  //     .attr('x2', d => d.target.x)
+                  //     .attr('y2', d => d.target.y);
 
                   modalNode.attr('transform', d => `translate(${d.x},${d.y})`);
 
@@ -1909,6 +1975,58 @@ function formatDuration(duration) {
                       modalSimulation.stop();
                   }
               });
+
+              // Variables pour gérer l'état de filtrage de la modal
+              let modalSelectedNodeId = null;
+              let modalOriginalOpacities = new Map();
+
+              // Fonction pour obtenir les nœuds connectés dans la modal
+              function getModalConnectedNodes(nodeId) {
+                  const connected = new Set([nodeId]);
+                  modalLinks.forEach(link => {
+                      const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                      const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+
+                      if (sourceId === nodeId) {
+                          connected.add(targetId);
+                      } else if (targetId === nodeId) {
+                          connected.add(sourceId);
+                      }
+                  });
+                  return connected;
+              }
+
+              // Fonction pour appliquer le filtrage de la modal
+              function applyModalFiltering(clickedNodeId) {
+                  if (modalSelectedNodeId === clickedNodeId) {
+                      // Reclique sur le même nœud : revenir à l'affichage normal
+                      resetModalFiltering();
+                      return;
+                  }
+
+                  modalSelectedNodeId = clickedNodeId;
+                  const connectedNodes = getModalConnectedNodes(clickedNodeId);
+
+                  // Sauvegarder les opacités originales si ce n'est pas déjà fait
+                  if (modalOriginalOpacities.size === 0) {
+                      modalNodes.forEach(n => {
+                          modalOriginalOpacities.set(n.id, 1.0);
+                      });
+                  }
+
+                  // Appliquer le filtrage visuel dans la modal
+                  modalNode.style('opacity', d => {
+                      return connectedNodes.has(d.id) ? 1.0 : 0.3;
+                  });
+              }
+
+              // Fonction pour réinitialiser le filtrage de la modal
+              function resetModalFiltering() {
+                  modalSelectedNodeId = null;
+
+                  // Restaurer l'opacité normale pour tous les nœuds de la modal
+                  modalNode.style('opacity', 1.0);
+              }
 
               // Ajouter le zoom pour la modal
               modalZoom = d3.zoom()
@@ -1924,6 +2042,14 @@ function formatDuration(duration) {
                   });
 
               modalSvg.call(modalZoom);
+
+              // Ajouter un clic sur l'arrière-plan de la modal pour réinitialiser le filtrage
+              modalSvg.on('click', function(event) {
+                  // S'assurer que le clic n'est pas sur un nœud
+                  if (event.target === modalSvg.node() || event.target.tagName === 'svg') {
+                      resetModalFiltering();
+                  }
+              });
 
               // Gérer les boutons de contrôle de la modal
               setupModalControls();
@@ -1948,13 +2074,13 @@ function formatDuration(duration) {
           // Mettre à jour visuellement seulement cette bulle
           d3.select(event.sourceEvent.target.parentNode).attr('transform', `translate(${d.x},${d.y})`);
 
-          // Mettre à jour les liens connectés à cette bulle dans la modal
-          const modalLink = modalG.selectAll('line');
-          modalLink.filter(l => l.source.id === d.id || l.target.id === d.id)
-              .attr('x1', l => l.source.x)
-              .attr('y1', l => l.source.y)
-              .attr('x2', l => l.target.x)
-              .attr('y2', l => l.target.y);
+          // Plus besoin de mettre à jour les liens de la modal
+          // const modalLink = modalG.selectAll('line');
+          // modalLink.filter(l => l.source.id === d.id || l.target.id === d.id)
+          //     .attr('x1', l => l.source.x)
+          //     .attr('y1', l => l.source.y)
+          //     .attr('x2', l => l.target.x)
+          //     .attr('y2', l => l.target.y);
       }
 
       function modalDragended(event, d) {
@@ -2022,6 +2148,10 @@ function formatDuration(duration) {
               modalSimulation = null;
           }
 
+          // Nettoyer les variables de filtrage de la modal
+          modalSelectedNodeId = null;
+          modalOriginalOpacities.clear();
+
           // Nettoyer les variables
           modalSvg = null;
           modalG = null;
@@ -2056,12 +2186,12 @@ function formatDuration(duration) {
           // Mettre à jour visuellement seulement cette bulle
           d3.select(event.sourceEvent.target.parentNode).attr('transform', `translate(${d.x},${d.y})`);
 
-          // Mettre à jour les liens connectés à cette bulle
-          link.filter(l => l.source.id === d.id || l.target.id === d.id)
-              .attr('x1', l => l.source.x)
-              .attr('y1', l => l.source.y)
-              .attr('x2', l => l.target.x)
-              .attr('y2', l => l.target.y);
+          // Plus besoin de mettre à jour les liens connectés
+          // link.filter(l => l.source.id === d.id || l.target.id === d.id)
+          //     .attr('x1', l => l.source.x)
+          //     .attr('y1', l => l.source.y)
+          //     .attr('x2', l => l.target.x)
+          //     .attr('y2', l => l.target.y);
       }
 
       function dragended(event, d) {
@@ -2105,6 +2235,14 @@ function formatDuration(duration) {
           });
 
       svg.call(zoom);
+
+      // Ajouter un clic sur l'arrière-plan pour réinitialiser le filtrage
+      svg.on('click', function(event) {
+          // S'assurer que le clic n'est pas sur un nœud
+          if (event.target === svg.node() || event.target.tagName === 'svg') {
+              resetFiltering();
+          }
+      });
 
       // Gérer les boutons de contrôle
       document.getElementById('zoom-in-btn').addEventListener('click', function() {
